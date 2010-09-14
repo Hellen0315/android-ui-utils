@@ -1,0 +1,68 @@
+<Shape id="list-header" displayName="List Header" icon="icons/list-header.png">
+    <Properties>
+      <PropertyGroup>
+        <Property name="box" type="Dimension">480,38</Property>
+        <Property name="customColors" type="Bool" displayName="Custom Colors">false</Property>
+        <Property name="darkTheme" type="Bool" displayName="Dark Theme">false</Property>
+      </PropertyGroup>
+      <PropertyGroup name="Custom Colors">
+        <Property name="fillColor" displayName="Fill Color" type="Color">#ccccccff</Property>
+        <Property name="textColor" displayName="Text Color" type="Color">#000000ff</Property>
+      </PropertyGroup>
+      <PropertyGroup name="Text">
+        <Property name="textContent" displayName="Text Content" type="PlainText">Header</Property>
+        <Property name="textFont" displayName="Text Font" type="Font">Droid Sans|bold|normal|21px</Property>
+      </PropertyGroup>
+    </Properties>
+    <Behaviors>
+        <For ref="bgRect">
+            <Fill>$customColors.value ? $fillColor
+                                      : Color.fromString($darkTheme.value ? "#191919ff" : "#ccccccff")</Fill>
+            <Box>new Dimension($box.w, $box.h)</Box>
+        </For>
+        <For ref="accentRect">
+            <Box>new Dimension($box.w, 1)</Box>
+            <Transform>"translate(0," + $box.h + ")"</Transform>
+            <Visibility>$darkTheme.value &amp;&amp; !$customColors.value</Visibility>
+        </For>
+        <For ref="text">
+            <TextContent>$textContent</TextContent>
+            <Fill>$customColors.value ? $textColor
+                                      : Color.fromString($darkTheme.value ? "#ffffffff" : "#000000ff")</Fill>
+            <Font>$textFont</Font>
+            <BoxFit>
+                <Arg>new Bound(8, 0, $box.w - 8, $box.h)</Arg>
+                <Arg>new Alignment(0, 1)</Arg>
+            </BoxFit>
+        </For>
+    </Behaviors>
+    <Actions>
+      <Action id="getSnappingGuide">
+        <Impl><![CDATA[
+          var b = this.getBounding();
+          return [
+            new SnappingData("WidgetTop", b.y , "Bottom", false, this.id),
+            new SnappingData("WidgetBottom", b.y + b.height , "Top", false, this.id)
+          ];
+        ]]></Impl>
+      </Action>
+      <Action id="setToPreferredHeight" displayName="Set to Default List Header Height">
+        <Impl><![CDATA[
+          var box = this.getProperty("box");
+          this.setProperty("box", new Dimension(box.w, 38));
+        ]]></Impl>
+      </Action>
+    </Actions>
+    <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil"
+               xmlns="http://www.w3.org/2000/svg">
+        <defs>
+        </defs>
+        <rect x="0" y="0" width="480" height="38" style="stroke: none;" id="bgRect"/>
+        <rect x="0" y="-1" width="480" height="1" style="stroke: none; fill: #333;" id="accentRect"/>
+        <text
+            x="0"
+            y="0"
+            id="text"
+            xml:space="preserve">Text 1</text>
+    </p:Content>
+</Shape>

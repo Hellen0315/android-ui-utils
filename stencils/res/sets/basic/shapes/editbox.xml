@@ -1,0 +1,90 @@
+<Shape id="editbox" displayName="Edit Field" icon="icons/editbox.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension">350,74</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Text">
+      <Property name="textContent" displayName="Text Content" type="RichText">Edit text</Property>
+      <Property name="textFont" displayName="Text Font" type="Font">Droid Sans|normal|normal|27px</Property>
+      <Property name="textAlign" displayName="Alignment" type="Alignment">0,1</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="ninepatchTC">
+      <Box>new Dimension($box.w - 16 - 16, 32)</Box>
+    </For>
+    <For ref="ninepatchTR">
+      <Transform>"translate(" + ($box.w - 16) + ",0)"</Transform>
+    </For>
+
+    <For ref="ninepatchCL">
+      <Box>new Dimension(16, $box.h - 32 - 39)</Box>
+    </For>
+    <For ref="ninepatchCC">
+      <Box>new Dimension($box.w - 16 - 16,
+                         $box.h - 32 - 39)</Box>
+    </For>
+    <For ref="ninepatchCR">
+      <Transform>"translate(" + ($box.w - 16) + ",0)"</Transform>
+      <Box>new Dimension(16, $box.h - 32 - 39)</Box>
+    </For>
+
+    <For ref="ninepatchBL">
+      <Transform>"translate(0," + ($box.h - 39) + ")"</Transform>
+    </For>
+    <For ref="ninepatchBC">
+      <Transform>"translate(0," + ($box.h - 39) + ")"</Transform>
+      <Box>new Dimension($box.w - 16 - 16, 39)</Box>
+    </For>
+    <For ref="ninepatchBR">
+      <Transform>"translate(" + ($box.w - 16) + "," +
+                                ($box.h - 39) + ")"</Transform>
+    </For>
+
+    <For ref="text">
+      <TextContent>$textContent</TextContent>
+      <Font>$textFont</Font>
+      <BoxFit>
+        <Arg>new Bound(
+                 16,
+                 10,
+                 $box.w - 16 - 16,
+                 $box.h - 17 - 10)</Arg>
+        <Arg>$textAlign</Arg>
+      </BoxFit>
+    </For>
+  </Behaviors>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <image id="ninepatchTL" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAgCAYAAAAbifjMAAABLElEQVR4nOWSQWqFMBCGZ5KJhiCIEYKodFXdFXqAty30FG66eitX3sADFHqenqFncaU7u1KMRnmvhfcoHQhZ6Hz//08Gx3GE3xQdfayq6nkYhjcAeEXER0QERLT+QZeDuq69ruvepZRnYwxorUEpBZzzGTDfa0DTNF7f959a61Oe5xDHMUgpgYjA5WATgXP+kabpqSgKiKIIiAgYY8AY2zhFRNtB27ZPQoivsix5HMcghADOOTDGNspOB77vn7Ms40mSgBAChBCWugtiAYIgeDHGzM0TYE99AwjD8EEpBURkZb8YIKX0lo17w9sFEJE1NNezHQKmRUHEnzmYGpfqVzlYqk5RrnbgOn8MsFye289gD3I7B+vs/3UP7gvYgxzV8RtdUPeP4HSwBh3VNwJ1J4LK4f+UAAAAAElFTkSuQmCC"
+      x="0" y="0" width="16" height="32"/>
+    <image id="ninepatchTC" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAgCAYAAADT5RIaAAAAP0lEQVR4nJWJsQ3AQAjEzNE8zMA8zPD7L0KaSJHo0liyzczAvXfU3aiqUGaicw6KCOTuSBIysxefrvGrLQC7PQweBxVoq1ZxAAAAAElFTkSuQmCC"
+      x="16" y="0" height="32"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchTR" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAgCAYAAAAbifjMAAABa0lEQVR4nO2TP2rDMBTGP/0xyDEkIUP23qFLp/YYOUELhd4gN8gUuhWawcdID9AlQ2fTzZAhEIdkiEJt6XVSiFzHuKQ0HfpAIHhPP77vk8SICKcUGwwGHoGI3HoH8KKUeorj+O0oYDKZUPmwMQbb7RZZlmGxWEBr/dztdh/G47H+AphOp5UKiqLAbrdDlmVI0xSr1epVKXUzGo0+Dudlq9VCVQ7WWkRRhE6ng16vhyRJrtbr9SOAO0/BbDarTJGIYK2FMQZ5nmO5XCJJEpPn+eVwONxnIsMwrDzsVFhrURQFgiCA1lrM5/NbAPd7gBCiSoCnwu37/T42m821lwHnvBYAAFJKEBHCMES73b7wAIyxowDXIyJwzhEEAZRSnudagIMwxsA5hxACUkqvX2vh0IoDlTNrrMCpKM83UgAAxhhwzlGe/5YCt/4YoOktOP/nt1Cu383APaafVfAPOP0dNPvLNXV+C40B5b2rT6Cap4An4wBtAAAAAElFTkSuQmCC"
+      x="0" y="0" width="16" height="32"/>
+
+    <image id="ninepatchCL" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAABCAYAAADXeS5fAAAAKElEQVR4nH3BsQ0AIAACMISEL/j/Fb7CydX2bMPTdklgG7YhCSTxcwF83Qbg9e0AtQAAAABJRU5ErkJggg=="
+      x="0" y="32" width="16"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchCC" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4+vXrfwAJoQPf1gvoUgAAAABJRU5ErkJggg=="
+      x="16" y="32"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchCR" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAABCAYAAADXeS5fAAAAK0lEQVR4nH3JsQ0AMAwCMPIV/7/CDSxIoZ261qvH9sFHW+wukiAJJIHkvL9IyxL/qlyzagAAAABJRU5ErkJggg=="
+      x="0" y="32" width="16"
+      preserveAspectRatio="none"/>
+
+    <image id="ninepatchBL" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAnCAYAAAAGjMh0AAABCklEQVR4nO3UQWqEMBQG4P89k0D1DO56gB6gqx5mYG7TbXuV0r1XcOvCE0R0osnrpkodo7V0oBT84V8YzMdLQElEMKYoCsnzHMYYGGOQJAmYGVtRXx+IKNqtbPM7cgAHcAA3Amafs4hE+08n+G7j6gQhhMU0PwJ+fYQ9m1YnICIHwIQQMPZzfd8EzFwREbz3E7B2rLEzQCn1JiIYhgHe+6lb2AzQWr9eLhcPAF3XwTk3te/7aOn6wsqyfEnT9NR13YiCmcHM0btYAFVVGaXUO4DHpmngvZ8B18gCAIC6ru+yLHsWkVPbtrDWwjmHEMICiQJjrLUPWuszET0BuI+9swnsyd//kQ7gBsAH5vT8tLOlkXcAAAAASUVORK5CYII="
+      x="0" y="0" width="16" height="39"/>
+    <image id="ninepatchBC" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAnCAYAAADO4CKiAAAAOElEQVR4nK2LIQ7AQAzD3Pz/u1WVK8jgyGloxLKB6e6oqhDwA5Lc7ZZJ0O6icw6yjWYGbIf3+MQD2dorq+wsMaMAAAAASUVORK5CYII="
+      x="16" y="0" height="39"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchBR" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAnCAYAAAAGjMh0AAABDklEQVR4nO2VTWqEQBCF32taB3/AG3gGl55pjjSrOUkgq6wCOUAgC6+gqK3VPYtgGMfYDmFICFhQq6763qO6qWbTNA6esNZCRGCMgTEGVVWhLEtO55qkrx8kF3kdytt9R+yAHbADHgTQznnXAZxzi/yHDnwidzsAPvfjbf3vDXFNyOvAOQdr7VcCAMn2RwARmQAfm4DroYkIRATjOIIktNbPM8AwDN8CJvXpVyKJruskCILTDGCM8VqfBA6HAwCci6J4mwH6vl9Vt9ZCKYUkSUDyJY7j462Ybtt20ayUQhiGyLIMURSB5Lmu62Oe5wu77Pt+7RrenXNPwzCc0jR9XakBt17iVvz9RtoBDwBcAHUm5nwqB85KAAAAAElFTkSuQmCC"
+      x="0" y="0" width="16" height="39"/>
+
+    <foreignObject x="16" y="10" width="200" height="150" id="text">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        Edit text content
+      </div>
+    </foreignObject>
+  </p:Content>
+</Shape>

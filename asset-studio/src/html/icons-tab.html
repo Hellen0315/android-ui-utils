@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Android Asset Studio - Icon Generator - Tab icons</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
+    <link rel="stylesheet" media="screen" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/themes/base/jquery.ui.all.css">
+    <!-- canvg used to overcome <img src=SVG> toDataURL security issues -->
+    <!-- see code.google.com/p/chromium/issues/detail?id=54204 -->
+    <script src="http://canvg.googlecode.com/svn/trunk/rgbcolor.js"></script> 
+    <script src="http://canvg.googlecode.com/svn/trunk/canvg.js"></script>
+
+    <link rel="stylesheet" media="screen" href="lib/colorpicker/css/colorpicker.css">
+    <script src="lib/colorpicker/js/colorpicker.js"></script>
+
+    <link rel="stylesheet" href="lib/jquery-ui-1.8.4.android-theme/theme.css">
+
+    <link rel="stylesheet" href="css/studio.css">
+    <script src="js/asset-studio.pack.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>Android Asset Studio</h1>
+    </div>
+    <div id="page-header">
+      <h2>Icon Generator <span>&mdash; Tab icons</span></h2>
+      <p id="page-intro">
+        The <strong>tab icon generator</strong> will create icons that you
+        can use in your Android application, from a variety of source images.
+        To begin, simply enter the input details below. Output will be shown
+        below.
+      </p>
+    </div>
+    <div id="inputs">
+      
+    </div>
+    <h3>Output images</h3>
+    <div id="outputs">
+    </div>
+
+    <script>
+      // Create image output slots
+      for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
+        studio.ui.createImageOutputSlot({
+          container: $('#outputs').get(0),
+          id: 'out-icon-' + density,
+          label: 'drawable-' + density
+        });
+
+      var paramResources = {
+        'hdpi-iconSize': { w: 48, h: 48 },
+        'mdpi-iconSize': { w: 32, h: 32 },
+        'ldpi-iconSize': { w: 24, h: 24 },
+        'hdpi-targetRect': { x: 3, y: 3, w: 42, h: 42 },
+        'mdpi-targetRect': { x: 2, y: 2, w: 28, h: 28 },
+        'ldpi-targetRect': { x: 1, y: 1, w: 22, h: 22 },
+        'hdpi-fxMult': 1.0,
+        'mdpi-fxMult': 0.666667,
+        'ldpi-fxMult': 0.5
+      };
+
+      /**
+       * Main image generation routine.
+       */
+      function regenerate() {
+        var values = form.getValues();
+
+        if (!values['source']) {
+          return;
+        }
+
+        imagelib.loadFromUri(values['source'], function(srcImg) {
+          if (!srcImg) {
+            return;
+          }
+
+          var srcSize = { w: srcImg.naturalWidth, h: srcImg.naturalHeight };
+          var srcRect = imagelib.drawing.getTrimRect(srcImg, srcSize);
+
+          for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+            var iconSize = paramResources[density + '-iconSize'];
+            var fxMult = paramResources[density + '-fxMult'];
+            var targetRect = paramResources[density + '-targetRect'];
+
+            var outCtx = imagelib.drawing.context(iconSize);
+            var srcCtx = imagelib.drawing.context(iconSize);
+
+            imagelib.drawing.drawCenterInside(srcCtx, srcImg, targetRect, srcRect);
+
+            var effects = [];
+            if (values['selected']) {
+              effects = [
+                {
+                  effect: 'outer-shadow',
+                  color: '#000',
+                  opacity: 0.25,
+                  blur: 5 * fxMult
+                },
+                {
+                  effect: 'fill-color',
+                  color: '#fff'
+                }
+              ];
+            } else {
+              effects = [
+                {
+                  effect: 'fill-color',
+                  color: '#808080'
+                }
+              ];
+            }
+
+            imagelib.drawing.fx(effects, outCtx, srcCtx, iconSize);
+
+            /*imagelib.drawing.applyFilter(
+              new ConvolutionFilter(
+                [-1, -1,  0,
+                 -1,  1,  1,
+                  0,  1,  1], 2, -128),
+              outCtx, iconSize);*/
+
+            imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
+              return function(img) {
+                $('#out-icon-' + density).attr('src', img.src);
+              };
+            }(density));
+          }
+        });
+      }
+
+      var form = new studio.forms.Form('icon-form', {
+        onChange: regenerate,
+        fields: [
+          new studio.forms.ImageField('source', { title: 'Source' }),
+          new studio.forms.BooleanField('selected', { title: 'Selected', defaultValue: false })
+        ]
+      });
+      form.createUI($('#inputs').get(0));
+    </script>
+  </body>
+</html>

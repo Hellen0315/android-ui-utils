@@ -1,0 +1,83 @@
+<Shape id="dropdown" displayName="Dropdown" icon="icons/dropdown.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension" p:lockHeight="true">350,72</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Text">
+      <Property name="text" displayName="Text" type="PlainText">Selected Item Text</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="ninepatchTC">
+      <Box>new Dimension($box.w - 89 - 29, 34)</Box>
+    </For>
+    <For ref="ninepatchTR">
+      <Transform>"translate(" + ($box.w - 89) + ",0)"</Transform>
+    </For>
+
+    <For ref="ninepatchCL">
+      <Box>new Dimension(29, $box.h - 34 - 38)</Box>
+    </For>
+    <For ref="ninepatchCC">
+      <Box>new Dimension($box.w - 29 - 89,
+                         $box.h - 34 - 38)</Box>
+    </For>
+    <For ref="ninepatchCR">
+      <Transform>"translate(" + ($box.w - 89) + ",0)"</Transform>
+      <Box>new Dimension(89, $box.h - 34 - 38)</Box>
+    </For>
+
+    <For ref="ninepatchBL">
+      <Transform>"translate(0," + ($box.h - 38) + ")"</Transform>
+    </For>
+    <For ref="ninepatchBC">
+      <Transform>"translate(0," + ($box.h - 38) + ")"</Transform>
+      <Box>new Dimension($box.w - 29 - 89, 38)</Box>
+    </For>
+    <For ref="ninepatchBR">
+      <Transform>"translate(" + ($box.w - 89) + "," +
+                                ($box.h - 38) + ")"</Transform>
+    </For>
+
+    <For ref="text">
+      <TextContent>$text</TextContent>
+      <Font>Font.fromString("Droid Sans|normal|normal|21px")</Font>
+      <BoxFit>
+        <Arg>new Bound(
+                 16,
+                 11,
+                 $box.w - 77 - 16,
+                 $box.h - 17 - 11)</Arg>
+        <Arg>new Alignment(0, 1)</Arg>
+      </BoxFit>
+    </For>
+  </Behaviors>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <image id="ninepatchTL" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAAiCAYAAACjv9J3AAABGklEQVR4nMWVsUrEQBCGv1kPQYPEIlZWRxCrYCNJmnuH6wVrny2QR8ir7dhkZc0tQWR3btqFfPtnvpkVVcW6nDnxWtDD3qGIHIEn4BG4KwoVkXvgfZqmj67r3pqmaauqaopBReQAnJZl+RrH8RxE897nYiaTvs7z/DkMwzmAchueEuml7/tTAJUYqV9JRUSAh7qun1W1CPACCty2bVsBzhJ6o6o/QCsoquq893+G/udiKXtdytqcqZNJzX8vkUSmPd2D5rjIBdR778LHS6XdQoVVpGBwidodmZxLPq7U7i3+sKfslTipRU9RVYmBJlBWkSztBbBPul0OZj2N59S0p5ZQuVpSsN29sNprLZIz30hsHnFzey13b3HoN/T+TZI0tsU5AAAAAElFTkSuQmCC"
+      x="0" y="0" width="29" height="34"/>
+    <image id="ninepatchTC" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAAiCAYAAACa2GMsAAAARklEQVR4nGNgwAUY////j+AwMDD4wznfvn2DS7H8+/ePASuHCdk0FmTT8HD+/v1Lsh4UFxCnDNVtRFqK2x6cYUCO24g0GgBwX1gjn3jsnQAAAABJRU5ErkJggg=="
+      x="29" y="0" height="34"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchTR" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFkAAAAiCAYAAAA07nWtAAACqUlEQVR4nO2aPW8aQRCG31nwAcIgI8QhKgqEoeMHQJOOzk0KflzqiCJF+nRQRxQUqQJOJFOYJsUJHR+3k8IsOp8PDDHL+S73SGglGGlnXw0zs3NHAMDMiNGHCNqB/wERR7F+CMBd0E6ElAWAPwAemfnXIcPkYrH4qsuLyWSC29tbbDYbXVsEhmVZj/P5/OdoNBoR0WcA35nZ9rMly7K05YvpdIp6vR5JkRVEhOFw+KXb7X4C8I2ZpdcmKeWL786GlBLMDJ17BAkRgZnR6XQ+9vv9Ra/X+w3gh9cu7i7egGoamBntdvsDgIafXVJnd8HMu09UYWYQEfL5fAXAtZ+NdpHda5QhomStVrsmIoOZV+7f4kg+I8wsACQBPBfZcRxtm7oLX1iFJqKjbLZF0LfGXSySwyryPr+94m/tghFZrWEVeR/u88SRfFn8RdZ9GVGfqIh8KEcHFslqjYrI3nMo0YkIUsrLi6ycipLIXtRlZIvA02TzGRebXURVZAAQQqgz+kZyPLs4L/7pQudlxHEcMPNujSLunAyfVAHELdxZkFJCCAFmvrzIQPQLn2Jb24Lpk6Ne+NRtTwgBxOlCL9szxpGsAxXJAPbn5Fjkt+EWGUHkZJUmThV5PB5jtVq9bqiJbDaLZrN5lK1PJL+88b3H2cVgMIBlWUcNzM8NM6NQKKDR8H0m+hrhGXVWq1UQERKJhDbf9pFIJHaP+k9hax+enGyaJtbrtZpsafPPSyqVwtXVFYrF4tH7qvbt0OziXUZyq9XC/f09lsslbNuGzqu/Ip1OI5VKoVQq4ebm5iR/XecLT+EDnlLGw8MDmBm2bWt91SudTsMwDJimiVwud9K/x1M3guuT//VVrUqlgtlsBiklHMfRInQmk4FhGCiXy8hmsyf76RZ5X7r4CxKHT0A9gNztAAAAAElFTkSuQmCC"
+      x="0" y="0" width="89" height="34"/>
+
+    <image id="ninepatchCL" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAABCAYAAAAih6XvAAAALUlEQVR4nGNkYGBg+P//PwMDAwMDIyMjj5iYWMfu3buz//79y/Dv3z+4HDUBAJ+/D2JslyBSAAAAAElFTkSuQmCC"
+      x="0" y="34" width="29"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchCC" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAABCAYAAAAb4BS0AAAAEElEQVR4nGM8ffr0fwYoAAAjPANiTkWQ+AAAAABJRU5ErkJggg=="
+      x="29" y="34"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchCR" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFkAAAABCAYAAAC11gI1AAAAYElEQVR4nLWOsQnAIBQF39dGcQLHcAh3yiKZyjXEQrARC0HwpU0tydXHcZJSIn4i54wQAlpr2HsfNUiilILeO+acWGt98iYisNbCGAPvPZxzxx2lFLTWiDHetdaL5Hg7DwSAI/+ArIExAAAAAElFTkSuQmCC"
+      x="0" y="34" width="89"
+      preserveAspectRatio="none"/>
+
+    <image id="ninepatchBL" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB0AAAAmCAYAAAA4LpBhAAABVklEQVR4nO3WwUrDQBDG8f+XepEqBISioPQg6E3Bs1ch4Ct4zMlrX8GLl75Mb30L38Qeihhoxktbl7CxNmRSkQ4shATy252ZzUYAZgaApKPBYPA6nU6fF4sFZVmun7UZB9UbZpaUZclqeKBJ5aVaDteIrtTMCIc7Crin9++sdGdomGJ3tJre4L4fSrCNumokAQo716OuGxupq5pqZzWtS20beBQNgc7QbVO77USi+1QS0vdhE17HgPB5I5TgaIth2wK/Rdcr3QQ0re+PjRRGbAKSGsGxL9L6hTGoijRJd21668KlppLU6/UIP/ptRxX9nM/ntkIlkSTREreLFkXxPpvNPtI0PQxPGjfUzEzS22Qyuc3z/Nrr50yRbrwEXsbj8X2WZeddoQIegafRaHSXZdnpcDg8dkWXcB+4AR6AK+DMHV3CCXABnAD9TlDPaH8T7tE9+q/RLz0YKVfo7zRcAAAAAElFTkSuQmCC"
+      x="0" y="0" width="29" height="38"/>
+    <image id="ninepatchBC" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAMAAAAmCAYAAAABSSE6AAAAWklEQVR4nK3PwQ3AIAgF0A8hMlVH7wLuJPTSqiSYcCgnX/wQoN674y0xs+8Nxlbi7khj8SdgjFGJFacVQUQ54j3HWATzahMROaC1tqCqOQjAveOa2E8Ii/6LB1duMf9Jt0UgAAAAAElFTkSuQmCC"
+      x="29" y="0" height="38"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchBR" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFkAAAAmCAYAAACvfze7AAADYElEQVR4nO2ay077RhSHv7nEcRILyCJRiAjhGdh3yyv1KVgh9QH6AN2wA7UPgNTLsjvUipAIkEDiL8JFmdNNxzWJA4XYDrHySZYjZTJzzk+/HM/F6uzsTMiJi4sL9vf3ubm5wTn36X5EhOFwyN3dHePxmJeXl4XiUkpRr9ep1Wp0u13q9fpCfWmtMcZwcHDww9XV1fci8i3Zxi6S/HuICCKCc24hkQE6nc6rvp6fnz/Vjxe4Wq3S7XYJw3Ch2JRS8V1EdFob++nel8D29jYAzjkmk8mHhVZK0Wg0CMOQnZ0dwjDMOkT17/UKK5JbtYid7K8s6HQ6ALGjn56e/tfvlFJEUUQYhvR6ParVamYxJXJMd3Ke5cI5l1m5SNJutxERrq+vEREeHx/fbO8dXKvV6PV6BEGQWTzJcgGki7xqTva0220ARqMRzjnG43FqO601jUaDer3O7u5upg72vOvkVRUZoNVqoZTi8vIS5xwPDw+vvtdax7OIfr9PEAS5xJHIL13kyWSS+aAeXy4mk0mm5SJJs9mMp3je0SKCMSZ2cL/fxxhDHrlqrZP38jnZ02w2ARgMBnGNbjQaRFHE3t4elUol8/F9LZ7KcTkiJwPJk62tLQCGwyGbm5toren3+1hrcysR8N9i5M1ysYqzi3lsbGyglOL+/p5Wq4UxJtdxvZudc/5zOebJ7xFFEVEUxePniYjELn7TyWUTuSjm1OQZF0POIk8HUQaS4nqW7uSpIMrOulx8FO/aJMk8pksG80RO6ygrlFKvrjKQlofPb+48OW+Rk0GUiamNoeQUboaV2k9eFvPc6++J74t3cjKIVXXyB+Ne1+QsmM4jJbfZFd9a5Gx4c9Peb9XlgdY63kApK1rr+LRazXGStTa/Z58xBq011tpCNoiWQcJE7vb29hmYOaLJVWRrLcaY0orsy6DWmtFo9ADcAjMvhdggCHILolKpYIzJ9ODyK+EF1lpzeno6AH6XlKWtrVaruQURBAHW2tzO1paNF/n4+Pjvo6OjX4Gf0toVInIeJ8RfgfPz8/uTk5PR4eHhb8CPwF9p7RTwc6GRlYtL4E/gF+APEUl9L0EB3xUZVcn4BtwAAxGZ+9BRZfwbfzXKu0r4QqxFLoC1yAWwFrkA1iIXwFrkAliLXAD/ANqZC0LLZyK1AAAAAElFTkSuQmCC"
+      x="0" y="0" width="89" height="38"/>
+    <text x="16" y="11" id="text" xml:space="preserve"></text>
+  </p:Content>
+</Shape>

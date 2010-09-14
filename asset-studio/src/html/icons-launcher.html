@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Android Asset Studio - Icon Generator - Launcher icons</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
+    <link rel="stylesheet" media="screen" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/themes/base/jquery.ui.all.css">
+    <!-- canvg used to overcome <img src=SVG> toDataURL security issues -->
+    <!-- see code.google.com/p/chromium/issues/detail?id=54204 -->
+    <script src="http://canvg.googlecode.com/svn/trunk/rgbcolor.js"></script> 
+    <script src="http://canvg.googlecode.com/svn/trunk/canvg.js"></script>
+
+    <link rel="stylesheet" media="screen" href="lib/colorpicker/css/colorpicker.css">
+    <script src="lib/colorpicker/js/colorpicker.js"></script>
+
+    <link rel="stylesheet" href="lib/jquery-ui-1.8.4.android-theme/theme.css">
+
+    <link rel="stylesheet" href="css/studio.css">
+    <script src="js/asset-studio.pack.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>Android Asset Studio</h1>
+    </div>
+    <div id="page-header">
+      <h2>Icon Generator <span>&mdash; Launcher icons</span></h2>
+      <p id="page-intro">
+        The <strong>launcher icon generator</strong> will create icons that you
+        can use in your Android application, from a variety of source images.
+        To begin, simply enter the input details below. Output will be shown
+        below.
+      </p>
+    </div>
+    <div id="inputs">
+      
+    </div>
+    <h3>Output images</h3>
+    <div id="outputs">
+    </div>
+
+    <script>
+      // Create image output slots
+      for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
+        studio.ui.createImageOutputSlot({
+          container: $('#outputs').get(0),
+          id: 'out-icon-' + density,
+          label: 'drawable-' + density
+        });
+
+      // Load image resources (stencils)
+      var resList = {};
+      for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
+        for (var shape in {'square':1, 'circle':1})
+          for (var type in {'back':1, 'fore':1, 'mask':1})
+            resList[shape + '-' + density + '-' + type] = (
+              'res/launcher-stencil/' + shape + '/' + density + '/' + type + '.png');
+
+      var imageResources = {};
+      imagelib.loadImageResources(resList, function(r) {
+        imageResources = r;
+        regenerate();
+      });
+
+      var paramResources = {
+        'hdpi-iconSize': { w: 72, h: 72 },
+        'mdpi-iconSize': { w: 48, h: 48 },
+        'ldpi-iconSize': { w: 36, h: 36 },
+        'square-hdpi-targetRect': { x: 8, y: 8, w: 56, h: 56 },
+        'circle-hdpi-targetRect': { x: 6, y: 6, w: 60, h: 60 },
+        'square-mdpi-targetRect': { x: 5, y: 5, w: 38, h: 38 },
+        'circle-mdpi-targetRect': { x: 4, y: 4, w: 40, h: 40 },
+        'square-ldpi-targetRect': { x: 4, y: 4, w: 28, h: 28 },
+        'circle-ldpi-targetRect': { x: 3, y: 3, w: 30, h: 30 }
+      };
+
+      /**
+       * Main image generation routine.
+       */
+      function regenerate() {
+        var values = form.getValues();
+
+        var continue_ = function(foreImg) {
+          var shape = values['shape'];
+          for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+            var iconSize = paramResources[density + '-iconSize'];
+            var targetRect = paramResources[shape + '-' + density + '-targetRect'];
+
+            var outCtx = imagelib.drawing.context(iconSize);
+            var tmpCtx = imagelib.drawing.context(iconSize);
+
+            tmpCtx.save();
+            tmpCtx.globalCompositeOperation = 'source-over';
+            imagelib.drawing.copy(tmpCtx, imageResources[shape + '-' + density + '-mask'], iconSize);
+            tmpCtx.globalCompositeOperation = 'source-atop';
+            tmpCtx.fillStyle = values['bgcolor'];
+            tmpCtx.fillRect(0, 0, iconSize.w, iconSize.h);
+            if (foreImg) {
+              imagelib.drawing[values['crop'] ? 'drawCenterCrop' : 'drawCenterInside']
+                (tmpCtx, foreImg, targetRect, {
+                  x: 0, y: 0,
+                  w: foreImg.naturalWidth, h: foreImg.naturalHeight
+                });
+            }
+            tmpCtx.restore();
+
+            imagelib.drawing.copy(outCtx, imageResources[shape + '-' + density + '-back'], iconSize);
+            imagelib.drawing.copy(outCtx, tmpCtx, iconSize);
+            imagelib.drawing.copy(outCtx, imageResources[shape + '-' + density + '-fore'], iconSize);
+
+            imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
+              return function(img) {
+                $('#out-icon-' + density).attr('src', img.src);
+              };
+            }(density));
+          }
+        };
+
+        if (values['foreground']) {
+          imagelib.loadFromUri(values['foreground'], function(foreImg) {
+            continue_(foreImg);
+          });
+        } else {
+          continue_(null);
+        }
+      }
+
+      var form = new studio.forms.Form('icon-form', {
+        onChange: regenerate,
+        fields: [
+          new studio.forms.ImageField('foreground', { title: 'Foreground' }),
+          new studio.forms.BooleanField('crop', {
+            title: 'Crop Foreground',
+            defaultValue: true,
+            offText: 'Center',
+            onText: 'Crop'
+          }),
+          new studio.forms.EnumField('shape', {
+            title: 'Shape',
+            buttons: true,
+            options: [
+              { id: 'square', title: 'Square' },
+              { id: 'circle', title: 'Circle' }
+            ],
+            defaultValue: 'square'
+          }),
+          new studio.forms.ColorField('bgcolor', { title: 'Background Color', defaultValue: '#ff0000' })
+        ]
+      });
+      form.createUI($('#inputs').get(0));
+    </script>
+  </body>
+</html>

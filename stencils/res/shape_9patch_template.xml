@@ -1,0 +1,83 @@
+<Shape id="%(id)s" displayName="TODO" icon="%(icon_uri)s">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension">350,63</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Text">
+      <Property name="text" displayName="Text" type="PlainText">Default Text</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="ninepatchTC">
+      <Box>new Dimension($box.w - %(width_r)d - %(width_l)d, %(height_t)d)</Box>
+    </For>
+    <For ref="ninepatchTR">
+      <Transform>"translate(" + ($box.w - %(width_r)d) + ",0)"</Transform>
+    </For>
+
+    <For ref="ninepatchCL">
+      <Box>new Dimension(%(width_l)d, $box.h - %(height_t)d - %(height_b)d)</Box>
+    </For>
+    <For ref="ninepatchCC">
+      <Box>new Dimension($box.w - %(width_l)d - %(width_r)d,
+                         $box.h - %(height_t)d - %(height_b)d)</Box>
+    </For>
+    <For ref="ninepatchCR">
+      <Transform>"translate(" + ($box.w - %(width_r)d) + ",0)"</Transform>
+      <Box>new Dimension(%(width_r)d, $box.h - %(height_t)d - %(height_b)d)</Box>
+    </For>
+
+    <For ref="ninepatchBL">
+      <Transform>"translate(0," + ($box.h - %(height_b)d) + ")"</Transform>
+    </For>
+    <For ref="ninepatchBC">
+      <Transform>"translate(0," + ($box.h - %(height_b)d) + ")"</Transform>
+      <Box>new Dimension($box.w - %(width_l)d - %(width_r)d, %(height_b)d)</Box>
+    </For>
+    <For ref="ninepatchBR">
+      <Transform>"translate(" + ($box.w - %(width_r)d) + "," +
+                                ($box.h - %(height_b)d) + ")"</Transform>
+    </For>
+
+    <For ref="text">
+      <TextContent>$text</TextContent>
+      <Font>Font.fromString("Droid Sans|normal|normal|21px")</Font>
+      <BoxFit>
+        <Arg>new Bound(
+                 %(pad_l)d,
+                 %(pad_t)d,
+                 $box.w - %(pad_r)d - %(pad_l)d,
+                 $box.h - %(pad_b)d - %(pad_t)d)</Arg>
+        <Arg>new Alignment(0, 0)</Arg>
+      </BoxFit>
+    </For>
+  </Behaviors>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <image id="ninepatchTL" xlink:href="%(uri_tl)s"
+      x="0" y="0" width="%(width_l)d" height="%(height_t)d"/>
+    <image id="ninepatchTC" xlink:href="%(uri_tc)s"
+      x="%(width_l)d" y="0" height="%(height_t)d"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchTR" xlink:href="%(uri_tr)s"
+      x="0" y="0" width="%(width_r)d" height="%(height_t)d"/>
+
+    <image id="ninepatchCL" xlink:href="%(uri_cl)s"
+      x="0" y="%(height_t)d" width="%(width_l)d"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchCC" xlink:href="%(uri_cc)s"
+      x="%(width_l)d" y="%(height_t)d"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchCR" xlink:href="%(uri_cr)s"
+      x="0" y="%(height_t)d" width="%(width_r)d"
+      preserveAspectRatio="none"/>
+
+    <image id="ninepatchBL" xlink:href="%(uri_bl)s"
+      x="0" y="0" width="%(width_l)d" height="%(height_b)d"/>
+    <image id="ninepatchBC" xlink:href="%(uri_bc)s"
+      x="%(width_l)d" y="0" height="%(height_b)d"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchBR" xlink:href="%(uri_br)s"
+      x="0" y="0" width="%(width_r)d" height="%(height_b)d"/>
+    <text x="%(pad_l)d" y="%(pad_t)d" id="text" xml:space="preserve"></text>
+  </p:Content>
+</Shape>

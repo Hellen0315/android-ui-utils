@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Android Asset Studio - Icon Generator - Menu icons</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
+    <link rel="stylesheet" media="screen" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/themes/base/jquery.ui.all.css">
+    <!-- canvg used to overcome <img src=SVG> toDataURL security issues -->
+    <!-- see code.google.com/p/chromium/issues/detail?id=54204 -->
+    <script src="http://canvg.googlecode.com/svn/trunk/rgbcolor.js"></script> 
+    <script src="http://canvg.googlecode.com/svn/trunk/canvg.js"></script>
+
+    <link rel="stylesheet" media="screen" href="lib/colorpicker/css/colorpicker.css">
+    <script src="lib/colorpicker/js/colorpicker.js"></script>
+
+    <link rel="stylesheet" href="lib/jquery-ui-1.8.4.android-theme/theme.css">
+
+    <link rel="stylesheet" href="css/studio.css">
+    <script src="js/asset-studio.pack.js"></script>
+  </head>
+  <body>
+    <div id="header">
+      <h1>Android Asset Studio</h1>
+    </div>
+    <div id="page-header">
+      <h2>Icon Generator <span>&mdash; Menu icons</span></h2>
+      <p id="page-intro">
+        The <strong>menu icon generator</strong> will create icons that you
+        can use in your Android application, from a variety of source images.
+        To begin, simply enter the input details below. Output will be shown
+        below.
+      </p>
+    </div>
+    <div id="inputs">
+      
+    </div>
+    <h3>Output images</h3>
+    <div id="outputs">
+    </div>
+
+    <script>
+      // Create image output slots
+      for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
+        studio.ui.createImageOutputSlot({
+          container: $('#outputs').get(0),
+          id: 'out-icon-' + density,
+          label: 'drawable-' + density
+        });
+
+      var paramResources = {
+        'hdpi-iconSize': { w: 72, h: 72 },
+        'mdpi-iconSize': { w: 48, h: 48 },
+        'ldpi-iconSize': { w: 36, h: 36 },
+        'hdpi-targetRect': { x: 8, y: 8, w: 56, h: 56 },
+        'mdpi-targetRect': { x: 5, y: 5, w: 38, h: 38 },
+        'ldpi-targetRect': { x: 4, y: 4, w: 28, h: 28 },
+        'hdpi-fxMult': 1.0,
+        'mdpi-fxMult': 0.666667,
+        'ldpi-fxMult': 0.5
+      };
+
+      /**
+       * Main image generation routine.
+       */
+      function regenerate() {
+        var values = form.getValues();
+
+        if (!values['source']) {
+          return;
+        }
+
+        imagelib.loadFromUri(values['source'], function(srcImg) {
+          if (!srcImg) {
+            return;
+          }
+
+          var srcSize = { w: srcImg.naturalWidth, h: srcImg.naturalHeight };
+          var srcRect = imagelib.drawing.getTrimRect(srcImg, srcSize);
+
+          for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+            var iconSize = paramResources[density + '-iconSize'];
+            var fxMult = paramResources[density + '-fxMult'];
+            var targetRect = paramResources[density + '-targetRect'];
+
+            var outCtx = imagelib.drawing.context(iconSize);
+            var srcCtx = imagelib.drawing.context(iconSize);
+
+            imagelib.drawing.drawCenterInside(srcCtx, srcImg, targetRect, srcRect);
+
+            imagelib.drawing.fx(effects = [
+              {
+                effect: 'outer-shadow',
+                color: '#fff',
+                opacity: 0.55,
+                blur: 3 * fxMult
+              },
+              {
+                effect: 'inner-shadow',
+                color: '#000',
+                opacity: 0.2,
+                blur: 3 * fxMult,
+                translate: { y: 3 * fxMult }
+              },
+              {
+                effect: 'inner-shadow',
+                color: '#000',
+                opacity: 0.35,
+                translate: { y: 1 }
+              },
+              {
+                effect: 'inner-shadow',
+                color: '#fff',
+                opacity: 0.7,
+                translate: { y: -1 }
+              },
+              {
+                effect: 'fill-lineargradient',
+                from: { x: 0, y: 0 },
+                to: { x: 0, y: iconSize.h },
+                colors: [
+                  { offset: 0, color: '#a3a3a3' },
+                  { offset: 1.0, color: '#787878' }
+                ]
+              }
+            ], outCtx, srcCtx, iconSize);
+
+            imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
+              return function(img) {
+                $('#out-icon-' + density).attr('src', img.src);
+              };
+            }(density));
+          }
+        });
+      }
+
+      var form = new studio.forms.Form('icon-form', {
+        onChange: regenerate,
+        fields: [
+          new studio.forms.ImageField('source', { title: 'Source' })
+        ]
+      });
+      form.createUI($('#inputs').get(0));
+    </script>
+  </body>
+</html>

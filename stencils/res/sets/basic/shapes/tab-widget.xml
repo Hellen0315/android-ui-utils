@@ -1,0 +1,124 @@
+<Shape id="tab-widget" displayName="Tab Widget" icon="icons/tab-widget.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension" p:lockHeight="true">480,96</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Text">
+      <Property name="tabLabel" displayName="Tab Labels" type="PlainText"
+        p:editInfo="({targetName: 'htmlObject', bound: new Bound(0, 0, Math.max($box.w, 80), 30), font: $textFont, align: new Alignment(0, 1), multi: false})">#Tab1|Tab2|Tab3</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="contentDiv">
+      <DomContent>
+        <![CDATA[
+          //depends: $tabLabel
+          var UNSELECTED_IMG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAABgCAYAAADLn4i/AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAOxJREFUeNrsV80KhiAQXM1O+TK9/wN59iRR6ccGC9GfG7Wg8QlLh6ZhmlnXUiklWK++75P3HkII4JxT63sGNqvrOhjHEbYkh2BrLQzDANM07cB697QxoLUGpRQP3DTNUlkwAZE9C27bls+MWqmy4Kv1DIxhUNUiA0ExxqUK0Pw+822wTILorwzz5xOU21ayzDKhFLJT5KyjnSLTz8T+b375Fq3JZ3KiNjdqHDKfPgflD3q5IVPAJ4RMgnKhFJLgbTfmeeb9D57pvZyiLDBKQEfw+i4zAVmNRG6weuNIa1Yzi/nqBdXZLC4Y/BNgACpRZWrmRTcpAAAAAElFTkSuQmCC';
+          var SELECTED_IMG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAABgCAYAAADLn4i/AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAK5JREFUeNpiZGBgEABiMSCWAuFdu3Yt/fz5M8Pr168ZMjIy1gHFJgPxMyB+xcRAAqBM8f///+GYuiaPCDcPAmfQLjRoazIyTf1IGbZJlPYmD9sMS1tn0C7VDdWENJTKjaEYGoMkiQ7lsm7YNiFGRJE72ioYdfNwcfOoYrIVMzIywvEAmkw1ZzAuW7YMI+G+f/8eTAsKCqKIs8AksAF0OZZ3794R7wwgXkasYoAAAwDUMQAT+czl3QAAAABJRU5ErkJggg==';
+
+          var items = $tabLabel.value.split(/\|/);
+          var specs = [];
+
+          for (var i in items) {
+            var label = items[i];
+            var selected = false;
+
+            if (label.match(/^#/)) {
+              selected = true;
+              label = label.substring(1);
+            }
+
+            specs.push({
+              _name: "div",
+              _uri: "http://www.w3.org/1999/xhtml",
+              style: new CSS()
+                  .set("-moz-border-image",
+                    "url(" + (selected ? SELECTED_IMG : UNSELECTED_IMG) + ") 0 5 0 5 stretch stretch")
+                  .set("display", "inline-block")
+                  .set("width", (100 / items.length).toFixed(1) + "%")
+                  .set("position", "relative")
+                  .set("border", 0)
+                  .set("padding", 0)
+                  .set("margin", 0)
+                  .set("-moz-box-sizing", "border-box"),
+                  
+              _children: [{
+                _name: "div",
+                _uri: "http://www.w3.org/1999/xhtml",
+                style: new CSS()
+                    .set("-moz-border-image",
+                      "url(" + (selected ? SELECTED_IMG : UNSELECTED_IMG) + ") 0 5 0 5 stretch stretch")
+                    .set("position", "absolute")
+                    .set("margin", "0 -2px")
+                    .set("border-top", 0)
+                    .set("border-bottom", 0)
+                    .set("padding", 0)
+                    .set("height", "96px")
+                    .set("width", "100%")
+                    .set("z-index", selected ? "1000" : "999"),
+                _children: [{
+                  _text: label,
+                  style: new CSS()
+                      .set("position", "absolute")
+                      .set("width", "100%")
+                      .set("top", "60px")
+                      .set("text-align", "center")
+                      .set("line-height", "21px")
+                      .set("height", "1em")
+                      .set("overflow", "hidden")
+                      .set("color", selected ? "#ffffff" : "#808080")
+                      .set("font-family", "'Droid Sans'")
+                      .set("font-size", "21px")
+                }]
+              }]
+            });
+          }
+
+          var fragment = null;
+          try {
+            fragment = F.newDOMFragment(specs);
+          } catch (e) {
+            Console.dumpError(e);
+          }
+          fragment;
+        ]]>
+      </DomContent>
+    </For>
+    <For ref="htmlObject">
+      <Box>
+        new Dimension($box.w, $box.h)
+      </Box>
+    </For>
+  </Behaviors>  
+  <Actions>
+    <Action id="getSnappingGuide">
+      <Impl>
+        <![CDATA[
+          var b = this.getBounding();
+          return [
+            new SnappingData("WidgetBottom", b.y + b.height , "Top", false, this.id)
+          ];
+        ]]>
+      </Impl>
+    </Action>
+  </Actions>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <foreignObject x="0" y="0" width="200" height="96" id="htmlObject">
+      <div xmlns="http://www.w3.org/1999/xhtml"
+        style="
+          position: absolute;
+          top: 92px;
+          height: 4px;
+          width: 100%;
+          background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAECAIAAADAusJtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABxJREFUeNpimjp1KtO7d++Y3r59y/Ty5UuAAAMAStYKFFqZ46gAAAAASUVORK5CYII=)
+        "></div>
+      <div xmlns="http://www.w3.org/1999/xhtml" id="contentDiv"
+        style="
+          width:100%;
+          height:96px;
+          font-size:0;
+          line-height:0;
+        "></div>
+    </foreignObject>
+  </p:Content>
+</Shape>

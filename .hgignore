@@ -1,0 +1,12 @@
+.DS_Store
+Thumbs.db
+.*\.pyc
+.*/_.*
+asset-studio/out
+asset-studio/src/js/local.properties
+icon-templates/demo-app/bin/
+icon-templates/demo-app/gen/
+icon-templates/demo-app/build.xml
+icon-templates/demo-app/build.properties
+icon-templates/demo-app/default.properties
+icon-templates/demo-app/local.properties

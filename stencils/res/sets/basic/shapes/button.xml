@@ -1,0 +1,83 @@
+<Shape id="button" displayName="Button" icon="icons/button.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension">240,72</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Text">
+      <Property name="text" displayName="Text" type="PlainText">Button</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="ninepatchTC">
+      <Box>new Dimension($box.w - 17 - 18, 34)</Box>
+    </For>
+    <For ref="ninepatchTR">
+      <Transform>"translate(" + ($box.w - 17) + ",0)"</Transform>
+    </For>
+
+    <For ref="ninepatchCL">
+      <Box>new Dimension(18, $box.h - 34 - 37)</Box>
+    </For>
+    <For ref="ninepatchCC">
+      <Box>new Dimension($box.w - 18 - 17,
+                         $box.h - 34 - 37)</Box>
+    </For>
+    <For ref="ninepatchCR">
+      <Transform>"translate(" + ($box.w - 17) + ",0)"</Transform>
+      <Box>new Dimension(17, $box.h - 34 - 37)</Box>
+    </For>
+
+    <For ref="ninepatchBL">
+      <Transform>"translate(0," + ($box.h - 37) + ")"</Transform>
+    </For>
+    <For ref="ninepatchBC">
+      <Transform>"translate(0," + ($box.h - 37) + ")"</Transform>
+      <Box>new Dimension($box.w - 18 - 17, 37)</Box>
+    </For>
+    <For ref="ninepatchBR">
+      <Transform>"translate(" + ($box.w - 17) + "," +
+                                ($box.h - 37) + ")"</Transform>
+    </For>
+
+    <For ref="text">
+      <TextContent>$text</TextContent>
+      <Font>Font.fromString("Droid Sans|normal|normal|21px")</Font>
+      <BoxFit>
+        <Arg>new Bound(
+                 16,
+                 10,
+                 $box.w - 17 - 16,
+                 $box.h - 17 - 10)</Arg>
+        <Arg>new Alignment(1, 1)</Arg>
+      </BoxFit>
+    </For>
+  </Behaviors>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <image id="ninepatchTL" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAiCAYAAABStIn6AAAA6klEQVR4nM3Uvw6CMBAG8O8Ki4Oms4PGxfgEJAQT9REcjbPPxsjMw3HH1IQQ+if0Eul4wC/f9UpJRKCxytBDIioAXACcARxWQUS0A3Dvuu5bVdXLWnsKpV+EiMgAePZ9/2ua5i0iYOZQIG+iW9u2H4cAQGwvfdC1ruuHS5EyEB+0t9YeRSQJCUEFEZUakHFINsTMyZCIhBPNX16VSK01NQiAF1qqJSXKOZBmGAZonOxi+o/lQBRrbV5LgmJXSAgyDshujZl1ILXxa0FqrRk1CMDGWtvm1Kan+++J9CBmhrvcUiDjqVP0y9kaAXe5RDsH2Zs9AAAAAElFTkSuQmCC"
+      x="0" y="0" width="18" height="34"/>
+    <image id="ninepatchTC" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAiCAYAAACeLbMRAAAAL0lEQVR4nGNggIJAhi9fvvxn+v//PwNu4u/fvwxMDAwMyGL//v3Dw8LJJVYx3EoAbuZa8MGAnQgAAAAASUVORK5CYII="
+      x="18" y="0" height="34"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchTR" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAiCAYAAAC5gzL5AAABM0lEQVR4nL2WP06EUBCHv3kaSxNaD6BHgMaO3lB6NA9gqC2trEwIlzB6gs1C7Hhjw9uwu/OABXcnIYR5w8fvN8M/UVXWhgDFyPoW+Aa+VLWLQtq2NaWICJvN5qeu64+iKF6BT1X9NWubphn1IyJUVfWW5/kL8K6q/rDGqSqxDUBVybLsqSzLZ+DButAoxHu/26dp+gjcW5DrqemoKiJCkiR3wO0iyE6yczfA1SpIYJkQ74+afRQigojEIWNK+hMBwrROh4S1VUqMmNeToQUjP0/J4XGAjvZkajqzIHN6IiIBYt9sQyWxfgx5k0osVc7tOZiGWOG9R0QCbHljBzaXKQnR1/0L5Ix2ToRc8AGMKenVnLGxF5uOc46+brmdwRdxuZ1JSNdF/xiAvXdJFGImx5hW8g/U2+zjeCEypAAAAABJRU5ErkJggg=="
+      x="0" y="0" width="17" height="34"/>
+
+    <image id="ninepatchCL" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAABCAYAAADTjP5iAAAAJElEQVR4nGP8//8/AzpgZGTsP3/+fMHfv38Z/v37x4BNDToAANKwD1wWZGGQAAAAAElFTkSuQmCC"
+      x="0" y="34" width="18"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchCC" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGM4efLkfwAIFQNbnd/VGQAAAABJRU5ErkJggg=="
+      x="18" y="34"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchCR" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAABCAYAAAA4u0VhAAAAJ0lEQVR4nGM8efLkfwY8gJGRkYGJiYmBmZmZwdDQcML///8L0dUAADqMB/9CqRkyAAAAAElFTkSuQmCC"
+      x="0" y="34" width="17"
+      preserveAspectRatio="none"/>
+
+    <image id="ninepatchBL" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAAlCAYAAABPsblCAAABMklEQVR4nO2UPU7EMBSEZ5woXpDoKJJQcIWloeYEKXIQLpBToByAI3CBnCGXQKKIkFLRrBQ/Grzyhjh/m2KFGMlS9OT5PH55MkUEfZF8qev6ues6GGMwtKev0FNXIgJ3/R0QN0sEYBuQMQab/TWrsxOJyHZzdC6ILuQyemQBc4GLJnsNiG6KPmAIOHo1ACD5y2xrs0AkTwzu95JER9cQYFEiaxgyubLwyUQnxQEoSYjIukT9HpH0Jxq70pIeMQzDo8kYM9krH0gAmCAIFEkopTzbpkGfTdN8pWl6M/cF8B1VV1X1obWG1hpRFE0uX6K3siwf4zje5Xl+P+dx84HeAbwWRaHatj1kWXaXJMn1GIi+k0juAOwBPAF4AHC7CvQDUwBSADGAq9WgJZoekH/Q5YG+AW0T6y3wiF2IAAAAAElFTkSuQmCC"
+      x="0" y="0" width="18" height="37"/>
+    <image id="ninepatchBC" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAlCAYAAACDKIOpAAAASUlEQVR4nHXMMQrAMAxD0R/HOKfq0bvnUrY6NNBC0+UhgRBzTpkktmTmu1bVficJa61hwCc9uDvWe18pIrAxxg3ACXAgaR38cQHiXzHKT4PyTgAAAABJRU5ErkJggg=="
+      x="18" y="0" height="37"
+      preserveAspectRatio="none"/>
+    <image id="ninepatchBR" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABEAAAAlCAYAAACkhgJBAAABP0lEQVR4nO2UO07DQBBA34yj5D7uORMXcYUPwA0i4Z6IMk0EV0AYTEHLp/EOBTaKnNndfAQSEtPZs/P2eWa9sl6vjUSICKpKURSUZXlhZufTNTOzJAMAM2NYp17+70LkJMgQvknf90mAiGBmqGockjMRkW2b4yAhBESEEEIcMiSTJqp6+nRCCGNPjpvOST3ZLs6O+EdO7ER/R9CFjEVuhQiTvG/iFSZgPiRmMr6f5P3PSe0+sYibDIdo34ibeAbbz1mT1HQcuG8ym+3IfMd4j6gqwzofUhRF1kBVCSH0gPvLJ03Gfqgqbdu+Ai8uZD6fZy1UldVq1QEbF7JYLLKQ5XJ5X9f1Brg6GNJ13VvTNI9VVW2AS+DB3Qy4jlK+enAL3AB3ZvYRg5wlIO/AM/BkZtHLWPa5lHJx0I/zD/llyCfqwqVIfKX6+gAAAABJRU5ErkJggg=="
+      x="0" y="0" width="17" height="37"/>
+    <text x="16" y="10" id="text" xml:space="preserve"></text>
+  </p:Content>
+</Shape>

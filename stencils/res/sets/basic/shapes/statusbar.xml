@@ -1,0 +1,49 @@
+<Shape id="statusbar" displayName="Status Bar" icon="icons/statusbar.png">
+    <Properties>
+      <PropertyGroup>
+        <Property name="box" type="Dimension" p:lockHeight="true">480,38</Property>
+        <Property name="withShadow" type="Bool" displayName="With Shadow">false</Property>
+      </PropertyGroup>
+    </Properties>
+    <Behaviors>
+        <For ref="htmlObject">
+            <Box>new Dimension($box.w, 38)</Box>
+        </For>
+        <For ref="titleShadow">
+            <Box>new Dimension($box.w, 8)</Box>
+            <Visibility>$withShadow</Visibility>
+        </For>
+    </Behaviors>
+    <Actions>
+      <Action id="getSnappingGuide">
+        <Impl>
+          <![CDATA[
+            var b = this.getBounding();
+            return [
+              new SnappingData("WidgetBottom", b.y + 38 , "Top", false, this.id)
+            ];
+          ]]>
+        </Impl>
+      </Action>
+    </Actions>
+    <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil"
+               xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient x1="0%" y1="0%" x2="0%" y2="100%" id="titleShadowGradient">
+            <stop style="stop-color: #000000; stop-opacity: 0.25" offset="0"/>
+            <stop style="stop-color: #000000; stop-opacity: 0" offset="1"/>
+        </linearGradient>
+      </defs>
+      <foreignObject x="0" y="0" width="480" height="38" id="htmlObject">
+        <div xmlns="http://www.w3.org/1999/xhtml"
+          style="
+            width: 100%;
+            height: 100%;
+            -moz-box-sizing: border-box;
+            border-width: 0px 208px 0px 0px;
+            -moz-border-image: url(data:image/png;base64,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) 0 208 0 0 stretch stretch;
+            "></div>
+      </foreignObject>
+      <rect x="0" y="38" width="400" height="8" style="stroke: none; fill: url(#titleShadowGradient);" id="titleShadow"/>
+    </p:Content>
+</Shape>
