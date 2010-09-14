@@ -81,30 +81,59 @@ studio.forms.ColorField = studio.forms.Field.extend({
       .attr('id', this.getHtmlId())
       .append($('<div>')
         .addClass('form-color-preview')
-        .css('background-color', this.getValue())
+        .css('background-color', this.getValue().color)
       )
       .button({ label: null, icons: { secondary: 'ui-icon-carat-1-s' }})
       .appendTo(fieldContainer);
 
     this.el_.ColorPicker({
-      color: this.el_.val(),
+      color: this.getValue().color,
       onChange: function(hsb, hex, rgb) {
         me.setValue('#' + hex);
-        $('.form-color-preview', me.el_).css('background-color', me.getValue());
+        $('.form-color-preview', me.el_)
+          .css('background-color', me.getValue().color);
         me.form_.notifyChanged_();
       }
     });
+
+    if (this.params_.alpha) {
+      this.alphaEl_ = $('<div>')
+        .addClass('form-color-alpha')
+        .slider({
+          min: 0,
+          max: 100,
+          range: 'min',
+          value: this.getValue().alpha,
+    			slide: function(evt, ui) {
+    				me.setAlpha(ui.value);
+    				me.form_.notifyChanged_();
+    			}
+        })
+        .appendTo(fieldContainer);
+    }
   },
 
   getValue: function() {
     var color = this.value_ || this.params_.defaultValue || '#000000';
     if (/^([0-9a-f]{6}|[0-9a-f]{3})$/i.test(color))
       color = '#' + color;
-    return color;
+
+    var alpha = this.alpha_;
+    if (typeof alpha != 'number') {
+      alpha = this.params_.defaultAlpha;
+      if (typeof alpha != 'number')
+        alpha = 100;
+    }
+
+    return { color: color, alpha: alpha };
   },
 
   setValue: function(val) {
     this.value_ = val;
+  },
+
+  setAlpha: function(val) {
+    this.alpha_ = val;
   }
 });
 

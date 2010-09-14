@@ -680,30 +680,59 @@ studio.forms.ColorField = studio.forms.Field.extend({
       .attr('id', this.getHtmlId())
       .append($('<div>')
         .addClass('form-color-preview')
-        .css('background-color', this.getValue())
+        .css('background-color', this.getValue().color)
       )
       .button({ label: null, icons: { secondary: 'ui-icon-carat-1-s' }})
       .appendTo(fieldContainer);
 
     this.el_.ColorPicker({
-      color: this.el_.val(),
+      color: this.getValue().color,
       onChange: function(hsb, hex, rgb) {
         me.setValue('#' + hex);
-        $('.form-color-preview', me.el_).css('background-color', me.getValue());
+        $('.form-color-preview', me.el_)
+          .css('background-color', me.getValue().color);
         me.form_.notifyChanged_();
       }
     });
+
+    if (this.params_.alpha) {
+      this.alphaEl_ = $('<div>')
+        .addClass('form-color-alpha')
+        .slider({
+          min: 0,
+          max: 100,
+          range: 'min',
+          value: this.getValue().alpha,
+    			slide: function(evt, ui) {
+    				me.setAlpha(ui.value);
+    				me.form_.notifyChanged_();
+    			}
+        })
+        .appendTo(fieldContainer);
+    }
   },
 
   getValue: function() {
     var color = this.value_ || this.params_.defaultValue || '#000000';
     if (/^([0-9a-f]{6}|[0-9a-f]{3})$/i.test(color))
       color = '#' + color;
-    return color;
+
+    var alpha = this.alpha_;
+    if (typeof alpha != 'number') {
+      alpha = this.params_.defaultAlpha;
+      if (typeof alpha != 'number')
+        alpha = 100;
+    }
+
+    return { color: color, alpha: alpha };
   },
 
   setValue: function(val) {
     this.value_ = val;
+  },
+
+  setAlpha: function(val) {
+    this.alpha_ = val;
   }
 });
 
@@ -802,20 +831,25 @@ studio.forms.BooleanField = studio.forms.EnumField.extend({
  */
 studio.forms.ImageField = studio.forms.Field.extend({
   createUI: function(container) {
-    var fieldContainer = $('.form-field-container', this.base(container));
+    var fieldUI = this.base(container);
+    var fieldContainer = $('.form-field-container', fieldUI);
 
     var me = this;
 
     // Set up drag+drop on the entire field container
-    fieldContainer.addClass('form-image-drop-target');
-    fieldContainer.get(0).ondragenter = studio.forms.ImageField.dragenterHandler_;
-    fieldContainer.get(0).ondragleave = studio.forms.ImageField.dragleaveHandler_;
-    fieldContainer.get(0).ondragover = studio.forms.ImageField.dragoverHandler_;
-    fieldContainer.get(0).ondrop = studio.forms.ImageField.makeDropHandler_(function(evt) {
-      if (me.loadFromFileList_(evt.dataTransfer.files)) {
-        me.setTypeUI_('image');
-      }
-    });
+    fieldUI.addClass('form-field-drop-target');
+    fieldUI.get(0).ondragenter = studio.forms.ImageField.makeDragenterHandler_(
+      fieldUI);
+    fieldUI.get(0).ondragleave = studio.forms.ImageField.makeDragleaveHandler_(
+      fieldUI);
+    fieldUI.get(0).ondragover = studio.forms.ImageField.makeDragoverHandler_(
+      fieldUI);
+    fieldUI.get(0).ondrop = studio.forms.ImageField.makeDropHandler_(fieldUI,
+      function(evt) {
+        if (me.loadFromFileList_(evt.dataTransfer.files)) {
+          me.setTypeUI_('image');
+        }
+      });
 
     // Create radio buttons
     this.el_ = $('<div>')
@@ -887,18 +921,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
           return function() {
             $('img', clipartParamsEl).removeClass('selected');
             $(this).addClass('selected');
-
-            var canvas = document.createElement('canvas');
-            canvas.className = 'offscreen';
-            canvas.style.width = '300px';
-            canvas.style.height = '300px';
-            document.body.appendChild(canvas);
-
-            canvg(canvas, clipartSrc, {ignoreMouse: true, ignoreAnimation: true});
-            me.setValueImageUri(canvas.toDataURL());
-
-            document.body.removeChild(canvas);
-
+            me.setValueSVGUrl(clipartSrc);
             me.form_.notifyChanged_();
           };
         }(clipartSrc))
@@ -920,25 +943,26 @@ studio.forms.ImageField = studio.forms.Field.extend({
       .attr('type', 'text')
       .keyup(function(clipartSrc) {
         return function() {
-          var canvas = document.createElement('canvas');
-          canvas.className = 'offscreen';
-          canvas.style.width = '300px';
-          canvas.style.height = '100px';
-          document.body.appendChild(canvas);
-
-          var ctx = canvas.getContext('2d');
-          ctx.fillStyle = '#000';
-          ctx.font = 'bold 100px/100px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'alphabetic';
-          ctx.fillText($(this).val(), 150, 100);
-          me.setValueImageUri(canvas.toDataURL());
-
-          document.body.removeChild(canvas);
-
+          me.textParams_ = me.textParams_ || {};
+          me.textParams_.text = $(this).val();
+          me.setValueTextParams(me.textParams_);
           me.form_.notifyChanged_();
         };
       }(clipartSrc))
+      .appendTo(textParamsEl);
+
+    $('<div>')
+      .slider({
+        min: 0,
+        max: 10,
+        value: 0,
+        slide: function(evt, ui) {
+          me.textParams_ = me.textParams_ || {};
+          me.textParams_.padding = ui.value;
+          me.setValueTextParams(me.textParams_);
+          me.form_.notifyChanged_();
+        }
+      })
       .appendTo(textParamsEl);
 
     typeEls.text.click(function(evt) {
@@ -1062,6 +1086,45 @@ studio.forms.ImageField = studio.forms.Field.extend({
       this.imagePreview_.attr('src', uri);
       this.imagePreview_.show();
     }
+  },
+
+  setValueSVGUrl: function(svgUrl) {
+    var canvas = document.createElement('canvas');
+    canvas.className = 'offscreen';
+    canvas.style.width = '300px';
+    canvas.style.height = '300px';
+    document.body.appendChild(canvas);
+
+    canvg(canvas, svgUrl, {ignoreMouse: true, ignoreAnimation: true});
+    this.setValueImageUri(canvas.toDataURL());
+
+    document.body.removeChild(canvas);
+  },
+
+  setValueTextParams: function(textParams) {
+    textParams = textParams || {};
+
+    var srcSize = { w: 600, h: 100 };
+    var srcCtx = imagelib.drawing.context(srcSize);
+
+    srcCtx.fillStyle = '#000';
+    srcCtx.font = 'bold 100px/100px sans-serif';
+    srcCtx.textBaseline = 'alphabetic';
+    srcCtx.fillText(textParams.text || '', 0, 100);
+
+    var trimRect = imagelib.drawing.getTrimRect(srcCtx, srcSize);
+
+    var padPx = (textParams.padding || 0) * 5;
+    var targetRect = { x: padPx, y: padPx, w: trimRect.w, h: trimRect.h };
+    var outCtx = imagelib.drawing.context({
+      w: trimRect.w + padPx * 2,
+      h: trimRect.h + padPx * 2
+    });
+
+    // TODO: replace with a simple draw() as the centering is useless
+    imagelib.drawing.drawCenterInside(outCtx, srcCtx, targetRect, trimRect);
+
+    this.setValueImageUri(outCtx.canvas.toDataURL());
   }
 });
 
@@ -1092,25 +1155,46 @@ studio.forms.ImageField.isValidFile_ = function(file) {
   'image/vnd.adobe.photoshop': true
 };*/
 
-studio.forms.ImageField.makeDropHandler_ = function(handler) {
+studio.forms.ImageField.makeDropHandler_ = function(el, handler) {
   return function(evt) {
-    $(this).removeClass('drag-hover');
+    $(el).removeClass('drag-hover');
     handler(evt);
   };
 };
 
-studio.forms.ImageField.dragoverHandler_ = function(evt) {
-  evt.dataTransfer.dropEffect = 'link';
-  evt.preventDefault();
+studio.forms.ImageField.makeDragoverHandler_ = function(el) {
+  return function(evt) {
+    el = $(el).get(0);
+    if (el._studio_frm_dragtimeout_) {
+      window.clearTimeout(el._studio_frm_dragtimeout_);
+      el._studio_frm_dragtimeout_ = null;
+    }
+    evt.dataTransfer.dropEffect = 'link';
+    evt.preventDefault();
+  };
 };
 
-studio.forms.ImageField.dragenterHandler_ = function(evt) {
-  $(this).addClass('drag-hover');
-  evt.preventDefault();
+studio.forms.ImageField.makeDragenterHandler_ = function(el) {
+  return function(evt) {
+    el = $(el).get(0);
+    if (el._studio_frm_dragtimeout_) {
+      window.clearTimeout(el._studio_frm_dragtimeout_);
+      el._studio_frm_dragtimeout_ = null;
+    }
+    $(el).addClass('drag-hover');
+    evt.preventDefault();
+  };
 };
 
-studio.forms.ImageField.dragleaveHandler_ = function(evt) {
-  $(this).removeClass('drag-hover');
+studio.forms.ImageField.makeDragleaveHandler_ = function(el) {
+  return function(evt) {
+    el = $(el).get(0);
+    if (el._studio_frm_dragtimeout_)
+      window.clearTimeout(el._studio_frm_dragtimeout_);
+    el._studio_frm_dragtimeout_ = window.setTimeout(function() {
+      $(el).removeClass('drag-hover');
+    }, 100);
+  };
 };
 
 studio.ui = {};

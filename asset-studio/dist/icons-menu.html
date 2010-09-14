@@ -4,13 +4,14 @@
     <title>Android Asset Studio - Icon Generator - Menu icons</title>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
-    <link rel="stylesheet" media="screen" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/themes/base/jquery.ui.all.css">
+    <link rel="stylesheet" href="http://yui.yahooapis.com/2.8.1/build/reset/reset-min.css">
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/themes/base/jquery.ui.all.css">
     <!-- canvg used to overcome <img src=SVG> toDataURL security issues -->
     <!-- see code.google.com/p/chromium/issues/detail?id=54204 -->
     <script src="http://canvg.googlecode.com/svn/trunk/rgbcolor.js"></script> 
     <script src="http://canvg.googlecode.com/svn/trunk/canvg.js"></script>
 
-    <link rel="stylesheet" media="screen" href="lib/colorpicker/css/colorpicker.css">
+    <link rel="stylesheet" href="lib/colorpicker/css/colorpicker.css">
     <script src="lib/colorpicker/js/colorpicker.js"></script>
 
     <link rel="stylesheet" href="lib/jquery-ui-1.8.4.android-theme/theme.css">
@@ -19,23 +20,26 @@
     <script src="js/asset-studio.pack.js"></script>
   </head>
   <body>
-    <div id="header">
-      <h1>Android Asset Studio</h1>
-    </div>
-    <div id="page-header">
-      <h2>Icon Generator <span>&mdash; Menu icons</span></h2>
-      <p id="page-intro">
-        The <strong>menu icon generator</strong> will create icons that you
-        can use in your Android application, from a variety of source images.
-        To begin, simply enter the input details below. Output will be shown
-        below.
-      </p>
-    </div>
-    <div id="inputs">
-      
-    </div>
-    <h3>Output images</h3>
-    <div id="outputs">
+    <div id="main-container">
+      <div id="header">
+        <h1><a href="index.html">Android Asset Studio</a></h1>
+      </div>
+      <div id="page-header">
+        <h2>Icon Generator <span>&mdash; Menu icons</span></h2>
+        <p id="page-intro">
+          The <strong>menu icon generator</strong> will create icons that you
+          can use in your Android application, from a variety of source images.
+          To begin, simply enter the input details below. Output will be shown
+          below.
+        </p>
+      </div>
+      <div id="inputs"></div>
+      <div id="outputs">
+        <h3>Output images</h3>
+      </div>
+      <div id="footer">
+        <p>See the source at the <a href="http://code.google.com/p/android-ui-utils">android-ui-utils</a> Google Code project.</p>
+      </div>
     </div>
 
     <script>
@@ -87,7 +91,7 @@
 
             imagelib.drawing.drawCenterInside(srcCtx, srcImg, targetRect, srcRect);
 
-            imagelib.drawing.fx(effects = [
+            imagelib.drawing.fx([
               {
                 effect: 'outer-shadow',
                 color: '#fff',
