@@ -133,7 +133,15 @@ a {
     display: inline-block;
     vertical-align: top;
     margin-top: 6px;
-    width: 160px;
+    width: 148px;
+    margin-right: 12px;
+  }
+
+  .form-field-outer > label .form-field-help-text {
+    font-weight: normal;
+    font-size: 11px;
+    line-height: 12px;
+    color: #888;
   }
 
   .form-field-container {

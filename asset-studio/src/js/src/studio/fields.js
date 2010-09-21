@@ -64,6 +64,10 @@ studio.forms.Field = Base.extend({
         $('<label>')
           .attr('for', this.getHtmlId())
           .text(this.params_.title)
+          .append($('<div>')
+            .addClass('form-field-help-text')
+            .css('display', this.params_.helpText ? '' : 'none')
+            .text(this.params_.helpText))
       )
       .append(
         $('<div>')
