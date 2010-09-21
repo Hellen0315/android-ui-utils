@@ -25,7 +25,11 @@
         <h1><a href="index.html">Android Asset Studio</a></h1>
       </div>
       <div id="page-header">
-        <h2>Icon Generator <span>&mdash; Notification icons</span></h2>
+        <div id="breadcrumb">
+          <a href="index.html">Android Asset Studio</a> &raquo;
+          <a href="index.html#group-icon-generators">Icon generators</a> &raquo;
+          <em>Notification icons</em>
+        </div>
         <p id="page-intro">
           The <strong>notification icon generator</strong> will create icons that you
           can use in your Android application, from a variety of source images.
@@ -83,17 +87,17 @@
         var values = form.getValues();
 
         // TODO: just add support for required inputs
-        if (!values['source']) {
+        if (!values['source'].uri) {
           return;
         }
 
-        imagelib.loadFromUri(values['source'], function(srcImg) {
+        imagelib.loadFromUri(values['source'].uri, function(srcImg) {
           if (!srcImg) {
             return;
           }
 
           var srcSize = { w: srcImg.naturalWidth, h: srcImg.naturalHeight };
-          var srcRect = imagelib.drawing.getTrimRect(srcImg, srcSize);
+          var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
           var shape = values['shape'];
           for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
@@ -125,7 +129,10 @@
       var form = new studio.forms.Form('icon-form', {
         onChange: regenerate,
         fields: [
-          new studio.forms.ImageField('source', { title: 'Source' }),
+          new studio.forms.ImageField('source', {
+            title: 'Source',
+            defaultValueTrim: 1
+          }),
           new studio.forms.EnumField('shape', {
             title: 'Shape',
             buttons: true,

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+//#REQUIRE "includes.js"
 //#REQUIRE "forms.js"
 
 /**
@@ -69,6 +70,39 @@ studio.forms.Field = Base.extend({
           .addClass('form-field-container')
       )
       .appendTo(container);
+  }
+});
+
+studio.forms.TextField = studio.forms.Field.extend({
+  createUI: function(container) {
+    var fieldContainer = $('.form-field-container', this.base(container));
+    var me = this;
+
+    this.el_ = $('<input>')
+      .addClass('form-text ui-widget ui-widget-content ' +
+                'ui-autocomplete-input ui-corner-all')
+      .attr('type', 'text')
+      .val(this.getValue())
+      .bind('keydown change', function() {
+        var inputEl = this;
+        window.setTimeout(function() {
+          me.setValue($(inputEl).val());
+          me.form_.notifyChanged_();
+        }, 0);
+      })
+      .appendTo(fieldContainer);
+  },
+
+  getValue: function() {
+    var value = this.value_;
+    if (typeof value != 'string') {
+      value = this.params_.defaultValue || '';
+    }
+    return value;
+  },
+
+  setValue: function(val) {
+    this.value_ = val;
   }
 });
 
@@ -181,6 +215,12 @@ studio.forms.EnumField = studio.forms.Field.extend({
           .text(option.title)
           .appendTo(this.el_);
       }
+
+      this.el_.combobox({
+        selected: function(evt, data) {
+          me.form_.notifyChanged_();
+        }
+      });
     }
   },
 
@@ -223,5 +263,40 @@ studio.forms.BooleanField = studio.forms.EnumField.extend({
 
   setValue: function(val) {
     this.base(val ? '1' : '0');
+  }
+});
+
+studio.forms.RangeField = studio.forms.Field.extend({
+  createUI: function(container) {
+    var fieldContainer = $('.form-field-container', this.base(container));
+    var me = this;
+
+    this.el_ = $('<div>')
+      .addClass('form-range')
+      .slider({
+        min: this.params_.min || 0,
+        max: this.params_.max || 100,
+        range: 'min',
+        value: this.getValue(),
+  			slide: function(evt, ui) {
+  				me.setValue(ui.value);
+  				me.form_.notifyChanged_();
+  			}
+      })
+      .appendTo(fieldContainer);
+  },
+
+  getValue: function() {
+    var value = this.value_;
+    if (typeof value != 'number') {
+      value = this.params_.defaultValue;
+      if (typeof value != 'number')
+        value = 0;
+    }
+    return value;
+  },
+
+  setValue: function(val) {
+    this.value_ = val;
   }
 });

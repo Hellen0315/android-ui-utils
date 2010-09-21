@@ -78,6 +78,24 @@ a {
       font-weight: normal;
     }
 
+  #breadcrumb {
+    color: #888;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 20px;
+    margin-bottom: 8px;
+  }
+
+    #breadcrumb a {
+      text-decoration: none;
+      color: #888;
+    }
+
+    #breadcrumb em {
+      color: #a4c639;
+      font-weight: bold;
+    }
+
   #page-links ul {
     margin: 12px 24px;
   }
@@ -119,10 +137,33 @@ a {
   }
 
   .form-field-container {
-    margin-left: 24px;
     display: inline-block;
     vertical-align: top;
   }
+
+.form-text,
+.ui-autocomplete-input {
+  margin: 0;
+  padding: 3px 6px;
+}
+
+.ui-autocomplete-input + .ui-button {
+  margin-left: -1px;
+}
+
+.ui-autocomplete {
+  z-index: 3 !important; /* to show above slider handles */
+}
+
+.form-text,
+.ui-autocomplete-input,
+.ui-autocomplete-input + .ui-button {
+  vertical-align: top;
+  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  height: 22px;
+}
 
 .form-image-hidden-file-field {
   position: absolute;
@@ -153,9 +194,11 @@ a {
 }
 
 .form-image-preview {
+  background-color: #fff;
   display: inline-block;
-  height: 100px;
-  border: 1px solid #eee;
+  max-height: 100px;
+  max-width: 300px;
+  border: 1px solid #ccc;
 }
 
 .form-color-preview {
@@ -173,16 +216,33 @@ a {
   border: 1px solid #617524;
 }
 
-.form-color-alpha {
+.form-color-alpha,
+.form-range {
+  margin-top: 6px;
   width: 200px;
 }
-
-/* drop target fields */
 
 .form-field-drop-target.drag-hover {
   outline: 2px solid #a4c639;
   outline-offset: 5px;
 }
+
+/* subforms */
+
+.form-subform {
+  margin-top: 24px;
+}
+
+.form-subform .form-field-outer {
+  margin-bottom: 6px;
+}
+
+  .form-subform .form-field-outer > label {
+    display: inline-block;
+    padding-right: 12px;
+    width: auto;
+    font-weight: normal;
+  }
 
 /* output images */
 
@@ -195,9 +255,11 @@ a {
   background-color: #eee;
   padding: 8px 10px;
   border-radius: 12px;
+  text-align: center;
 }
 
 .out-image-container img {
+  border: 1px solid #ccc;
   margin-top: 4px;
 }
 

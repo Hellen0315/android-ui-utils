@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="lib/jquery-ui-1.8.4.android-theme/theme.css">
 
     <link rel="stylesheet" href="css/studio.css">
-    <script src="js/asset-studio.pack.js"></script>
+    <script src="js/asset-studio.js"></script>
   </head>
   <body>
     <div id="main-container">
@@ -25,7 +25,11 @@
         <h1><a href="index.html">Android Asset Studio</a></h1>
       </div>
       <div id="page-header">
-        <h2>Icon Generator <span>&mdash; Launcher icons</span></h2>
+        <div id="breadcrumb">
+          <a href="index.html">Android Asset Studio</a> &raquo;
+          <a href="index.html#group-icon-generators">Icon generators</a> &raquo;
+          <em>Launcher icons</em>
+        </div>
         <p id="page-intro">
           The <strong>launcher icon generator</strong> will create icons that you
           can use in your Android application, from a variety of source images.
@@ -135,8 +139,8 @@
           }
         };
 
-        if (values['foreground']) {
-          imagelib.loadFromUri(values['foreground'], function(foreImg) {
+        if (values['foreground'].uri) {
+          imagelib.loadFromUri(values['foreground'].uri, function(foreImg) {
             continue_(foreImg);
           });
         } else {
@@ -153,7 +157,19 @@
             defaultValue: true,
             offText: 'Center',
             onText: 'Crop'
+          }),/*
+          new studio.forms.BooleanField('trim', {
+            title: 'Trim Foreground',
+            defaultValue: false,
+            offText: 'Don\'t Trim',
+            onText: 'Trim'
           }),
+          new studio.forms.RangeField('pad', {
+            title: 'Foreground Padding',
+            defaultValue: 0,
+            min: 0,
+            max: 10
+          }),*/
           new studio.forms.EnumField('shape', {
             title: 'Shape',
             buttons: true,

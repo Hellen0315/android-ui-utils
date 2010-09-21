@@ -554,6 +554,98 @@ window.imagelib = imagelib;
 
 var studio = {};
 
+(function( $ ) {
+  $.widget( "ui.combobox", {
+    _create: function() {
+      var self = this,
+        select = this.element.hide(),
+        selected = select.children( ":selected" ),
+        value = selected.val() ? selected.text() : "";
+      var input = $( "<input>" )
+        .insertAfter( select )
+        .val( value )
+        .autocomplete({
+          delay: 0,
+          minLength: 0,
+          source: function( request, response ) {
+            var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+            response( select.children( "option" ).map(function() {
+              var text = $( this ).text();
+              if ( this.value && ( !request.term || matcher.test(text) ) )
+                return {
+                  label: text.replace(
+                    new RegExp(
+                      "(?![^&;]+;)(?!<[^<>]*)(" +
+                      $.ui.autocomplete.escapeRegex(request.term) +
+                      ")(?![^<>]*>)(?![^&;]+;)", "gi"
+                    ), "<strong>$1</strong>" ),
+                  value: text,
+                  option: this
+                };
+            }) );
+          },
+          select: function( event, ui ) {
+            ui.item.option.selected = true;
+            window.foo = self;
+            self._trigger( "selected", event, {
+              item: ui.item.option
+            });
+          },
+          change: function( event, ui ) {
+            if ( !ui.item ) {
+              var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( $(this).val() ) + "$", "i" ),
+                valid = false;
+              select.children( "option" ).each(function() {
+                if ( this.value.match( matcher ) ) {
+                  this.selected = valid = true;
+                  return false;
+                }
+              });
+              if ( !valid ) {
+                // remove invalid value, as it didn't match anything
+                $( this ).val( "" );
+                select.val( "" );
+                return false;
+              }
+            }
+          }
+        })
+        .addClass( "ui-widget ui-widget-content ui-corner-left" );
+
+      input.data( "autocomplete" )._renderItem = function( ul, item ) {
+        return $( "<li></li>" )
+          .data( "item.autocomplete", item )
+          .append( "<a>" + item.label + "</a>" )
+          .appendTo( ul );
+      };
+
+      $( "<button>&nbsp;</button>" )
+        .attr( "tabIndex", -1 )
+        .attr( "title", "Show All Items" )
+        .insertAfter( input )
+        .button({
+          icons: {
+            primary: "ui-icon-triangle-1-s"
+          },
+          text: false
+        })
+        .removeClass( "ui-corner-all" )
+        .addClass( "ui-corner-right ui-button-icon" )
+        .click(function() {
+          // close if already visible
+          if ( input.autocomplete( "widget" ).is( ":visible" ) ) {
+            input.autocomplete( "close" );
+            return;
+          }
+
+          // pass empty string as value to search for, displaying all results
+          input.autocomplete( "search", "" );
+          input.focus();
+        });
+    }
+  });
+})( jQuery );
+
 studio.forms = {};
 
 /**
@@ -671,6 +763,39 @@ studio.forms.Field = Base.extend({
   }
 });
 
+studio.forms.TextField = studio.forms.Field.extend({
+  createUI: function(container) {
+    var fieldContainer = $('.form-field-container', this.base(container));
+    var me = this;
+
+    this.el_ = $('<input>')
+      .addClass('form-text ui-widget ui-widget-content ' +
+                'ui-autocomplete-input ui-corner-all')
+      .attr('type', 'text')
+      .val(this.getValue())
+      .bind('keydown change', function() {
+        var inputEl = this;
+        window.setTimeout(function() {
+          me.setValue($(inputEl).val());
+          me.form_.notifyChanged_();
+        }, 0);
+      })
+      .appendTo(fieldContainer);
+  },
+
+  getValue: function() {
+    var value = this.value_;
+    if (typeof value != 'string') {
+      value = this.params_.defaultValue || '';
+    }
+    return value;
+  },
+
+  setValue: function(val) {
+    this.value_ = val;
+  }
+});
+
 studio.forms.ColorField = studio.forms.Field.extend({
   createUI: function(container) {
     var fieldContainer = $('.form-field-container', this.base(container));
@@ -780,6 +905,12 @@ studio.forms.EnumField = studio.forms.Field.extend({
           .text(option.title)
           .appendTo(this.el_);
       }
+
+      this.el_.combobox({
+        selected: function(evt, data) {
+          me.form_.notifyChanged_();
+        }
+      });
     }
   },
 
@@ -825,11 +956,54 @@ studio.forms.BooleanField = studio.forms.EnumField.extend({
   }
 });
 
+studio.forms.RangeField = studio.forms.Field.extend({
+  createUI: function(container) {
+    var fieldContainer = $('.form-field-container', this.base(container));
+    var me = this;
+
+    this.el_ = $('<div>')
+      .addClass('form-range')
+      .slider({
+        min: this.params_.min || 0,
+        max: this.params_.max || 100,
+        range: 'min',
+        value: this.getValue(),
+  			slide: function(evt, ui) {
+  				me.setValue(ui.value);
+  				me.form_.notifyChanged_();
+  			}
+      })
+      .appendTo(fieldContainer);
+  },
+
+  getValue: function() {
+    var value = this.value_;
+    if (typeof value != 'number') {
+      value = this.params_.defaultValue;
+      if (typeof value != 'number')
+        value = 0;
+    }
+    return value;
+  },
+
+  setValue: function(val) {
+    this.value_ = val;
+  }
+});
+
 
 /**
  * Represents a form field for image values.
  */
 studio.forms.ImageField = studio.forms.Field.extend({
+  constructor: function(id, params) {
+    this.valueType_ = null;
+    this.textParams_ = {};
+    this.imageParams_ = {};
+    this.trimFormValues_ = {};
+    this.base(id, params);
+  },
+
   createUI: function(container) {
     var fieldUI = this.base(container);
     var fieldContainer = $('.form-field-container', fieldUI);
@@ -846,9 +1020,15 @@ studio.forms.ImageField = studio.forms.Field.extend({
       fieldUI);
     fieldUI.get(0).ondrop = studio.forms.ImageField.makeDropHandler_(fieldUI,
       function(evt) {
-        if (me.loadFromFileList_(evt.dataTransfer.files)) {
-          me.setTypeUI_('image');
-        }
+        me.loadFromFileList_(evt.dataTransfer.files, function(ret) {
+          if (!ret)
+            return;
+
+          me.setValueType_('image');
+          me.imageParams_ = ret;
+          me.valueFilename_ = ret.name;
+          me.renderValueAndNotifyChanged_();
+        });
       });
 
     // Create radio buttons
@@ -890,14 +1070,22 @@ studio.forms.ImageField = studio.forms.Field.extend({
         accept: 'image/*'
       })
       .change(function() {
-        if (me.loadFromFileList_(me.fileEl_.get(0).files))
-          me.setTypeUI_('image');
+        me.loadFromFileList_(me.fileEl_.get(0).files, function(ret) {
+          if (!ret)
+            return;
+
+          me.setValueType_('image');
+          me.imageParams_ = ret;
+          me.valueFilename_ = ret.name;
+          me.renderValueAndNotifyChanged_();
+        });
       })
       .appendTo(this.el_);
 
     typeEls.image.click(function(evt) {
       me.fileEl_.trigger('click');
-      me.setTypeUI_(null);
+      me.setValueType_(null);
+      me.renderValueAndNotifyChanged_();
       evt.preventDefault();
       return false;
     });
@@ -921,62 +1109,101 @@ studio.forms.ImageField = studio.forms.Field.extend({
           return function() {
             $('img', clipartParamsEl).removeClass('selected');
             $(this).addClass('selected');
-            me.setValueSVGUrl(clipartSrc);
-            me.form_.notifyChanged_();
+            me.imageParams_ = {svgUri: clipartSrc};
+            me.valueFilename_ = clipartSrc.match(/[^/]+$/)[0];
+            me.renderValueAndNotifyChanged_();
           };
         }(clipartSrc))
         .appendTo(clipartListEl);
     }
 
     typeEls.clipart.click(function(evt) {
-      me.setTypeUI_('clipart');
+      me.setValueType_('clipart');
+      me.renderValueAndNotifyChanged_();
     });
 
     // Prepare UI for the 'text' type
     var textParamsEl = $('<div>')
-      .addClass('form-image-type-params form-image-type-params-text')
+      .addClass(
+        'form-subform ' +
+        'form-image-type-params ' +
+        'form-image-type-params-text')
       .hide()
       .appendTo(this.el_);
 
-    $('<input>')
-      .addClass('form-image-clipart-item')
-      .attr('type', 'text')
-      .keyup(function(clipartSrc) {
-        return function() {
-          me.textParams_ = me.textParams_ || {};
-          me.textParams_.text = $(this).val();
-          me.setValueTextParams(me.textParams_);
-          me.form_.notifyChanged_();
-        };
-      }(clipartSrc))
-      .appendTo(textParamsEl);
+    var fontOptions = [];
+    for (var i = 0; i < studio.forms.ImageField.fontList_.length; i++) {
+      fontOptions.push({
+        id: i + 1,
+        title: studio.forms.ImageField.fontList_[i].title
+      });
+    }
 
-    $('<div>')
-      .slider({
-        min: 0,
-        max: 10,
-        value: 0,
-        slide: function(evt, ui) {
-          me.textParams_ = me.textParams_ || {};
-          me.textParams_.padding = ui.value;
-          me.setValueTextParams(me.textParams_);
-          me.form_.notifyChanged_();
-        }
-      })
-      .appendTo(textParamsEl);
+    this.textForm_ = new studio.forms.Form(
+      this.form_.id_ + '-' + this.id_ + '-textform', {
+        onChange: function() {
+          var values = me.textForm_.getValues();
+          me.textParams_.text = values['text'];
+          me.textParams_.fontStack = values['font']
+              ? studio.forms.ImageField.fontList_[values['font'] - 1].stack
+              : 'sans-serif';
+          me.valueFilename_ = values['text'];
+          me.renderValueAndNotifyChanged_();
+        },
+        fields: [
+          new studio.forms.TextField('text', {
+            title: 'Text',
+          }),
+          new studio.forms.EnumField('font', {
+            title: 'Font',
+            options: fontOptions
+          }),
+        ]
+      });
+    this.textForm_.createUI(textParamsEl);
 
     typeEls.text.click(function(evt) {
-      me.setTypeUI_('text');
+      me.setValueType_('text');
+      me.renderValueAndNotifyChanged_();
     });
+
+    // Create trim subform
+    this.trimFormValues_ = {};
+    this.trimForm_ = new studio.forms.Form(
+      this.form_.id_ + '-' + this.id_ + '-trimform', {
+        onChange: function() {
+          me.trimFormValues_ = me.trimForm_.getValues();
+          me.renderValueAndNotifyChanged_();
+        },
+        fields: [
+          new studio.forms.BooleanField('trim', {
+            title: 'Trim',
+            defaultValue: this.params_.defaultValueTrim || false,
+            offText: 'Don\'t Trim',
+            onText: 'Trim'
+          }),
+          new studio.forms.RangeField('pad', {
+            title: 'Padding',
+            defaultValue: 0,
+            min: 0,
+            max: 15
+          }),
+        ]
+      });
+    this.trimForm_.createUI($('<div>')
+      .addClass('form-subform')
+      .appendTo(fieldContainer));
+    this.trimFormValues_ = this.trimForm_.getValues();
 
     // Create image preview element
     this.imagePreview_ = $('<img>')
       .addClass('form-image-preview')
       .hide()
-      .appendTo(fieldContainer);
+      .appendTo(fieldContainer.parent());
   },
 
-  setTypeUI_: function(type) {
+  setValueType_: function(type) {
+    this.valueType_ = type;
     $('label', this.el_).removeClass('ui-state-active');
     $('.form-image-type-params', this.el_).hide();
     if (type) {
@@ -985,7 +1212,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
     }
   },
 
-  loadFromFileList_: function(fileList) {
+  loadFromFileList_: function(fileList, callback) {
     fileList = fileList || [];
 
     var me = this;
@@ -999,10 +1226,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
     }
 
     if (!file) {
-      this.clearValue();
-      this.form_.notifyChanged_();
       alert('Please choose a valid image file (PNG, JPG, GIF, SVG, PSD, etc.)');
-      return false;
+      callback(null);
+      return;
     }
 
     var svgHack = false;
@@ -1013,28 +1239,16 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
     // Closure to capture the file information.
     fileReader.onload = function(e) {
-      if (svgHack) {
-        var canvas = document.createElement('canvas');
-        canvas.className = 'offscreen';
-        canvas.style.width = '300px';
-        canvas.style.height = '300px';
-        document.body.appendChild(canvas);
-
-        canvg(canvas, e.target.result, {ignoreMouse: true, ignoreAnimation: true});
-        me.setValueImageUri(canvas.toDataURL());
-
-        document.body.removeChild(canvas);
-      } else {
-        me.setValueImageUri(e.target.result);
-      }
-      me.form_.notifyChanged_();
+      callback({
+        uri: svgHack ? null : e.target.result,
+        svgText: svgHack ? e.target.result : null,
+        name: file.name
+      });
     };
     fileReader.onerror = function(e) {
-      me.clearValue();
-      me.form_.notifyChanged_();
       switch(e.target.error.code) {
         case e.target.error.NOT_FOUND_ERR:
-          alert('File Not Found!');
+          alert('File not found!');
           break;
         case e.target.error.NOT_READABLE_ERR:
           alert('File is not readable');
@@ -1044,6 +1258,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
         default:
           alert('An error occurred reading this file.');
       }
+      callback(null);
     };
     /*fileReader.onprogress = function(e) {
       $('#read-progress').css('visibility', 'visible');
@@ -1055,9 +1270,8 @@ studio.forms.ImageField = studio.forms.Field.extend({
       }
     };*/
     fileReader.onabort = function(e) {
-      me.clearValue();
-      me.form_.notifyChanged_();
       alert('File read cancelled');
+      callback(null);
     };
     /*fileReader.onloadstart = function(e) {
       $('#read-progress').css('visibility', 'visible');
@@ -1066,65 +1280,101 @@ studio.forms.ImageField = studio.forms.Field.extend({
       fileReader.readAsText(file);
     else
       fileReader.readAsDataURL(file);
-
-    return true;
   },
 
   clearValue: function() {
-    this.valueImageUri_ = null;
+    this.valueType_ = null;
+    this.valueFilename_ = null;
+    this.valueUri_ = null;
     this.fileEl_.val('');
     this.imagePreview_.hide();
   },
 
   getValue: function() {
-    return this.valueImageUri_;
+    return {
+      uri: this.valueUri_,
+      name: this.valueFilename_
+    };
   },
 
-  setValueImageUri: function(uri) {
-    this.valueImageUri_ = uri;
-    if (this.imagePreview_) {
-      this.imagePreview_.attr('src', uri);
-      this.imagePreview_.show();
+  // this function is asynchronous
+  renderValueAndNotifyChanged_: function() {
+    if (!this.valueType_) {
+      this.valueUri_ = null;
     }
-  },
 
-  setValueSVGUrl: function(svgUrl) {
-    var canvas = document.createElement('canvas');
-    canvas.className = 'offscreen';
-    canvas.style.width = '300px';
-    canvas.style.height = '300px';
-    document.body.appendChild(canvas);
+    var me = this;
 
-    canvg(canvas, svgUrl, {ignoreMouse: true, ignoreAnimation: true});
-    this.setValueImageUri(canvas.toDataURL());
+    // Render the base image (text, clipart, or image)
+    switch (this.valueType_) {
+      case 'image':
+      case 'clipart':
+        if (this.imageParams_.svgText || this.imageParams_.svgUri) {
+          var canvas = document.createElement('canvas');
+          canvas.className = 'offscreen';
+          canvas.style.width = '480px';
+          canvas.style.height = '480px';
+          document.body.appendChild(canvas);
 
-    document.body.removeChild(canvas);
-  },
+          canvg(canvas, this.imageParams_.svgText || this.imageParams_.svgUri,
+              {ignoreMouse: true, ignoreAnimation: true});
+          continue_(canvas.getContext('2d'), { w: 480, h: 480 });
 
-  setValueTextParams: function(textParams) {
-    textParams = textParams || {};
+          document.body.removeChild(canvas);
+        } else if (this.imageParams_.uri) {
+          imagelib.loadFromUri(this.imageParams_.uri, function(img) {
+            var size = {
+              w: img.naturalWidth,
+              h: img.naturalHeight
+            };
+            var ctx = imagelib.drawing.context(size);
+            imagelib.drawing.copy(ctx, img, size);
+            continue_(ctx, size);
+          });
+        }
+        break;
 
-    var srcSize = { w: 600, h: 100 };
-    var srcCtx = imagelib.drawing.context(srcSize);
+      case 'text':
+        var size = { w: 1200, h: 480 };
+        var ctx = imagelib.drawing.context(size);
 
-    srcCtx.fillStyle = '#000';
-    srcCtx.font = 'bold 100px/100px sans-serif';
-    srcCtx.textBaseline = 'alphabetic';
-    srcCtx.fillText(textParams.text || '', 0, 100);
+        ctx.fillStyle = '#000';
+        ctx.font = 'bold 480px/480px ' + (this.textParams_.fontStack ||
+                                          'sans-serif');
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(this.textParams_.text || '', 0, 480);
 
-    var trimRect = imagelib.drawing.getTrimRect(srcCtx, srcSize);
+        continue_(ctx, size);
+        break;
+    }
 
-    var padPx = (textParams.padding || 0) * 5;
-    var targetRect = { x: padPx, y: padPx, w: trimRect.w, h: trimRect.h };
-    var outCtx = imagelib.drawing.context({
-      w: trimRect.w + padPx * 2,
-      h: trimRect.h + padPx * 2
-    });
+    function continue_(srcCtx, srcSize) {
+      // Apply trimming
+      var trimRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
+      if (me.trimFormValues_['trim']) {
+        trimRect = imagelib.drawing.getTrimRect(srcCtx, srcSize);
+      }
 
-    // TODO: replace with a simple draw() as the centering is useless
-    imagelib.drawing.drawCenterInside(outCtx, srcCtx, targetRect, trimRect);
+      var padPx = (me.trimFormValues_['pad'] || 0) * 10;
+      var targetRect = { x: padPx, y: padPx, w: trimRect.w, h: trimRect.h };
+      var outCtx = imagelib.drawing.context({
+        w: trimRect.w + padPx * 2,
+        h: trimRect.h + padPx * 2
+      });
 
-    this.setValueImageUri(outCtx.canvas.toDataURL());
+      // TODO: replace with a simple draw() as the centering is useless
+      imagelib.drawing.drawCenterInside(outCtx, srcCtx, targetRect, trimRect);
+
+      // Set the final URI value and show a preview
+      me.valueUri_ = outCtx.canvas.toDataURL();
+
+      if (me.imagePreview_) {
+        me.imagePreview_.attr('src', me.valueUri_);
+        me.imagePreview_.show();
+      }
+
+      me.form_.notifyChanged_();
+    }
   }
 });
 
@@ -1135,6 +1385,17 @@ studio.forms.ImageField.clipartList_ = [
   'icons/search.svg',
   'icons/share.svg',
   'icons/export.svg'
+];
+
+studio.forms.ImageField.fontList_ = [
+  { title: 'Helvetica / Arial', stack: 'helvetica, arial, sans-serif' },
+  { title: 'Georgia', stack: 'georgia, serif' },
+  { title: 'Book Antiqua / Palatino',
+    stack: '"Book Antiqua", palatino, "Palatino Linotype", serif' },
+  { title: 'Courier', stack: 'courier, monospace' },
+  { title: 'Courier New', stack: '"Courier New", monospace' },
+  { title: 'Webdings', stack: '"Webdings"' },
+  { title: 'Wingdings', stack: '"Wingdings"' },
 ];
 
 

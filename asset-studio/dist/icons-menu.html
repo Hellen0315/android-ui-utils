@@ -25,7 +25,11 @@
         <h1><a href="index.html">Android Asset Studio</a></h1>
       </div>
       <div id="page-header">
-        <h2>Icon Generator <span>&mdash; Menu icons</span></h2>
+        <div id="breadcrumb">
+          <a href="index.html">Android Asset Studio</a> &raquo;
+          <a href="index.html#group-icon-generators">Icon generators</a> &raquo;
+          <em>Menu icons</em>
+        </div>
         <p id="page-intro">
           The <strong>menu icon generator</strong> will create icons that you
           can use in your Android application, from a variety of source images.
@@ -33,7 +37,11 @@
           below.
         </p>
       </div>
-      <div id="inputs"></div>
+      <div id="inputs">
+        <div id="inputs-form"></div>
+        <input type="checkbox" id="output-try-system" checked="checked">
+        <label for="output-try-system">Use framework asset where possible</label><br>
+      </div>
       <div id="outputs">
         <h3>Output images</h3>
       </div>
@@ -43,6 +51,10 @@
     </div>
 
     <script>
+      $('#output-try-system')
+          .button()
+          .change(regenerate);
+
       // Create image output slots
       for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
         studio.ui.createImageOutputSlot({
@@ -63,23 +75,47 @@
         'ldpi-fxMult': 0.5
       };
 
+      var sysReplacements = {
+        'search.svg': 'search',
+        'home.svg': 'home',
+        'refresh.svg': 'refresh',
+        'share.svg': 'share'
+      };
+
       /**
        * Main image generation routine.
        */
       function regenerate() {
         var values = form.getValues();
+        var sourceName = values['source'].name;
 
-        if (!values['source']) {
+        if ($('#output-try-system').is(':checked') &&
+            sourceName &&
+            sysReplacements.hasOwnProperty(sourceName)) {
+          var replacement = sysReplacements[sourceName];
+          $('#out-icon-hdpi').attr('src',
+              'http://android.git.kernel.org/?p=platform/frameworks/base.git;' +
+              'a=blob_plain;f=core/res/res/drawable-hdpi/ic_menu_' + replacement
+              + '.png;hb=master');
+          $('#out-icon-mdpi').attr('src',
+              'http://android.git.kernel.org/?p=platform/frameworks/base.git;' +
+              'a=blob_plain;f=core/res/res/drawable-mdpi/ic_menu_' + replacement
+              + '.png;hb=master');
+          $('#out-icon-ldpi').attr('src', '');
           return;
         }
 
-        imagelib.loadFromUri(values['source'], function(srcImg) {
+        if (!values['source'].uri) {
+          return;
+        }
+
+        imagelib.loadFromUri(values['source'].uri, function(srcImg) {
           if (!srcImg) {
             return;
           }
 
           var srcSize = { w: srcImg.naturalWidth, h: srcImg.naturalHeight };
-          var srcRect = imagelib.drawing.getTrimRect(srcImg, srcSize);
+          var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
           for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
             var iconSize = paramResources[density + '-iconSize'];
@@ -140,10 +176,13 @@
       var form = new studio.forms.Form('icon-form', {
         onChange: regenerate,
         fields: [
-          new studio.forms.ImageField('source', { title: 'Source' })
+          new studio.forms.ImageField('source', {
+            title: 'Source',
+            defaultValueTrim: 1
+          })
         ]
       });
-      form.createUI($('#inputs').get(0));
+      form.createUI($('#inputs-form').get(0));
     </script>
   </body>
 </html>
