@@ -1385,12 +1385,22 @@ studio.forms.ImageField = studio.forms.Field.extend({
 });
 
 studio.forms.ImageField.clipartList_ = [
+  'icons/add.svg',
+  'icons/back.svg',
+  'icons/block.svg',
+  'icons/camera.svg',
+  'icons/edit.svg',
+  'icons/export.svg',
   'icons/home.svg',
   'icons/map_pin.svg',
+  'icons/mylocation.svg',
+  'icons/play_clip.svg',
   'icons/refresh.svg',
   'icons/search.svg',
   'icons/share.svg',
-  'icons/export.svg'
+  'icons/sort_by_size.svg',
+  'icons/star.svg',
+  'icons/stop.svg'
 ];
 
 studio.forms.ImageField.fontList_ = [
