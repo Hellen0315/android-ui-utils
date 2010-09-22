@@ -554,6 +554,37 @@ window.imagelib = imagelib;
 
 var studio = {};
 
+studio.checkBrowser = function() {
+  var chromeMatch = navigator.userAgent.match(/Chrome\/(\d)/);
+  var browserSupported = false;
+  if (chromeMatch) {
+    var chromeVersion = parseInt(chromeMatch[1], 10);
+    if (chromeVersion >= 6) {
+      browserSupported = true;
+    }
+  }
+
+  if (!browserSupported) {
+    $('<div>')
+      .attr('title', 'Your browser is not supported.')
+      .append($('<span class="ui-icon ui-icon-alert" ' +
+                'style="float:left; margin:0 7px 50px 0;">'))
+      .append($('<p>')
+        .html('Currently only ' +
+              '<a href="http://www.google.com/chrome">Chrome 6+</a> ' +
+              'is supported. Your mileage may vary with other browsers.'))
+      .dialog({
+  			modal: true,
+  			resizable: false,
+  			buttons: {
+      		'Close': function() {
+            $(this).dialog('close');
+    			}
+			  }
+  		});
+  }
+};
+
 // From sample code at http://jqueryui.com/demos/autocomplete/#combobox
 
 (function( $ ) {
@@ -1341,14 +1372,16 @@ studio.forms.ImageField = studio.forms.Field.extend({
         break;
 
       case 'text':
-        var size = { w: 1200, h: 480 };
+        var size = { w: 3000, h: 480 };
         var ctx = imagelib.drawing.context(size);
+        var text = this.textParams_.text || '';
 
         ctx.fillStyle = '#000';
         ctx.font = 'bold 480px/480px ' + (this.textParams_.fontStack ||
                                           'sans-serif');
         ctx.textBaseline = 'bottom';
-        ctx.fillText(this.textParams_.text || '', 0, 480);
+        ctx.fillText(text, 0, 480);
+        size.w = ctx.measureText(text).width || 480;
 
         continue_(ctx, size);
         break;

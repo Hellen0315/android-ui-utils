@@ -359,14 +359,16 @@ studio.forms.ImageField = studio.forms.Field.extend({
         break;
 
       case 'text':
-        var size = { w: 1200, h: 480 };
+        var size = { w: 3000, h: 480 };
         var ctx = imagelib.drawing.context(size);
+        var text = this.textParams_.text || '';
 
         ctx.fillStyle = '#000';
         ctx.font = 'bold 480px/480px ' + (this.textParams_.fontStack ||
                                           'sans-serif');
         ctx.textBaseline = 'bottom';
-        ctx.fillText(this.textParams_.text || '', 0, 480);
+        ctx.fillText(text, 0, 480);
+        size.w = ctx.measureText(text).width || 480;
 
         continue_(ctx, size);
         break;
