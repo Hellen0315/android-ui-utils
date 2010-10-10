@@ -14,12 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-mkdir -p _rawshapes
+mkdir -p _sandbox/rawshapes
 for shpfl in `ls res/raw`; do
   echo $shpfl
   if [[ "$shpfl" =~ ".9.png" ]]; then
-    python stengen/shape_from_9patch.py res/raw/$shpfl > _rawshapes/$shpfl.xml
+    python stengen/shape_from_9patch.py res/raw/$shpfl > _sandbox/rawshapes/$shpfl.xml
   else
-    python stengen/shape_from_png.py res/raw/$shpfl > _rawshapes/$shpfl.xml
+    python stengen/shape_from_png.py res/raw/$shpfl > _sandbox/rawshapes/$shpfl.xml
   fi
 done

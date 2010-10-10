@@ -1,7 +1,7 @@
 .DS_Store
 Thumbs.db
 .*\.pyc
-.*/_[^.]*$
+.*/_sandbox$
 asset-studio/out
 asset-studio/src/js/local.properties
 icon-templates/demo-app/bin/
