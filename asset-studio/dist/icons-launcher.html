@@ -88,7 +88,7 @@
       var resList = {};
       for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
         for (var shape in {'square':1, 'circle':1})
-          for (var type in {'back':1, 'fore':1, 'mask':1})
+          for (var type in {'back':1, 'fore1':1, 'fore2':1, 'mask':1})
             resList[shape + '-' + density + '-' + type] = (
               'res/launcher-stencil/' + shape + '/' + density + '/' + type + '.png');
 
@@ -156,9 +156,10 @@
             }
             tmpCtx.restore();
 
+            var foreEffect = values['foreEffect'];
             imagelib.drawing.copy(outCtx, imageResources[shape + '-' + density + '-back'], iconSize);
             imagelib.drawing.copy(outCtx, tmpCtx, iconSize);
-            imagelib.drawing.copy(outCtx, imageResources[shape + '-' + density + '-fore'], iconSize);
+            imagelib.drawing.copy(outCtx, imageResources[shape + '-' + density + '-fore' + foreEffect], iconSize);
 
             imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
               return function(img) {
@@ -206,6 +207,15 @@
             defaultValue: '#000000',
             alpha: true,
             defaultAlpha: 0
+          }),
+          new studio.forms.EnumField('foreEffect', {
+            title: 'Foreground effects',
+            buttons: true,
+            options: [
+              { id: '1', title: 'Simple' },
+              { id: '2', title: 'Fancy' }
+            ],
+            defaultValue: '1'
           })
         ]
       });
