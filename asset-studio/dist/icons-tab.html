@@ -29,6 +29,11 @@
     <link rel="stylesheet" href="lib/colorpicker/css/colorpicker.css">
     <script src="lib/colorpicker/js/colorpicker.js"></script>
 
+    <!-- for .ZIP downloads -->
+    <script src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
+    <script src="lib/downloadify/js/downloadify.min.js"></script>
+    <script src="lib/jszip/jszip.js"></script>
+
     <link rel="stylesheet" href="lib/jquery-ui-1.8.4.android-theme/theme.css">
 
     <link rel="stylesheet" href="css/studio.css">
@@ -66,7 +71,7 @@
       </div>
       <div id="inputs"></div>
       <div id="outputs">
-        <h3>Output images</h3>
+        <h3>Output images <div id="zip-button"></div></h3>
       </div>
       <div id="footer">
         <p>See the source at the <a href="http://code.google.com/p/android-ui-utils">android-ui-utils</a> Google Code project.</p>
@@ -76,13 +81,18 @@
     <script>
       $(studio.checkBrowser);
 
+      var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
+
       // Create image output slots
-      for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
-        studio.ui.createImageOutputSlot({
-          container: $('#outputs').get(0),
-          id: 'out-icon-' + density,
-          label: 'drawable-' + density
-        });
+      for (var type in {'selected':1, 'unselected':1 }) {
+        for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
+          studio.ui.createImageOutputSlot({
+            container: $('#outputs').get(0),
+            id: 'out-icon-' + type + '-' + density,
+            label: 'drawable-' + density + ', ' + type
+          });
+        $('<hr>').appendTo($('#outputs'));
+      }
 
       var paramResources = {
         'hdpi-iconSize': { w: 48, h: 48 },
@@ -96,11 +106,24 @@
         'ldpi-fxMult': 0.5
       };
 
+      var drawableXmlTemplate = [
+        '<?xml version="1.0" encoding="utf-8"?>',
+        '<selector xmlns:android="http://schemas.android.com/apk/res/android">',
+        '  <item android:state_selected="true" android:state_pressed="false" android:drawable="@drawable/%s_selected" />',
+        '  <item android:drawable="@drawable/%s_unselected" />',
+        '</selector>',
+        ''
+      ].join('\n');
+
       /**
        * Main image generation routine.
        */
       function regenerate() {
         var values = form.getValues();
+
+        var iconName = 'ic_tab_' + values['name'];
+        zipper.clear();
+        zipper.setZipFilename(iconName + '.zip');
 
         if (!values['source'].uri) {
           return;
@@ -114,54 +137,68 @@
           var srcSize = { w: srcImg.naturalWidth, h: srcImg.naturalHeight };
           var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
-          for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
-            var iconSize = paramResources[density + '-iconSize'];
-            var fxMult = paramResources[density + '-fxMult'];
-            var targetRect = paramResources[density + '-targetRect'];
+          for (var type in {'selected':1, 'unselected':1}) {
+            for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+              var iconSize = paramResources[density + '-iconSize'];
+              var fxMult = paramResources[density + '-fxMult'];
+              var targetRect = paramResources[density + '-targetRect'];
 
-            var outCtx = imagelib.drawing.context(iconSize);
-            var srcCtx = imagelib.drawing.context(iconSize);
+              var outCtx = imagelib.drawing.context(iconSize);
+              var srcCtx = imagelib.drawing.context(iconSize);
 
-            imagelib.drawing.drawCenterInside(srcCtx, srcImg, targetRect, srcRect);
+              imagelib.drawing.drawCenterInside(srcCtx, srcImg, targetRect, srcRect);
 
-            var effects = [];
-            if (values['selected']) {
-              effects = [
-                {
-                  effect: 'outer-shadow',
-                  color: '#000',
-                  opacity: 0.25,
-                  blur: 5 * fxMult
-                },
-                {
-                  effect: 'fill-color',
-                  color: '#fff'
-                }
-              ];
-            } else {
-              effects = [
-                {
-                  effect: 'fill-color',
-                  color: '#808080'
-                }
-              ];
+              var effects = [];
+              if (type == 'selected') {
+                effects = [
+                  {
+                    effect: 'outer-shadow',
+                    color: '#000',
+                    opacity: 0.25,
+                    blur: 5 * fxMult
+                  },
+                  {
+                    effect: 'fill-color',
+                    color: '#fff'
+                  }
+                ];
+              } else {
+                effects = [
+                  {
+                    effect: 'fill-color',
+                    color: '#808080'
+                  }
+                ];
+              }
+
+              imagelib.drawing.fx(effects, outCtx, srcCtx, iconSize);
+
+              /*imagelib.drawing.applyFilter(
+                new ConvolutionFilter(
+                  [-1, -1,  0,
+                   -1,  1,  1,
+                    0,  1,  1], 2, -128),
+                outCtx, iconSize);*/
+
+              zipper.add({
+                name: 'res/drawable-' + density + '/' +
+                      iconName + '_' + type + '.png',
+                base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
+              });
+
+              imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(type, density) {
+                return function(img) {
+                  $('#out-icon-' + type + '-' + density).attr('src', img.src);
+                };
+              }(type, density));
             }
-
-            imagelib.drawing.fx(effects, outCtx, srcCtx, iconSize);
-
-            /*imagelib.drawing.applyFilter(
-              new ConvolutionFilter(
-                [-1, -1,  0,
-                 -1,  1,  1,
-                  0,  1,  1], 2, -128),
-              outCtx, iconSize);*/
-
-            imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
-              return function(img) {
-                $('#out-icon-' + density).attr('src', img.src);
-              };
-            }(density));
           }
+
+          // Add drawable XML to the zip file
+          zipper.add({
+            name: 'res/drawable/' + iconName + '.xml',
+            textData: drawableXmlTemplate.replace(/%s/g, iconName)
+          });
         });
       }
 
@@ -173,7 +210,11 @@
             helpText: 'Must be alpha-transparent',
             defaultValueTrim: 1
           }),
-          new studio.forms.BooleanField('selected', { title: 'Selected', defaultValue: false })
+          new studio.forms.TextField('name', {
+            title: 'Icon name',
+            helpText: 'Used when generating ZIP files. Becomes <code>ic_tab_&lt;name&gt;</code>.',
+            defaultValue: 'example'
+          })
         ]
       });
       form.createUI($('#inputs').get(0));

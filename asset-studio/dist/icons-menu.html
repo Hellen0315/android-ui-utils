@@ -26,6 +26,11 @@
     <script src="http://canvg.googlecode.com/svn/trunk/rgbcolor.js"></script> 
     <script src="http://canvg.googlecode.com/svn/trunk/canvg.js"></script>
 
+    <!-- for .ZIP downloads -->
+    <script src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
+    <script src="lib/downloadify/js/downloadify.min.js"></script>
+    <script src="lib/jszip/jszip.js"></script>
+
     <link rel="stylesheet" href="lib/colorpicker/css/colorpicker.css">
     <script src="lib/colorpicker/js/colorpicker.js"></script>
 
@@ -70,7 +75,7 @@
         <label for="output-try-system">Use framework asset where possible</label><br>
       </div>
       <div id="outputs">
-        <h3>Output images</h3>
+        <h3>Output images <div id="zip-button"></div></h3>
       </div>
       <div id="footer">
         <p>See the source at the <a href="http://code.google.com/p/android-ui-utils">android-ui-utils</a> Google Code project.</p>
@@ -79,6 +84,8 @@
 
     <script>
       $(studio.checkBrowser);
+
+      var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
 
       $('#output-try-system')
           .button()
@@ -130,6 +137,10 @@
       function regenerate() {
         var values = form.getValues();
         var sourceName = values['source'].name;
+
+        var iconName = 'ic_menu_' + values['name'];
+        zipper.clear();
+        zipper.setZipFilename(iconName + '.zip');
 
         if ($('#output-try-system').is(':checked') &&
             sourceName &&
@@ -206,6 +217,11 @@
               }
             ], outCtx, srcCtx, iconSize);
 
+            zipper.add({
+              name: 'res/drawable-' + density + '/' + iconName + '.png',
+              base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
+            });
+
             imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
               return function(img) {
                 $('#out-icon-' + density).attr('src', img.src);
@@ -222,6 +238,11 @@
             title: 'Source',
             helpText: 'Must be alpha-transparent',
             defaultValueTrim: 0
+          }),
+          new studio.forms.TextField('name', {
+            title: 'Icon name',
+            helpText: 'Used when generating ZIP files. Becomes <code>ic_menu_&lt;name&gt;</code>.',
+            defaultValue: 'example'
           })
         ]
       });

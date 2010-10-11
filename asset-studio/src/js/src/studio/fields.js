@@ -67,7 +67,7 @@ studio.forms.Field = Base.extend({
           .append($('<div>')
             .addClass('form-field-help-text')
             .css('display', this.params_.helpText ? '' : 'none')
-            .text(this.params_.helpText))
+            .html(this.params_.helpText))
       )
       .append(
         $('<div>')

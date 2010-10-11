@@ -287,6 +287,18 @@ a {
   margin-top: 4px;
 }
 
+#outputs hr {
+  border: 0;
+  margin: 4px 0;
+  height: 1px;
+}
+
+#zip-button {
+  display: inline-block;
+  margin-left: 12px;
+  vertical-align: middle;
+}
+
 /* bug fixes */
 
 .colorpicker {

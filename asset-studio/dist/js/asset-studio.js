@@ -790,7 +790,7 @@ studio.forms.Field = Base.extend({
           .append($('<div>')
             .addClass('form-field-help-text')
             .css('display', this.params_.helpText ? '' : 'none')
-            .text(this.params_.helpText))
+            .html(this.params_.helpText))
       )
       .append(
         $('<div>')
@@ -1517,6 +1517,65 @@ studio.ui.createImageOutputSlot = function(params) {
     .append($('<img>')
       .attr('id', params.id))
     .appendTo(params.container);
+};
+
+studio.zip = {};
+
+studio.zip.createDownloadifyZipButton = function(element, options) {
+  // TODO: badly needs to be documented :-)
+
+  var zipperHandle = {
+    fileSpecs_: []
+  };
+
+  options = options || {};
+  options.swf = options.swf || 'lib/downloadify/media/downloadify.swf';
+  options.downloadImage = options.downloadImage ||
+      'images/download-zip-button.png';
+  options.width = options.width || 133;
+  options.height = options.height || 30;
+  options.dataType = 'base64';
+  options.onError = options.onError || function() {
+    if (zipperHandle.fileSpecs_.length)
+      alert('There was an error downloading the .zip');
+  };
+
+  // Zip file data and filename generator functions.
+  options.filename = function() {
+    return zipperHandle.zipFilename_ || 'output.zip';
+  };
+  options.data = function() {
+    if (!zipperHandle.fileSpecs_.length)
+      return '';
+
+    var zip = new JSZip();
+    for (var i = 0; i < zipperHandle.fileSpecs_.length; i++) {
+      var fileSpec = zipperHandle.fileSpecs_[i];
+      if (fileSpec.base64data)
+        zip.add(fileSpec.name, fileSpec.base64data, {base64:true});
+      else if (fileSpec.textData)
+        zip.add(fileSpec.name, fileSpec.textData);
+    }
+    return zip.generate();
+  };
+
+  var downloadifyHandle = Downloadify.create($(element).get(0), options);
+  //downloadifyHandle.disable();
+
+  // Set up zipper control functions
+  zipperHandle.setZipFilename = function(zipFilename) {
+    zipperHandle.zipFilename_ = zipFilename;
+  };
+  zipperHandle.clear = function() {
+    zipperHandle.fileSpecs_ = [];
+    //downloadifyHandle.disable();
+  };
+  zipperHandle.add = function(spec) {
+    zipperHandle.fileSpecs_.push(spec);
+    //downloadifyHandle.enable();
+  };
+
+  return zipperHandle;
 };
 
 window.studio = studio;
