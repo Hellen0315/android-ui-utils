@@ -37,6 +37,11 @@
     <link rel="stylesheet" href="lib/jquery-ui-1.8.4.android-theme/theme.css">
 
     <link rel="stylesheet" href="css/studio.css">
+    <style>
+      .out-image-block {
+        width: 15em;
+      }
+    </style>
     <script src="js/asset-studio.pack.js"></script>
 
     <!-- TODO: remove Analytics tracking if you're building the tools locally! -->
@@ -69,9 +74,16 @@
           below.
         </p>
       </div>
-      <div id="inputs"></div>
+      <div id="inputs">
+        <div id="inputs-form"></div>
+        <input type="checkbox" id="output-show-guides">
+        <label for="output-show-guides">Show Guides</label>
+      </div>
       <div id="outputs">
-        <h3>Output images <div id="zip-button"></div></h3>
+        <h3>
+          Output images
+          <div id="zip-button"></div>
+        </h3>
       </div>
       <div id="footer">
         <p>See the source at the <a href="http://code.google.com/p/android-ui-utils">android-ui-utils</a> Google Code project.</p>
@@ -80,21 +92,27 @@
 
     <script>
       $(studio.checkBrowser);
+      $('#output-show-guides').button().click(regenerate);
 
       var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
 
       // Create image output slots
-      for (var type in {'selected':1, 'unselected':1 }) {
-        for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
-          studio.ui.createImageOutputSlot({
-            container: $('#outputs').get(0),
-            id: 'out-icon-' + type + '-' + density,
-            label: 'drawable-' + density + ', ' + type
-          });
-        $('<hr>').appendTo($('#outputs'));
+      for (var version in {'X':1, '5':1}) {
+        var versionStr = (version == 'X') ? '' : ('-v' + version);
+
+        for (var type in {'selected':1, 'unselected':1 }) {
+          for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
+            studio.ui.createImageOutputSlot({
+              container: $('#outputs').get(0),
+              id: 'out-icon-' + version + '-' + type + '-' + density,
+              label: 'drawable-' + density + versionStr + ', ' + type
+            });
+
+          $('<hr>').appendTo($('#outputs'));
+        }
       }
 
-      var paramResources = {
+      var PARAM_RESOURCES = {
         'hdpi-iconSize': { w: 48, h: 48 },
         'mdpi-iconSize': { w: 32, h: 32 },
         'ldpi-iconSize': { w: 24, h: 24 },
@@ -120,6 +138,7 @@
        */
       function regenerate() {
         var values = form.getValues();
+        var showGuides = $('#output-show-guides').is(':checked');
 
         var iconName = 'ic_tab_' + values['name'];
         zipper.clear();
@@ -137,60 +156,133 @@
           var srcSize = { w: srcImg.naturalWidth, h: srcImg.naturalHeight };
           var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
-          for (var type in {'selected':1, 'unselected':1}) {
-            for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
-              var iconSize = paramResources[density + '-iconSize'];
-              var fxMult = paramResources[density + '-fxMult'];
-              var targetRect = paramResources[density + '-targetRect'];
+          for (var version in {'X':1, '5':1}) {
+            for (var type in {'selected':1, 'unselected':1}) {
+              for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+                var iconSize = PARAM_RESOURCES[density + '-iconSize'];
+                var fxMult = PARAM_RESOURCES[density + '-fxMult'];
+                var targetRect = PARAM_RESOURCES[density + '-targetRect'];
 
-              var outCtx = imagelib.drawing.context(iconSize);
-              var srcCtx = imagelib.drawing.context(iconSize);
+                var outCtx = imagelib.drawing.context(iconSize);
+                var srcCtx = imagelib.drawing.context(iconSize);
 
-              imagelib.drawing.drawCenterInside(srcCtx, srcImg, targetRect, srcRect);
+                imagelib.drawing.drawCenterInside(srcCtx, srcImg, targetRect, srcRect);
 
-              var effects = [];
-              if (type == 'selected') {
-                effects = [
-                  {
-                    effect: 'outer-shadow',
-                    color: '#000',
-                    opacity: 0.25,
-                    blur: 5 * fxMult
-                  },
-                  {
-                    effect: 'fill-color',
-                    color: '#fff'
+                var effects = [];
+                if (version == 'X') {
+                  if (type == 'selected') {
+                    effects = [
+                      {
+                        effect: 'inner-shadow',
+                        color: '#000',
+                        opacity: 0.2,
+                        blur: 3 * fxMult,
+                        translate: { y: 3 * fxMult }
+                      },
+                      {
+                        effect: 'inner-shadow',
+                        color: '#000',
+                        opacity: 0.35,
+                        translate: { y: 1 }
+                      },
+                      {
+                        effect: 'inner-shadow',
+                        color: '#fff',
+                        opacity: 0.35,
+                        translate: { y: -1 }
+                      },
+                      {
+                        effect: 'fill-lineargradient',
+                        from: { x: 0, y: 0 },
+                        to: { x: 0, y: iconSize.h },
+                        colors: [
+                          { offset: 0, color: '#a3a3a3' },
+                          { offset: 1.0, color: '#787878' }
+                        ]
+                      }
+                    ];
+                  } else {
+                    effects = [
+                      {
+                        effect: 'inner-shadow',
+                        color: '#000',
+                        opacity: 0.1,
+                        blur: 3 * fxMult,
+                        translate: { y: 3 * fxMult }
+                      },
+                      {
+                        effect: 'inner-shadow',
+                        color: '#000',
+                        opacity: 0.35,
+                        translate: { y: 1 }
+                      },
+                      {
+                        effect: 'inner-shadow',
+                        color: '#fff',
+                        opacity: 0.35,
+                        translate: { y: -1 }
+                      },
+                      {
+                        effect: 'fill-lineargradient',
+                        from: { x: 0, y: 0 },
+                        to: { x: 0, y: iconSize.h },
+                        colors: [
+                          { offset: 0.25, color: '#f9f9f9' },
+                          { offset: 1.0, color: '#dfdfdf' }
+                        ]
+                      }
+                    ];
                   }
-                ];
-              } else {
-                effects = [
-                  {
-                    effect: 'fill-color',
-                    color: '#808080'
+                } else if (version == '5') {
+                  if (type == 'selected') {
+                    effects = [
+                      {
+                        effect: 'outer-shadow',
+                        color: '#000',
+                        opacity: 0.25,
+                        blur: 5 * fxMult
+                      },
+                      {
+                        effect: 'fill-color',
+                        color: '#fff'
+                      }
+                    ];
+                  } else {
+                    effects = [
+                      {
+                        effect: 'fill-color',
+                        color: '#808080'
+                      }
+                    ];
                   }
-                ];
+                }
+
+                imagelib.drawing.fx(effects, outCtx, srcCtx, iconSize);
+
+                /*imagelib.drawing.applyFilter(
+                  new ConvolutionFilter(
+                    [-1, -1,  0,
+                     -1,  1,  1,
+                      0,  1,  1], 2, -128),
+                  outCtx, iconSize);*/
+
+                zipper.add({
+                  name: 'res/drawable-' + density + '/' +
+                        iconName + '_' + type + '.png',
+                  base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
+                });
+
+                if (showGuides)
+                  studio.ui.drawImageGuideRects(outCtx, iconSize, [
+                    targetRect
+                  ]);
+
+                imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(version, type, density) {
+                  return function(img) {
+                    $('#out-icon-' + version + '-' + type + '-' + density).attr('src', img.src);
+                  };
+                }(version, type, density));
               }
-
-              imagelib.drawing.fx(effects, outCtx, srcCtx, iconSize);
-
-              /*imagelib.drawing.applyFilter(
-                new ConvolutionFilter(
-                  [-1, -1,  0,
-                   -1,  1,  1,
-                    0,  1,  1], 2, -128),
-                outCtx, iconSize);*/
-
-              zipper.add({
-                name: 'res/drawable-' + density + '/' +
-                      iconName + '_' + type + '.png',
-                base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
-              });
-
-              imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(type, density) {
-                return function(img) {
-                  $('#out-icon-' + type + '-' + density).attr('src', img.src);
-                };
-              }(type, density));
             }
           }
 
@@ -217,7 +309,7 @@
           })
         ]
       });
-      form.createUI($('#inputs').get(0));
+      form.createUI($('#inputs-form').get(0));
     </script>
   </body>
 </html>

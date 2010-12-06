@@ -26,17 +26,22 @@
     <script src="http://canvg.googlecode.com/svn/trunk/rgbcolor.js"></script> 
     <script src="http://canvg.googlecode.com/svn/trunk/canvg.js"></script>
 
+    <link rel="stylesheet" href="lib/colorpicker/css/colorpicker.css">
+    <script src="lib/colorpicker/js/colorpicker.js"></script>
+
     <!-- for .ZIP downloads -->
     <script src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
     <script src="lib/downloadify/js/downloadify.min.js"></script>
     <script src="lib/jszip/jszip.js"></script>
 
-    <link rel="stylesheet" href="lib/colorpicker/css/colorpicker.css">
-    <script src="lib/colorpicker/js/colorpicker.js"></script>
-
     <link rel="stylesheet" href="lib/jquery-ui-1.8.4.android-theme/theme.css">
 
     <link rel="stylesheet" href="css/studio.css">
+    <style>
+      .out-image-block {
+        min-width: 15em;
+      }
+    </style>
     <script src="js/asset-studio.pack.js"></script>
 
     <!-- TODO: remove Analytics tracking if you're building the tools locally! -->
@@ -72,10 +77,15 @@
       <div id="inputs">
         <div id="inputs-form"></div>
         <input type="checkbox" id="output-try-system" checked="checked">
-        <label for="output-try-system">Use framework asset where possible</label><br>
+        <label for="output-try-system">Use framework asset where possible</label>
+        <input type="checkbox" id="output-show-guides">
+        <label for="output-show-guides">Show Guides</label>
       </div>
       <div id="outputs">
-        <h3>Output images <div id="zip-button"></div></h3>
+        <h3>
+          Output images
+          <div id="zip-button"></div>
+        </h3>
       </div>
       <div id="footer">
         <p>See the source at the <a href="http://code.google.com/p/android-ui-utils">android-ui-utils</a> Google Code project.</p>
@@ -84,6 +94,7 @@
 
     <script>
       $(studio.checkBrowser);
+      $('#output-show-guides').button().click(regenerate);
 
       var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
 
@@ -99,16 +110,19 @@
           label: 'drawable-' + density
         });
 
-      var paramResources = {
+      var PARAM_RESOURCES = {
         'hdpi-iconSize': { w: 72, h: 72 },
         'mdpi-iconSize': { w: 48, h: 48 },
         'ldpi-iconSize': { w: 36, h: 36 },
-        'hdpi-targetRect': { x: 0, y: 0, w: 72, h: 72 },
-        'mdpi-targetRect': { x: 0, y: 0, w: 48, h: 48 },
-        'ldpi-targetRect': { x: 0, y: 0, w: 36, h: 36 },
-//        'hdpi-targetRect': { x: 8, y: 8, w: 56, h: 56 },
-//        'mdpi-targetRect': { x: 5, y: 5, w: 38, h: 38 },
-//        'ldpi-targetRect': { x: 4, y: 4, w: 28, h: 28 },
+        'hdpi-guideRect': { x: 12, y: 12, w: 48, h: 48 }, // 56 pre-Gingerbread
+        'mdpi-guideRect': { x: 8, y: 8, w: 32, h: 32 }, // 38 pre-Gingerbread
+        'ldpi-guideRect': { x: 6, y: 6, w: 24, h: 24 }, // 28 pre-Gingerbread
+        'hdpi-targetRect': { x: 12, y: 12, w: 48, h: 48 },
+        'mdpi-targetRect': { x: 8, y: 8, w: 32, h: 32 },
+        'ldpi-targetRect': { x: 6, y: 6, w: 24, h: 24 },
+//        'hdpi-targetRect': { x: 0, y: 0, w: 72, h: 72 },
+//        'mdpi-targetRect': { x: 0, y: 0, w: 48, h: 48 },
+//        'ldpi-targetRect': { x: 0, y: 0, w: 36, h: 36 },
         'hdpi-fxMult': 1.0,
         'mdpi-fxMult': 0.666667,
         'ldpi-fxMult': 0.5
@@ -137,6 +151,7 @@
       function regenerate() {
         var values = form.getValues();
         var sourceName = values['source'].name;
+        var showGuides = $('#output-show-guides').is(':checked');
 
         var iconName = 'ic_menu_' + values['name'];
         zipper.clear();
@@ -171,9 +186,10 @@
           var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
           for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
-            var iconSize = paramResources[density + '-iconSize'];
-            var fxMult = paramResources[density + '-fxMult'];
-            var targetRect = paramResources[density + '-targetRect'];
+            var iconSize = PARAM_RESOURCES[density + '-iconSize'];
+            var fxMult = PARAM_RESOURCES[density + '-fxMult'];
+            var guideRect = PARAM_RESOURCES[density + '-guideRect'];
+            var targetRect = PARAM_RESOURCES[density + '-targetRect'];
 
             var outCtx = imagelib.drawing.context(iconSize);
             var srcCtx = imagelib.drawing.context(iconSize);
@@ -181,12 +197,6 @@
             imagelib.drawing.drawCenterInside(srcCtx, srcImg, targetRect, srcRect);
 
             imagelib.drawing.fx([
-              {
-                effect: 'outer-shadow',
-                color: '#fff',
-                opacity: 0.55,
-                blur: 3 * fxMult
-              },
               {
                 effect: 'inner-shadow',
                 color: '#000',
@@ -203,7 +213,7 @@
               {
                 effect: 'inner-shadow',
                 color: '#fff',
-                opacity: 0.7,
+                opacity: 0.35,
                 translate: { y: -1 }
               },
               {
@@ -222,6 +232,11 @@
               base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
             });
 
+            if (showGuides)
+              studio.ui.drawImageGuideRects(outCtx, iconSize, [
+                guideRect
+              ]);
+
             imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
               return function(img) {
                 $('#out-icon-' + density).attr('src', img.src);
@@ -237,7 +252,7 @@
           new studio.forms.ImageField('source', {
             title: 'Source',
             helpText: 'Must be alpha-transparent',
-            defaultValueTrim: 0
+            defaultValueTrim: 1
           }),
           new studio.forms.TextField('name', {
             title: 'Icon name',

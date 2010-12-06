@@ -18,10 +18,34 @@ studio.ui = {};
 
 studio.ui.createImageOutputSlot = function(params) {
   $('<div>')
-    .addClass('out-image-container')
+    .addClass('out-image-block')
     .append($('<div>')
       .text(params.label))
     .append($('<img>')
+      .addClass('out-image')
       .attr('id', params.id))
     .appendTo(params.container);
 };
+
+
+studio.ui.drawImageGuideRects = function(ctx, size, guides) {
+  guides = guides || [];
+
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, size.w, size.h);
+  ctx.globalAlpha = 1.0;
+
+  var guideColors = studio.ui.drawImageGuideRects.guideColors_;
+
+  for (var i = 0; i < guides.length; i++) {
+    ctx.strokeStyle = guideColors[(i - 1) % guideColors.length];
+    ctx.strokeRect(guides[i].x + 0.5, guides[i].y + 0.5, guides[i].w - 1, guides[i].h - 1);
+  }
+
+  ctx.restore();
+};
+studio.ui.drawImageGuideRects.guideColors_ = [
+  '#f00'
+];

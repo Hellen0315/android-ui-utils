@@ -179,7 +179,7 @@ imagelib.drawing.blur = function(radius, ctx, size) {
 	}
 
   imagelib.drawing.applyFilter(
-    new ConvolutionFilter(matrix, total, 0),
+    new ConvolutionFilter(matrix, total, 0, true),
     ctx, size);
 };
 
@@ -200,13 +200,11 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
   var tmpCtx = imagelib.drawing.context(size);
   var tmpCtx2 = imagelib.drawing.context(size);
 
-  dstCtx.save();
-
   // Render outer effects
   for (var i = 0; i < outerEffects.length; i++) {
     var effect = outerEffects[i];
 
-    tmpCtx.save();
+    dstCtx.save();
 
     switch (effect.effect) {
       case 'outer-shadow':
@@ -216,15 +214,17 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
           imagelib.drawing.blur(effect.blur, tmpCtx, size);
         imagelib.drawing.makeAlphaMask(tmpCtx, size, effect.color || '#000');
         if (effect.translate)
-          tmpCtx.translate(effect.translate.x || 0, effect.translate.y || 0);
+          dstCtx.translate(effect.translate.x || 0, effect.translate.y || 0);
 
         dstCtx.globalAlpha = Math.max(0, Math.min(1, effect.opacity || 1));
         imagelib.drawing.copy(dstCtx, tmpCtx, size);
         break;
     }
 
-    tmpCtx.restore();
+    dstCtx.restore();
   }
+
+  dstCtx.save();
 
   // Render object with optional fill effects (only take first fill effect)
   imagelib.drawing.clear(tmpCtx, size);

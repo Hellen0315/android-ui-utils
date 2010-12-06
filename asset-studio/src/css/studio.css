@@ -270,10 +270,11 @@ a {
 
 /* output images */
 
-.out-image-container {
+.out-image-block {
   display: inline-block;
   vertical-align: top;
   margin-right: 12px;
+  margin-bottom: 12px;
   font-size: 11px;
   line-height: 12px;
   background-color: #eee;
@@ -282,9 +283,11 @@ a {
   text-align: center;
 }
 
-.out-image-container img {
+.out-image {
   border: 1px solid #ccc;
   margin-top: 4px;
+  display: inline-block;
+  position: relative;
 }
 
 #outputs hr {

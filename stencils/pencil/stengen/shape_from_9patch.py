@@ -78,17 +78,7 @@ def main():
   template_params['icon_uri'] = image_to_data_uri_(src_im)
   template_params['dim_constraint_attributes'] = '' # p:lockHeight="true"
   
-  template_params['uri_tl'] = image_to_data_uri_(src_im.crop((1, 1, stretch_l, stretch_t)))
-  template_params['uri_tc'] = image_to_data_uri_(src_im.crop((stretch_l, 1, stretch_r, stretch_t)))
-  template_params['uri_tr'] = image_to_data_uri_(src_im.crop((stretch_r, 1, src_im.size[0] - 1, stretch_t)))
-  
-  template_params['uri_cl'] = image_to_data_uri_(src_im.crop((1, stretch_t, stretch_l, stretch_b)))
-  template_params['uri_cc'] = image_to_data_uri_(src_im.crop((stretch_l, stretch_t, stretch_r, stretch_b)))
-  template_params['uri_cr'] = image_to_data_uri_(src_im.crop((stretch_r, stretch_t, src_im.size[0] - 1, stretch_b)))
-
-  template_params['uri_bl'] = image_to_data_uri_(src_im.crop((1, stretch_b, stretch_l, src_im.size[1] - 1)))
-  template_params['uri_bc'] = image_to_data_uri_(src_im.crop((stretch_l, stretch_b, stretch_r, src_im.size[1] - 1)))
-  template_params['uri_br'] = image_to_data_uri_(src_im.crop((stretch_r, stretch_b, src_im.size[0] - 1, src_im.size[1] - 1)))
+  template_params['image_uri'] = image_to_data_uri_(src_im.crop((1, 1, src_im.size[0] - 1, src_im.size[1] - 1)))
 
   template_params['width_l'] = stretch_l - 1
   template_params['width_r'] = src_im.size[0] - stretch_r - 1

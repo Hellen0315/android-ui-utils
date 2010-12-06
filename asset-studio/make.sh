@@ -37,5 +37,7 @@ cp -rf res/ ../dist/res/
 cd html
 #find . -iname \*.html -exec java -jar ../../lib/htmlcompressor-0.9.jar --remove-intertag-spaces --remove-quotes -o ../out/{} {} \;
 find . -iname \*.html -exec cp {} ../../dist/{} \;
+#find . -iname \*.manifest -exec cp {} ../../dist/{} \;
+#find . -iname .htaccess -exec cp {} ../../dist/{} \;
 cd ..
 cd ..

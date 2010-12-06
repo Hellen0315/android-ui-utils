@@ -26,17 +26,22 @@
     <script src="http://canvg.googlecode.com/svn/trunk/rgbcolor.js"></script> 
     <script src="http://canvg.googlecode.com/svn/trunk/canvg.js"></script>
 
+    <link rel="stylesheet" href="lib/colorpicker/css/colorpicker.css">
+    <script src="lib/colorpicker/js/colorpicker.js"></script>
+
     <!-- for .ZIP downloads -->
     <script src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
     <script src="lib/downloadify/js/downloadify.min.js"></script>
     <script src="lib/jszip/jszip.js"></script>
 
-    <link rel="stylesheet" href="lib/colorpicker/css/colorpicker.css">
-    <script src="lib/colorpicker/js/colorpicker.js"></script>
-
     <link rel="stylesheet" href="lib/jquery-ui-1.8.4.android-theme/theme.css">
 
     <link rel="stylesheet" href="css/studio.css">
+    <style>
+      .out-image-block {
+        min-width: 15em;
+      }
+    </style>
     <script src="js/asset-studio.pack.js"></script>
 
     <!-- TODO: remove Analytics tracking if you're building the tools locally! -->
@@ -69,9 +74,16 @@
           below.
         </p>
       </div>
-      <div id="inputs"></div>
+      <div id="inputs">
+        <div id="inputs-form"></div>
+        <input type="checkbox" id="output-show-guides">
+        <label for="output-show-guides">Show Guides</label>
+      </div>
       <div id="outputs">
-        <h3>Output images <div id="zip-button"></div></h3>
+        <h3>
+          Output images
+          <div id="zip-button"></div>
+        </h3>
       </div>
       <div id="footer">
         <p>See the source at the <a href="http://code.google.com/p/android-ui-utils">android-ui-utils</a> Google Code project.</p>
@@ -80,40 +92,58 @@
 
     <script>
       $(studio.checkBrowser);
+      $('#output-show-guides').button().click(regenerate);
 
       var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
 
       // Create image output slots
-      for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
-        studio.ui.createImageOutputSlot({
-          container: $('#outputs').get(0),
-          id: 'out-icon-' + density,
-          label: 'drawable-' + density
-        });
+      for (var version in {'X':1, '9':1}) {
+        var versionStr = (version == 'X') ? '' : ('-v' + version);
+
+        for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
+          studio.ui.createImageOutputSlot({
+            container: $('#outputs').get(0),
+            id: 'out-icon-' + version + '-' + density,
+            label: 'drawable-' + density + versionStr
+          });
+
+        $('<hr>').appendTo($('#outputs'));
+      }
 
       // Load image resources (stencils)
       var resList = {};
-      for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
+      for (var version in {'X':1})
         for (var shape in {'square':1, 'circle':1})
-          resList[shape + '-' + density] = (
-            'res/notification-stencil/' + shape + '/' + density + '.png');
+          for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
+            resList[version + '-' + shape + '-' + density] = (
+              'res/notification-stencil/' + shape + '/' + density + '.png');
 
-      var imageResources = {};
+      var IMAGE_RESOURCES = {};
       imagelib.loadImageResources(resList, function(r) {
-        imageResources = r;
+        IMAGE_RESOURCES = r;
         regenerate();
       });
 
-      var paramResources = {
-        'hdpi-iconSize': { w: 38, h: 38 },
-        'mdpi-iconSize': { w: 25, h: 25 },
-        'ldpi-iconSize': { w: 19, h: 19 },
-        'square-hdpi-targetRect': { x: 6, y: 6, w: 26, h: 26 },
-        'circle-hdpi-targetRect': { x: 7, y: 7, w: 24, h: 24 },
-        'square-mdpi-targetRect': { x: 4, y: 4, w: 17, h: 17 },
-        'circle-mdpi-targetRect': { x: 5, y: 5, w: 15, h: 15 },
-        'square-ldpi-targetRect': { x: 4, y: 4, w: 11, h: 11 },
-        'circle-ldpi-targetRect': { x: 4, y: 4, w: 11, h: 11 }
+      var PARAM_RESOURCES = {
+        'X-hdpi-iconSize': { w: 38, h: 38 },
+        'X-mdpi-iconSize': { w: 25, h: 25 },
+        'X-ldpi-iconSize': { w: 19, h: 19 },
+        'X-square-hdpi-targetRect': { x: 6, y: 6, w: 26, h: 26 },
+        'X-circle-hdpi-targetRect': { x: 7, y: 7, w: 24, h: 24 },
+        'X-square-mdpi-targetRect': { x: 4, y: 4, w: 17, h: 17 },
+        'X-circle-mdpi-targetRect': { x: 5, y: 5, w: 15, h: 15 },
+        'X-square-ldpi-targetRect': { x: 4, y: 4, w: 11, h: 11 },
+        'X-circle-ldpi-targetRect': { x: 4, y: 4, w: 11, h: 11 },
+
+        '9-hdpi-iconSize': { w: 24, h: 38 },
+        '9-mdpi-iconSize': { w: 16, h: 25 },
+        '9-ldpi-iconSize': { w: 12, h: 19 },
+        '9-square-hdpi-targetRect': { x: 0, y: 7, w: 24, h: 24 },
+        '9-circle-hdpi-targetRect': { x: 0, y: 7, w: 24, h: 24 },
+        '9-square-mdpi-targetRect': { x: 0, y: 4, w: 16, h: 16 },
+        '9-circle-mdpi-targetRect': { x: 0, y: 4, w: 16, h: 16 },
+        '9-square-ldpi-targetRect': { x: 0, y: 3, w: 12, h: 12 },
+        '9-circle-ldpi-targetRect': { x: 0, y: 3, w: 12, h: 12 }
       };
 
       /**
@@ -121,6 +151,7 @@
        */
       function regenerate() {
         var values = form.getValues();
+        var showGuides = $('#output-show-guides').is(':checked');
 
         var iconName = 'ic_stat_' + values['name'];
         zipper.clear();
@@ -140,33 +171,62 @@
           var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
           var shape = values['shape'];
-          for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
-            var iconSize = paramResources[density + '-iconSize'];
-            var targetRect = paramResources[shape + '-' + density + '-targetRect'];
+          for (var version in {'X':1, '9':1}) {
+            for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+              var iconSize = PARAM_RESOURCES[version + '-' + density + '-iconSize'];
+              var targetRect = PARAM_RESOURCES[version + '-' + shape + '-' + density + '-targetRect'];
 
-            var outCtx = imagelib.drawing.context(iconSize);
-            var tmpCtx = imagelib.drawing.context(iconSize);
+              var outCtx = imagelib.drawing.context(iconSize);
+              var tmpCtx = imagelib.drawing.context(iconSize);
 
-            tmpCtx.save();
-            imagelib.drawing.drawCenterInside(tmpCtx, srcImg, targetRect, srcRect);
-            tmpCtx.globalCompositeOperation = 'source-atop';
-            tmpCtx.fillStyle = '#fff';
-            tmpCtx.fillRect(0, 0, iconSize.w, iconSize.h);
-            tmpCtx.restore();
+              if (version == 'X') {
+                tmpCtx.save();
+                imagelib.drawing.drawCenterInside(tmpCtx, srcImg, targetRect, srcRect);
+                tmpCtx.globalCompositeOperation = 'source-atop';
+                tmpCtx.fillStyle = '#fff';
+                tmpCtx.fillRect(0, 0, iconSize.w, iconSize.h);
+                tmpCtx.restore();
 
-            imagelib.drawing.copy(outCtx, imageResources[shape + '-' + density], iconSize);
-            imagelib.drawing.copy(outCtx, tmpCtx, iconSize);
+                imagelib.drawing.copy(outCtx, IMAGE_RESOURCES[version + '-' + shape + '-' + density], iconSize);
+                imagelib.drawing.copy(outCtx, tmpCtx, iconSize);
+              } else if (version == '9') {
+                imagelib.drawing.drawCenterInside(tmpCtx, srcImg, targetRect, srcRect);
 
-            zipper.add({
-              name: 'res/drawable-' + density + '/' + iconName + '.png',
-              base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
-            });
+                imagelib.drawing.fx([
+                  {
+                    effect: 'inner-shadow',
+                    color: '#fff',
+                    opacity: 0.10,
+                    translate: { y: 1 }
+                  },
+                  {
+                    effect: 'fill-lineargradient',
+                    from: { x: 0, y: 0 },
+                    to: { x: 0, y: iconSize.h },
+                    colors: [
+                      { offset: 0, color: '#919191' },
+                      { offset: 1.0, color: '#828282' }
+                    ]
+                  }
+                ], outCtx, tmpCtx, iconSize);
+              }
 
-            imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
-              return function(img) {
-                $('#out-icon-' + density).attr('src', img.src);
-              };
-            }(density));
+              zipper.add({
+                name: 'res/drawable-' + density + '/' + iconName + '.png',
+                base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
+              });
+
+              if (showGuides)
+                studio.ui.drawImageGuideRects(outCtx, iconSize, [
+                  targetRect
+                ]);
+
+              imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(version, density) {
+                return function(img) {
+                  $('#out-icon-' + version + '-' + density).attr('src', img.src);
+                };
+              }(version, density));
+            }
           }
         });
       }
@@ -195,7 +255,7 @@
           })
         ]
       });
-      form.createUI($('#inputs').get(0));
+      form.createUI($('#inputs-form').get(0));
     </script>
   </body>
 </html>

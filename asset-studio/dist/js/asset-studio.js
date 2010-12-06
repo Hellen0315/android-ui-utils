@@ -178,11 +178,12 @@ var Class = {
 };
 
 var ConvolutionFilter = Class.create({
-  initialize : function(matrix, divisor, bias) {
+  initialize : function(matrix, divisor, bias, separable) {
     this.r = (Math.sqrt(matrix.length) - 1) / 2;
     this.matrix = matrix;
     this.divisor = divisor;
     this.bias = bias;
+    this.separable = separable;
   },
   apply : function(src, dst) {
     var w = src.width, h = src.height;
@@ -191,28 +192,34 @@ var ConvolutionFilter = Class.create({
     var di, si, idx;
     var r, g, b;
 
-    for(var y=0;y<h;++y) {
-      for(var x=0;x<w;++x) {
-        idx = r = g = b = 0;
-        di = (y*w + x) << 2;
-        for(var ky=-this.r;ky<=this.r;++ky) {
-          for(var kx=-this.r;kx<=this.r;++kx) {
-            si = (Math.max(0, Math.min(h - 1, y + ky)) * w +
-                  Math.max(0, Math.min(w - 1, x + kx))) << 2;
-            r += srcData[si]*this.matrix[idx];
-            g += srcData[si + 1]*this.matrix[idx];
-            b += srcData[si + 2]*this.matrix[idx];
-            //a += srcData[si + 3]*this.matrix[idx];
-            idx++;
+    //if (this.separable) {
+      // TODO: optimize if linearly separable ... may need changes to divisor
+      // and bias calculations
+    //} else {
+      // Not linearly separable
+      for(var y=0;y<h;++y) {
+        for(var x=0;x<w;++x) {
+          idx = r = g = b = 0;
+          di = (y*w + x) << 2;
+          for(var ky=-this.r;ky<=this.r;++ky) {
+            for(var kx=-this.r;kx<=this.r;++kx) {
+              si = (Math.max(0, Math.min(h - 1, y + ky)) * w +
+                    Math.max(0, Math.min(w - 1, x + kx))) << 2;
+              r += srcData[si]*this.matrix[idx];
+              g += srcData[si + 1]*this.matrix[idx];
+              b += srcData[si + 2]*this.matrix[idx];
+              //a += srcData[si + 3]*this.matrix[idx];
+              idx++;
+            }
           }
+          dstData[di] = r/this.divisor + this.bias;
+          dstData[di + 1] = g/this.divisor + this.bias;
+          dstData[di + 2] = b/this.divisor + this.bias;
+          //dstData[di + 3] = a/this.divisor + this.bias;
+          dstData[di + 3] = 255;
         }
-        dstData[di] = r/this.divisor + this.bias;
-        dstData[di + 1] = g/this.divisor + this.bias;
-        dstData[di + 2] = b/this.divisor + this.bias;
-        //dstData[di + 3] = a/this.divisor + this.bias;
-        dstData[di + 3] = 255;
       }
-    }
+    //}
     // for Firefox
     //dstData.forEach(function(n, i, arr) { arr[i] = n<0 ? 0 : n>255 ? 255 : n; });
   }
@@ -382,7 +389,7 @@ imagelib.drawing.blur = function(radius, ctx, size) {
 	}
 
   imagelib.drawing.applyFilter(
-    new ConvolutionFilter(matrix, total, 0),
+    new ConvolutionFilter(matrix, total, 0, true),
     ctx, size);
 };
 
@@ -403,13 +410,11 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
   var tmpCtx = imagelib.drawing.context(size);
   var tmpCtx2 = imagelib.drawing.context(size);
 
-  dstCtx.save();
-
   // Render outer effects
   for (var i = 0; i < outerEffects.length; i++) {
     var effect = outerEffects[i];
 
-    tmpCtx.save();
+    dstCtx.save();
 
     switch (effect.effect) {
       case 'outer-shadow':
@@ -419,15 +424,17 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
           imagelib.drawing.blur(effect.blur, tmpCtx, size);
         imagelib.drawing.makeAlphaMask(tmpCtx, size, effect.color || '#000');
         if (effect.translate)
-          tmpCtx.translate(effect.translate.x || 0, effect.translate.y || 0);
+          dstCtx.translate(effect.translate.x || 0, effect.translate.y || 0);
 
         dstCtx.globalAlpha = Math.max(0, Math.min(1, effect.opacity || 1));
         imagelib.drawing.copy(dstCtx, tmpCtx, size);
         break;
     }
 
-    tmpCtx.restore();
+    dstCtx.restore();
   }
+
+  dstCtx.save();
 
   // Render object with optional fill effects (only take first fill effect)
   imagelib.drawing.clear(tmpCtx, size);
@@ -1349,13 +1356,13 @@ studio.forms.ImageField = studio.forms.Field.extend({
         if (this.imageParams_.svgText || this.imageParams_.svgUri) {
           var canvas = document.createElement('canvas');
           canvas.className = 'offscreen';
-          canvas.style.width = '480px';
-          canvas.style.height = '480px';
+          canvas.style.width = '800px';
+          canvas.style.height = '800px';
           document.body.appendChild(canvas);
 
           canvg(canvas, this.imageParams_.svgText || this.imageParams_.svgUri,
               {ignoreMouse: true, ignoreAnimation: true});
-          continue_(canvas.getContext('2d'), { w: 480, h: 480 });
+          continue_(canvas.getContext('2d'), { w: 800, h: 800 });
 
           document.body.removeChild(canvas);
         } else if (this.imageParams_.uri) {
@@ -1372,16 +1379,16 @@ studio.forms.ImageField = studio.forms.Field.extend({
         break;
 
       case 'text':
-        var size = { w: 3000, h: 480 };
+        var size = { w: 4000, h: 800 };
         var ctx = imagelib.drawing.context(size);
         var text = this.textParams_.text || '';
 
         ctx.fillStyle = '#000';
-        ctx.font = 'bold 480px/480px ' + (this.textParams_.fontStack ||
+        ctx.font = 'bold 800px/800px ' + (this.textParams_.fontStack ||
                                           'sans-serif');
         ctx.textBaseline = 'bottom';
-        ctx.fillText(text, 0, 480);
-        size.w = ctx.measureText(text).width || 480;
+        ctx.fillText(text, 0, 800);
+        size.w = ctx.measureText(text).width || 800;
 
         continue_(ctx, size);
         break;
@@ -1511,13 +1518,37 @@ studio.ui = {};
 
 studio.ui.createImageOutputSlot = function(params) {
   $('<div>')
-    .addClass('out-image-container')
+    .addClass('out-image-block')
     .append($('<div>')
       .text(params.label))
     .append($('<img>')
+      .addClass('out-image')
       .attr('id', params.id))
     .appendTo(params.container);
 };
+
+
+studio.ui.drawImageGuideRects = function(ctx, size, guides) {
+  guides = guides || [];
+
+  ctx.save();
+  ctx.globalAlpha = 0.5;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, size.w, size.h);
+  ctx.globalAlpha = 1.0;
+
+  var guideColors = studio.ui.drawImageGuideRects.guideColors_;
+
+  for (var i = 0; i < guides.length; i++) {
+    ctx.strokeStyle = guideColors[(i - 1) % guideColors.length];
+    ctx.strokeRect(guides[i].x + 0.5, guides[i].y + 0.5, guides[i].w - 1, guides[i].h - 1);
+  }
+
+  ctx.restore();
+};
+studio.ui.drawImageGuideRects.guideColors_ = [
+  '#f00'
+];
 
 studio.zip = {};
 
@@ -1559,7 +1590,10 @@ studio.zip.createDownloadifyZipButton = function(element, options) {
     return zip.generate();
   };
 
-  var downloadifyHandle = Downloadify.create($(element).get(0), options);
+  var downloadifyHandle;
+  if (window.Downloadify) {
+    downloadifyHandle = Downloadify.create($(element).get(0), options);
+  }
   //downloadifyHandle.disable();
 
   // Set up zipper control functions

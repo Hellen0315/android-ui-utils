@@ -54,7 +54,10 @@ studio.zip.createDownloadifyZipButton = function(element, options) {
     return zip.generate();
   };
 
-  var downloadifyHandle = Downloadify.create($(element).get(0), options);
+  var downloadifyHandle;
+  if (window.Downloadify) {
+    downloadifyHandle = Downloadify.create($(element).get(0), options);
+  }
   //downloadifyHandle.disable();
 
   // Set up zipper control functions
