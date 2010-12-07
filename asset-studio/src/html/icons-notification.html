@@ -173,6 +173,8 @@
           var shape = values['shape'];
           for (var version in {'X':1, '9':1}) {
             for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+              var versionStr = (version == 'X') ? '' : ('-v' + version);
+
               var iconSize = PARAM_RESOURCES[version + '-' + density + '-iconSize'];
               var targetRect = PARAM_RESOURCES[version + '-' + shape + '-' + density + '-targetRect'];
 
@@ -212,7 +214,7 @@
               }
 
               zipper.add({
-                name: 'res/drawable-' + density + '/' + iconName + '.png',
+                name: 'res/drawable-' + density + versionStr + '/' + iconName + '.png',
                 base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
               });
 

@@ -159,6 +159,8 @@
           for (var version in {'X':1, '5':1}) {
             for (var type in {'selected':1, 'unselected':1}) {
               for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+                var versionStr = (version == 'X') ? '' : ('-v' + version);
+
                 var iconSize = PARAM_RESOURCES[density + '-iconSize'];
                 var fxMult = PARAM_RESOURCES[density + '-fxMult'];
                 var targetRect = PARAM_RESOURCES[density + '-targetRect'];
@@ -267,7 +269,7 @@
                   outCtx, iconSize);*/
 
                 zipper.add({
-                  name: 'res/drawable-' + density + '/' +
+                  name: 'res/drawable-' + density + versionStr + '/' +
                         iconName + '_' + type + '.png',
                   base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
                 });
