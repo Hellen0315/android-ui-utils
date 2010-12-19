@@ -280,6 +280,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
       .slider({
         min: this.params_.min || 0,
         max: this.params_.max || 100,
+        step: this.params_.step || 1,
         range: 'min',
         value: this.getValue(),
   			slide: function(evt, ui) {

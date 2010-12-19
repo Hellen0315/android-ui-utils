@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 studio.checkBrowser = function() {
-  var chromeMatch = navigator.userAgent.match(/Chrome\/(\d)/);
+  var chromeMatch = navigator.userAgent.match(/Chrome\/(\d+)/);
   var browserSupported = false;
   if (chromeMatch) {
     var chromeVersion = parseInt(chromeMatch[1], 10);
@@ -26,21 +26,15 @@ studio.checkBrowser = function() {
 
   if (!browserSupported) {
     $('<div>')
+      .addClass('browser-unsupported-note ui-state-highlight')
       .attr('title', 'Your browser is not supported.')
       .append($('<span class="ui-icon ui-icon-alert" ' +
                 'style="float:left; margin:0 7px 50px 0;">'))
       .append($('<p>')
         .html('Currently only ' +
               '<a href="http://www.google.com/chrome">Chrome 6+</a> ' +
-              'is supported. Your mileage may vary with other browsers.'))
-      .dialog({
-  			modal: true,
-  			resizable: false,
-  			buttons: {
-      		'Close': function() {
-            $(this).dialog('close');
-    			}
-			  }
-  		});
+              'is recommended and supported. Your mileage may vary with ' +
+              'other browsers.'))
+      .prependTo('body');
   }
 };

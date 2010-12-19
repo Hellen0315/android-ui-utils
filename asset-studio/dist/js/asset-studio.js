@@ -562,7 +562,7 @@ window.imagelib = imagelib;
 var studio = {};
 
 studio.checkBrowser = function() {
-  var chromeMatch = navigator.userAgent.match(/Chrome\/(\d)/);
+  var chromeMatch = navigator.userAgent.match(/Chrome\/(\d+)/);
   var browserSupported = false;
   if (chromeMatch) {
     var chromeVersion = parseInt(chromeMatch[1], 10);
@@ -573,22 +573,16 @@ studio.checkBrowser = function() {
 
   if (!browserSupported) {
     $('<div>')
+      .addClass('browser-unsupported-note ui-state-highlight')
       .attr('title', 'Your browser is not supported.')
       .append($('<span class="ui-icon ui-icon-alert" ' +
                 'style="float:left; margin:0 7px 50px 0;">'))
       .append($('<p>')
         .html('Currently only ' +
               '<a href="http://www.google.com/chrome">Chrome 6+</a> ' +
-              'is supported. Your mileage may vary with other browsers.'))
-      .dialog({
-  			modal: true,
-  			resizable: false,
-  			buttons: {
-      		'Close': function() {
-            $(this).dialog('close');
-    			}
-			  }
-  		});
+              'is recommended and supported. Your mileage may vary with ' +
+              'other browsers.'))
+      .prependTo('body');
   }
 };
 
@@ -1010,6 +1004,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
       .slider({
         min: this.params_.min || 0,
         max: this.params_.max || 100,
+        step: this.params_.step || 1,
         range: 'min',
         value: this.getValue(),
   			slide: function(evt, ui) {
@@ -1035,6 +1030,14 @@ studio.forms.RangeField = studio.forms.Field.extend({
   }
 });
 
+
+/**
+ * This is needed due to what seems like a bug in Chrome where using drawImage
+ * with any SVG, regardless of origin (even if it was loaded from a data URI),
+ * marks the canvas's origin dirty flag, precluding us from accessing its pixel
+ * data.
+ */
+var USE_CANVG = window.canvg && true;
 
 /**
  * Represents a form field for image values.
@@ -1151,9 +1154,14 @@ studio.forms.ImageField = studio.forms.Field.extend({
         .attr('src', clipartSrc)
         .click(function(clipartSrc) {
           return function() {
+            var useCanvg = USE_CANVG && clipartSrc.match(/\.svg$/);
+
             $('img', clipartParamsEl).removeClass('selected');
             $(this).addClass('selected');
-            me.imageParams_ = {svgUri: clipartSrc};
+            me.imageParams_ = {
+              canvgSvgUri: useCanvg ? clipartSrc : null,
+              uri: useCanvg ? null : clipartSrc
+            };
             me.valueFilename_ = clipartSrc.match(/[^/]+$/)[0];
             me.renderValueAndNotifyChanged_();
           };
@@ -1230,7 +1238,8 @@ studio.forms.ImageField = studio.forms.Field.extend({
             title: 'Padding',
             defaultValue: 0,
             min: 0,
-            max: 15
+            max: 0.5, // 1/2 of min(width, height)
+            step: 0.05
           }),
         ]
       });
@@ -1270,22 +1279,20 @@ studio.forms.ImageField = studio.forms.Field.extend({
     }
 
     if (!file) {
-      alert('Please choose a valid image file (PNG, JPG, GIF, SVG, PSD, etc.)');
+      alert('Please choose a valid image file (PNG, JPG, GIF, SVG, etc.)');
       callback(null);
       return;
     }
 
-    var svgHack = false;
-    if (file.type == 'image/svg+xml' && window.canvg)
-      svgHack = true;
+    var useCanvg = USE_CANVG && file.type == 'image/svg+xml';
 
     var fileReader = new FileReader();
 
     // Closure to capture the file information.
     fileReader.onload = function(e) {
       callback({
-        uri: svgHack ? null : e.target.result,
-        svgText: svgHack ? e.target.result : null,
+        uri: useCanvg ? null : e.target.result,
+        canvgSvgText: useCanvg ? e.target.result : null,
         name: file.name
       });
     };
@@ -1320,7 +1327,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
     /*fileReader.onloadstart = function(e) {
       $('#read-progress').css('visibility', 'visible');
     };*/
-    if (svgHack)
+    if (useCanvg)
       fileReader.readAsText(file);
     else
       fileReader.readAsDataURL(file);
@@ -1353,16 +1360,28 @@ studio.forms.ImageField = studio.forms.Field.extend({
     switch (this.valueType_) {
       case 'image':
       case 'clipart':
-        if (this.imageParams_.svgText || this.imageParams_.svgUri) {
+        if (this.imageParams_.canvgSvgText || this.imageParams_.canvgSvgUri) {
           var canvas = document.createElement('canvas');
+          var size = { w: 800, h: 800 };
           canvas.className = 'offscreen';
-          canvas.style.width = '800px';
-          canvas.style.height = '800px';
+          canvas.width = size.w;
+          canvas.height = size.h;
           document.body.appendChild(canvas);
 
-          canvg(canvas, this.imageParams_.svgText || this.imageParams_.svgUri,
-              {ignoreMouse: true, ignoreAnimation: true});
-          continue_(canvas.getContext('2d'), { w: 800, h: 800 });
+          canvg(
+            canvas,
+            this.imageParams_.canvgSvgText ||
+              this.imageParams_.canvgSvgUri,
+            {
+              scaleWidth: size.w,
+              scaleHeight: size.h,
+              ignoreMouse: true,
+              ignoreAnimation: true,
+              ignoreDimensions: true,
+              ignoreClear: true
+            }
+          );
+          continue_(canvas.getContext('2d'), size);
 
           document.body.removeChild(canvas);
         } else if (this.imageParams_.uri) {
@@ -1384,11 +1403,11 @@ studio.forms.ImageField = studio.forms.Field.extend({
         var text = this.textParams_.text || '';
 
         ctx.fillStyle = '#000';
-        ctx.font = 'bold 800px/800px ' + (this.textParams_.fontStack ||
-                                          'sans-serif');
+        ctx.font = 'bold ' + size.h + 'px/' + size.h + 'px ' +
+                    (this.textParams_.fontStack || 'sans-serif');
         ctx.textBaseline = 'bottom';
-        ctx.fillText(text, 0, 800);
-        size.w = ctx.measureText(text).width || 800;
+        ctx.fillText(text, 0, size.h);
+        size.w = ctx.measureText(text).width || size.w;
 
         continue_(ctx, size);
         break;
@@ -1401,8 +1420,10 @@ studio.forms.ImageField = studio.forms.Field.extend({
         trimRect = imagelib.drawing.getTrimRect(srcCtx, srcSize);
       }
 
-      var padPx = (me.trimFormValues_['pad'] || 0) * 10;
+      var padPx = (me.trimFormValues_['pad'] || 0) *
+                  Math.min(trimRect.w, trimRect.h);
       var targetRect = { x: padPx, y: padPx, w: trimRect.w, h: trimRect.h };
+
       var outCtx = imagelib.drawing.context({
         w: trimRect.w + padPx * 2,
         h: trimRect.h + padPx * 2
