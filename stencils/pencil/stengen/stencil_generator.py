@@ -27,7 +27,8 @@ def main():
   params['displayname'] = sys.argv[2]
   params['description'] = sys.argv[3]
 
-  zip_file = zipfile.ZipFile('dist/stencil-%s.zip' % params['id'], 'w')
+  zip_file = zipfile.ZipFile('dist/stencil-%s.zip' % params['id'], 'w',
+      zipfile.ZIP_DEFLATED)
 
   # save stencil XML
   shapes_xml = ''
