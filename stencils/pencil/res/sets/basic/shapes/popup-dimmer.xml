@@ -1,0 +1,15 @@
+<Shape id="popup-dimmer" displayName="Popup Dim Background" icon="icons/popup-dimmer.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension">480,800</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="dimRect">
+      <Box>$box</Box>
+    </For>
+  </Behaviors>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" id="dimRect" style="fill: #000000; fill-opacity: 0.6"></rect>
+  </p:Content>
+</Shape>

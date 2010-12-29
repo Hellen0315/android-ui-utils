@@ -15,7 +15,7 @@
         <Property name="secondaryTextFont" displayName="Secondary Text Font" type="Font">Droid Sans|normal|normal|21px</Property>
       </PropertyGroup>
       <PropertyGroup name="Handles">
-        <Property name="leftPadding" displayName="Left Padding" type="Handle" p:lockY="true" p:minX="9" p:maxY="$box.w / 2">9,0</Property>
+        <Property name="leftPadding" displayName="Left Padding" type="Handle" p:lockY="true" p:minX="9" p:maxX="$box.w / 2">9,0</Property>
       </PropertyGroup>
     </Properties>
     <Behaviors>

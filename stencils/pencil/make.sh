@@ -18,3 +18,4 @@ mkdir -p dist
 python stengen/stencil_generator.py frame "Frames" "Device frames"
 python stengen/stencil_generator.py basic "Basic Controls" "Basic UI elements"
 python stengen/stencil_generator.py launcher "Launcher and Widgets" "Home screen (Launcher) and app widgets"
+python stengen/stencil_generator.py patterns "UI Patterns" "User interface patterns"

@@ -1,7 +1,7 @@
 <Shape id="options-menu" displayName="Options Menu" icon="icons/options-menu.png">
   <Properties>
     <PropertyGroup>
-      <Property name="box" type="Dimension">480,117</Property>
+      <Property name="box" type="Dimension">480,217</Property>
     </PropertyGroup>
     <PropertyGroup name="Text">
       <Property name="menuItems" displayName="Menu Items " type="PlainText"
@@ -27,7 +27,7 @@ Item 3 | Item 4]]></Property>
               style: new CSS()
                   .set("height", "99px")
                   .set("border-bottom",
-                      (r < rows.length - 1) ? "1px solid rgba(0,0,0,0.33)"
+                      (r < rows.length - 1) ? "1px solid rgba(255,255,255,0.33)"
                                             : "0"),
               _children: []
             };
@@ -47,7 +47,7 @@ Item 3 | Item 4]]></Property>
                     .set("padding", 0)
                     .set("margin", 0)
                     .set("border-right",
-                        (i < items.length - 1) ? "1px solid rgba(0,0,0,0.33)"
+                        (i < items.length - 1) ? "1px solid rgba(255,255,255,0.33)"
                                                : "0")
                     .set("-moz-box-sizing", "border-box"),
                 
@@ -61,7 +61,7 @@ Item 3 | Item 4]]></Property>
                       .set("height", "1em")
                       .set("overflow", "hidden")
                       .set("text-align", "center")
-                      .set("color", "#000000")
+                      .set("color", "#ffffff")
                       .set("font-family", "'Droid Sans'")
                       .set("font-size", "21px")
                       .set("line-height", "21px")
@@ -90,14 +90,14 @@ Item 3 | Item 4]]></Property>
     </For>
   </Behaviors>  
   <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
-    <foreignObject x="0" y="0" width="200" height="117" id="htmlObject">
+    <foreignObject x="0" y="0" width="200" height="217" id="htmlObject">
       <div xmlns="http://www.w3.org/1999/xhtml" id="contentDiv"
         style="
           font-size: 0;
           line-height: 0;
           -moz-box-sizing: border-box;
           border-width: 18px 3px 0px 3px;
-          -moz-border-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAeCAYAAADU8sWcAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAKtJREFUeNrsld0KgCAMhd1cf1e9qQ/jm/YElsVAQqOIPBc2EFQ2P8+mjIwxZEAmUDgRMVI5I5XbZuGChHcwODND4T0Mbq0dmlU+wuCbTci0w5STcy7ESQih7ERH47vyyfmradx5n3MBca5Dg++Cc9DzWs+DdbS95untvPfL18CtzLNmlEt1+uyRJRx5+pjeWsqRWtCcemzaa6tOMw39aj+8PbiUmkCNr7YKMAC6MjQ1T5RaqwAAAABJRU5ErkJggg==) 18 3 0 3 stretch stretch;
+          -moz-border-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAeCAYAAADU8sWcAAAAPklEQVR4nO3QUQ0AIAzE0BvB+DThCRubCch9rDXwkkZVydWyyeDg4ODg4K/bmXlc+NztIem68LnbwcHBwb/W/pYGVuT1HvwAAAAASUVORK5CYII=) 18 3 0 3 stretch stretch;
         "></div>
     </foreignObject>
   </p:Content>

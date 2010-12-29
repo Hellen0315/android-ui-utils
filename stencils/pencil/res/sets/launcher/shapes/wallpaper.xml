@@ -1,4 +1,4 @@
-<Shape id="wallpaper" displayName="Wallpaper (480x800)" icon="icons/wallpaper.png">
+<Shape id="wallpaper_480x800" displayName="Wallpaper (480x800)" icon="icons/wallpaper.png">
     <Properties>
         <PropertyGroup>
             <Property name="box" type="Dimension">480,800</Property>

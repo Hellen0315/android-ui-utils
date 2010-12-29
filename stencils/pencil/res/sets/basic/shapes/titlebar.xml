@@ -2,7 +2,7 @@
     <Properties>
       <PropertyGroup>
         <Property name="box" type="Dimension" p:lockHeight="true">480,39</Property>
-        <Property name="withShadow" type="Bool" displayName="With Shadow">true</Property>
+        <Property name="withShadow" type="Bool" displayName="With Shadow">false</Property>
       </PropertyGroup>
       <PropertyGroup name="Background">
         <Property name="fillColor" displayName="Color" type="Color">#9a9a9a</Property>

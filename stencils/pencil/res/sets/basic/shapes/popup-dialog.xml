@@ -1,0 +1,104 @@
+<Shape id="popup-dialog" displayName="Popup Dialog" icon="icons/popup-dialog.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension">480,240</Property>
+      <Property name="showTitle" displayName="Show Title" type="Bool">true</Property>
+      <Property name="showIcon" displayName="Leave Space for Icon" type="Bool">false</Property>
+      <Property name="black" displayName="Black" type="Bool">true</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Text">
+      <Property name="text" displayName="Text" type="PlainText">Popup Title</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="htmlObject">
+      <Box>new Dimension($box.w, $box.h)</Box>
+    </For>
+    <For ref="text">
+      <TextContent>$text</TextContent>
+      <Font>Font.fromString("Droid Sans|normal|normal|33px")</Font>
+      <Visibility>$showTitle</Visibility>
+      <BoxFit>
+        <Arg>
+          <![CDATA[
+            var leftPadding = 19 + ($showIcon.value ? 80 : 15);
+            new Bound(leftPadding, 15, $box.w - leftPadding - 19, 80);
+          ]]>
+        </Arg>
+        <Arg>new Alignment(0, 1)</Arg>
+      </BoxFit>
+    </For>
+
+    <For ref="contentDiv">
+      <DomContent>
+        <![CDATA[
+          var spec = {
+            _name: "div",
+            _uri: "http://www.w3.org/1999/xhtml",
+            style: new CSS()
+                .set("position", "absolute")
+                .set("margin", "-2px -2px -2px -2px")
+                .set("left", "0")
+                .set("bottom", "0")
+                .set("right", "0")
+                .set("-moz-box-sizing", "border-box")
+          };
+
+          if (!$black.value) {
+            spec.style.set("background-color", "#ffffff");
+          }
+
+          if ($showTitle.value) {
+            spec.style.set("top", "82px"); // 82 - 2px margin = 80px height
+            if ($black.value) {
+              spec.style.set("border-top", "2px solid rgba(255,255,255,0.15)");
+            }
+
+          } else {
+            spec.style.set("top", "0");
+          }
+
+          var fragment = null;
+          try {
+            fragment = F.newDOMFragment([spec]);
+          } catch (e) {
+            Console.dumpError(e);
+          }
+          fragment;
+        ]]>
+      </DomContent>
+    </For>
+  </Behaviors>
+  <Actions>
+    <Action id="getSnappingGuide">
+      <Impl>
+        <![CDATA[
+          var b = this.getBounding();
+          return [
+            new SnappingData("ContentLeft", b.x + 18, "Left", true, this.id),
+            new SnappingData("ContentTop", b.y + 14, "Top", false, this.id),
+            new SnappingData("ContentTopWithTitle", b.y + 14 + 80, "Top", false, this.id),
+            new SnappingData("ContentRight", b.x + b.width - 18, "Right", true, this.id),
+            new SnappingData("ContentBottom", b.y + b.height - 22, "Bottom", false, this.id)
+          ];
+        ]]>
+      </Impl>
+    </Action>
+  </Actions>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" id="dim" style="fill: #000000; fill-opacity: 0.6"></rect>
+    <foreignObject x="0" y="0" id="htmlObject">
+      <div xmlns="http://www.w3.org/1999/xhtml" id="contentDiv"
+        style="
+          position: relative;
+          font-size: 0;
+          line-height: 0;
+          -moz-box-sizing: border-box;
+          height: 100%;
+          border-width: 16px 20px 24px 20px;
+          -moz-border-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEwAAABMCAYAAADHl1ErAAAEoklEQVR4nO2cS3LbMAyGf/nRpKMTZLLJjFe9jA+UfXOgXKYrZ7JJegF72jxsdWHBgkDwAbm2xZb/DEeMJEvEF4CkbEJV0zTQVFWVup8Ohw7+hfOHSjdmwPk+LjPDxaXRVeKxS0pa3Yh6FThXVQowH4wqUPd99lySYGjbBI5XyjFHMWDSeAlowuoatEsDk7Co7Fi9Qh9mhQC0EDANFgc1QR+ahCevcU5poHZsO2m3O/i9TYWWGpISDJWp+HsM0HyweNmyNnKQ/POqHGDt6OgLPQI0VYoGjl/rXOLANFDbtn1Ur9i+A7RqD6KRo2UsJHnhcGasTNmWwBFkus45RRZyzyE4n2z7iQ4W0MGT1+kpNSR5CM4AzEXh8DQvA04PTvZF0rMI0ofSNjkoeKUB08JRwvoiioQ2hduXnUvccO5ZBItHgfYZHtJO5+/zMA7NB+wawBVcaDI0+fVOLdl/cWAfAN5Z2+g87o18NFVHylgfxjt7CexKFB6ecsQ8pyQEgkXtovbIkKX6BIHQnNGo6AwHe0kPm6Ifkld3d3ffFovFfV3Xt8daekptNpuX1Wr18Pz8/ANuuE7hjpSqJp792kSVj44HL8sBFgDUdX27WCzu0XUj2mClPbX0lDKtkBNVDm1OsB4fH38ebdUJtVwub9q2zrH3qtDI7u1GfB5G0kZKCS03aSN6cp8bAuabXkhPy00pnmX2MAlLPkvym+Um+Rxs+uIg1WDftxQ5A5P2JE1/YiGpXSg6koxcofZH7bJ62Fi+IDxGmg0mD9MoW26cowbbOKQPyhmUlNmWHDvti6oAM6oAM6oAM6oAM6oAM6oAM+pSP4Vlq+JhRhVgRhVgRhVgRhVgRhVgRhVgRhVgRhVgRhVgRhVgRhVgRhVgRvGVeEUJKh5m1BBg/5I3mm3RgKVeJGdwg21M9TBtSbblxmNSKHErqhAw34WSkwBGqlD7o3ZZPUyuZw+uOB6pNBuO9rBY+hxf156b5Np8mT8Z7G5iIUlb6WE8HSU3Ubv5Pz0JFtBlPfjEQW2h5+7kpg/0oVFJCs3QKmgtOVPCmm02m5e6rm+Xy+XNcXacXuv1+hX7dkto3MZBnb6WI60lOr2vVquHtiGj1nq9fn16evqOtt3ooGke5oV2WOdJuUZtJipfXk75RXN0iVjXAL6y+heMPzmL/sm/AbwB+MXqb+ycHkCZgxULSZ5QTt7FkwHoPO55EhhwPmha+jLvQsi73uB6mRwxVfmA8XxBnlROab88hY5g5ZJg+o54WAIeaA6wpmkOCeLtrh263GiZxUrAyLNySWHmxTfFcDPkkZYrRDfnCeV8/xbu2wXGmiTPwfnmY0HF+jBe37I6bwglaOb0GgY5/9oi8Rn5YIz0vqp7vZOWnCUTtLSssDEA0+aSWtqyfDxSwxFID0mgC0veEAny0rBIsWdh7cE76QHc62FAz8voXJ/XjS0XKfSdl+NNou71LiACDFCh+bYapEsD43Xt4dqZQoRgAQnADie6r6wLgRnLmllplAZy/0cMQKtkYL0PRd73F7rPiZVuBNIhcQ0C9j+r/C5pVAFmVAFmVAFmVAFmVAFmVAFm1B8vfFHa2ifGugAAAABJRU5ErkJggg==) 16 20 24 20 stretch stretch;
+        "></div>
+    </foreignObject>
+    <text x="0" y="0" width="1" height="80" style="fill: #ffffff;" id="text" xml:space="preserve"/>
+  </p:Content>
+</Shape>
