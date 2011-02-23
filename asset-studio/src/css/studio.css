@@ -195,9 +195,18 @@ a {
   opacity: 0;
 }
 
+.form-image-clipart-attribution {
+  font-weight: normal;
+  font-size: 11px;
+  line-height: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+
 .form-image-clipart-list {
   background-color: #fff;
   width: 250px;
+  height: 200px;
   border: 1px solid #ccc;
   overflow-y: scroll;
 }
@@ -244,6 +253,19 @@ a {
 .form-range {
   margin-top: 6px;
   width: 200px;
+}
+
+.form-range {
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+.form-range-text {
+  display: inline-block;
+  vertical-align: bottom;
+  padding-left: 6px;
+  font-size: 11px;
+  line-height: 11px;
 }
 
 .form-field-drop-target.drag-hover {

@@ -1009,10 +1009,21 @@ studio.forms.RangeField = studio.forms.Field.extend({
         value: this.getValue(),
   			slide: function(evt, ui) {
   				me.setValue(ui.value);
+  				if (me.textEl_) {
+  				  me.textEl_.text(me.params_.textFn(ui.value));
+				  }
   				me.form_.notifyChanged_();
   			}
       })
       .appendTo(fieldContainer);
+
+    if (this.params_.textFn || this.params_.showText) {
+      this.params_.textFn = this.params_.textFn || function(d){ return d; };
+      this.textEl_ = $('<div>')
+        .addClass('form-range-text')
+        .text(this.params_.textFn(this.getValue()))
+        .appendTo(fieldContainer);
+    }
   },
 
   getValue: function() {
@@ -1169,6 +1180,16 @@ studio.forms.ImageField = studio.forms.Field.extend({
         .appendTo(clipartListEl);
     }
 
+    var clipartAttributionEl = $('<div>')
+      .addClass('form-image-clipart-attribution')
+      .html([
+          'Clipart courtesy of ',
+          '<a href="http://www.yay.se/2011/02/',
+              'native-android-icons-in-vector-format/"',
+          ' target="_blank">Olof Brickarp</a>.'
+        ].join(''))
+      .appendTo(clipartParamsEl);
+
     typeEls.clipart.click(function(evt) {
       me.setValueType_('clipart');
       me.renderValueAndNotifyChanged_();
@@ -1237,9 +1258,12 @@ studio.forms.ImageField = studio.forms.Field.extend({
           new studio.forms.RangeField('pad', {
             title: 'Padding',
             defaultValue: 0,
-            min: 0,
+            min: -0.1,
             max: 0.5, // 1/2 of min(width, height)
-            step: 0.05
+            step: 0.05,
+            textFn: function(v) {
+              return (v * 100) + '%';
+            }
           }),
         ]
       });
@@ -1420,7 +1444,11 @@ studio.forms.ImageField = studio.forms.Field.extend({
         trimRect = imagelib.drawing.getTrimRect(srcCtx, srcSize);
       }
 
-      var padPx = (me.trimFormValues_['pad'] || 0) *
+      // If trimming, add a tiny bit of padding to fix artifacts around the
+      // edges.
+      var extraPadding = me.trimFormValues_['trim'] ? 0.001 : 0;
+
+      var padPx = ((me.trimFormValues_['pad'] || 0) + extraPadding) *
                   Math.min(trimRect.w, trimRect.h);
       var targetRect = { x: padPx, y: padPx, w: trimRect.w, h: trimRect.h };
 
@@ -1446,22 +1474,65 @@ studio.forms.ImageField = studio.forms.Field.extend({
 });
 
 studio.forms.ImageField.clipartList_ = [
+  'icons/accounts.svg',
   'icons/add.svg',
+  'icons/agenda.svg',
+  'icons/all_friends.svg',
+  'icons/attachment.svg',
   'icons/back.svg',
+  'icons/backspace.svg',
+  'icons/barcode.svg',
+  'icons/battery_charging.svg',
+  'icons/bell.svg',
   'icons/block.svg',
+  'icons/block_user.svg',
+  'icons/bookmarks.svg',
   'icons/camera.svg',
+  'icons/circle_arrow.svg',
+  'icons/clock.svg',
+  'icons/compass.svg',
+  'icons/cross.svg',
+  'icons/cross2.svg',
+  'icons/directions.svg',
+  'icons/down_arrow.svg',
   'icons/edit.svg',
+  'icons/expand_arrows.svg',
   'icons/export.svg',
+  'icons/eye.svg',
+  'icons/gallery.svg',
+  'icons/group.svg',
+  'icons/happy_droid.svg',
+  'icons/help.svg',
   'icons/home.svg',
+  'icons/info.svg',
+  'icons/key.svg',
+  'icons/list.svg',
+  'icons/lock.svg',
+  'icons/mail.svg',
+  'icons/map.svg',
   'icons/map_pin.svg',
-  'icons/mylocation.svg',
+  'icons/mic.svg',
+  'icons/notification.svg',
+  'icons/phone.svg',
   'icons/play_clip.svg',
+  'icons/plus.svg',
+  'icons/position.svg',
+  'icons/power.svg',
   'icons/refresh.svg',
   'icons/search.svg',
+  'icons/settings.svg',
   'icons/share.svg',
+  'icons/slideshow.svg',
   'icons/sort_by_size.svg',
+  'icons/sound_full.svg',
+  'icons/sound_off.svg',
   'icons/star.svg',
-  'icons/stop.svg'
+  'icons/stars_grade.svg',
+  'icons/stop.svg',
+  'icons/trashcan.svg',
+  'icons/usb.svg',
+  'icons/user.svg',
+  'icons/warning.svg'
 ];
 
 studio.forms.ImageField.fontList_ = [

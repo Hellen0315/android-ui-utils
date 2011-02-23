@@ -285,10 +285,21 @@ studio.forms.RangeField = studio.forms.Field.extend({
         value: this.getValue(),
   			slide: function(evt, ui) {
   				me.setValue(ui.value);
+  				if (me.textEl_) {
+  				  me.textEl_.text(me.params_.textFn(ui.value));
+				  }
   				me.form_.notifyChanged_();
   			}
       })
       .appendTo(fieldContainer);
+
+    if (this.params_.textFn || this.params_.showText) {
+      this.params_.textFn = this.params_.textFn || function(d){ return d; };
+      this.textEl_ = $('<div>')
+        .addClass('form-range-text')
+        .text(this.params_.textFn(this.getValue()))
+        .appendTo(fieldContainer);
+    }
   },
 
   getValue: function() {

@@ -1,9 +1,7 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="480px"
-	 height="480px" viewBox="0 0 480 480" style="enable-background:new 0 0 480 480;" xml:space="preserve">
-	<path style="fill-rule:evenodd;clip-rule:evenodd;" d="M240,80c-88.366,0-160,71.634-160,160s71.634,160,160,160
-		s160-71.634,160-160S328.366,80,240,80z M140,240c0-17.328,4.409-33.626,12.165-47.835l135.67,135.67
-		C273.626,335.591,257.328,340,240,340C184.772,340,140,295.228,140,240z M327.835,287.835l-135.67-135.67
-		C206.374,144.409,222.672,140,240,140c55.228,0,100,44.772,100,100C340,257.328,335.591,273.626,327.835,287.835z"/>
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1 Tiny//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11-tiny.dtd">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" baseProfile="tiny" x="0px" y="0px" width="480px" height="480px" viewBox="0 0 480 480" xml:space="preserve">
+  <g id="block">
+  	<path d="M241.102,56.001c-99.424,0-180.002,80.577-180.002,180.001c0,99.405,80.578,180,180.002,180   c99.406,0,179.996-80.595,179.996-180C421.098,136.578,340.508,56.001,241.102,56.001z M353.598,236.002   c0,18.75-4.668,36.388-12.828,51.95L189.129,136.315c15.562-8.142,33.221-12.814,51.973-12.814   C303.131,123.501,353.598,173.972,353.598,236.002z M128.6,236.002c0-18.751,4.674-36.406,12.811-51.956l151.643,151.629   c-15.562,8.154-33.219,12.827-51.951,12.827C179.067,348.502,128.6,298.031,128.6,236.002z"/>
+  </g>
 </svg>
