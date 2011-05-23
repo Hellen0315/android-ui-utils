@@ -16,6 +16,8 @@
     limitations under the License.
   -->
   <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Android Asset Studio - Icon Generator - Notification icons</title>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
@@ -87,6 +89,7 @@
       </div>
       <div id="footer">
         <p>See the source at the <a href="http://code.google.com/p/android-ui-utils">android-ui-utils</a> Google Code project.</p>
+        <p>All generated art is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>.</p>
       </div>
     </div>
 
@@ -97,7 +100,7 @@
       var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
 
       // Create image output slots
-      for (var version in {'X':1, '9':1}) {
+      for (var version in {'X':1, '11':1, '9':1}) {
         var versionStr = (version == 'X') ? '' : ('-v' + version);
 
         for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
@@ -135,6 +138,16 @@
         'X-square-ldpi-targetRect': { x: 4, y: 4, w: 11, h: 11 },
         'X-circle-ldpi-targetRect': { x: 4, y: 4, w: 11, h: 11 },
 
+        '11-hdpi-iconSize': { w: 48, h: 48 },
+        '11-mdpi-iconSize': { w: 32, h: 32 },
+        '11-ldpi-iconSize': { w: 24, h: 24 },
+        '11-square-hdpi-targetRect': { x: 6, y: 6, w: 36, h: 36 },
+        '11-circle-hdpi-targetRect': { x: 6, y: 6, w: 36, h: 36 },
+        '11-square-mdpi-targetRect': { x: 4, y: 4, w: 24, h: 24 },
+        '11-circle-mdpi-targetRect': { x: 4, y: 4, w: 24, h: 24 },
+        '11-square-ldpi-targetRect': { x: 3, y: 3, w: 18, h: 18 },
+        '11-circle-ldpi-targetRect': { x: 3, y: 3, w: 18, h: 18 },
+
         '9-hdpi-iconSize': { w: 24, h: 38 },
         '9-mdpi-iconSize': { w: 16, h: 25 },
         '9-ldpi-iconSize': { w: 12, h: 19 },
@@ -171,7 +184,7 @@
           var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
           var shape = values['shape'];
-          for (var version in {'X':1, '9':1}) {
+          for (var version in {'X':1, '11':1, '9':1}) {
             for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
               var versionStr = (version == 'X') ? '' : ('-v' + version);
 
@@ -191,6 +204,15 @@
 
                 imagelib.drawing.copy(outCtx, IMAGE_RESOURCES[version + '-' + shape + '-' + density], iconSize);
                 imagelib.drawing.copy(outCtx, tmpCtx, iconSize);
+              } else if (version == '11') {
+                imagelib.drawing.drawCenterInside(tmpCtx, srcImg, targetRect, srcRect);
+
+                imagelib.drawing.fx([
+                  {
+                    effect: 'fill-color',
+                    color: '#fff'
+                  }
+                ], outCtx, tmpCtx, iconSize);
               } else if (version == '9') {
                 imagelib.drawing.drawCenterInside(tmpCtx, srcImg, targetRect, srcRect);
 
