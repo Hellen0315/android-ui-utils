@@ -178,22 +178,13 @@ studio.forms.ImageField = studio.forms.Field.extend({
       .hide()
       .appendTo(this.el_);
 
-    var fontOptions = [];
-    for (var i = 0; i < studio.forms.ImageField.fontList_.length; i++) {
-      fontOptions.push({
-        id: i + 1,
-        title: studio.forms.ImageField.fontList_[i].title
-      });
-    }
-
     this.textForm_ = new studio.forms.Form(
       this.form_.id_ + '-' + this.id_ + '-textform', {
         onChange: function() {
           var values = me.textForm_.getValues();
           me.textParams_.text = values['text'];
           me.textParams_.fontStack = values['font']
-              ? studio.forms.ImageField.fontList_[values['font'] - 1].stack
-              : 'sans-serif';
+              ? values['font'] : 'sans-serif';
           me.valueFilename_ = values['text'];
           me.renderValueAndNotifyChanged_();
         },
@@ -201,9 +192,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
           new studio.forms.TextField('text', {
             title: 'Text',
           }),
-          new studio.forms.EnumField('font', {
+          new studio.forms.AutocompleteTextField('font', {
             title: 'Font',
-            options: fontOptions
+            items: studio.forms.ImageField.fontList_
           }),
         ]
       });
@@ -510,14 +501,15 @@ studio.forms.ImageField.clipartList_ = [
 ];
 
 studio.forms.ImageField.fontList_ = [
-  { title: 'Helvetica / Arial', stack: 'helvetica, arial, sans-serif' },
-  { title: 'Georgia', stack: 'georgia, serif' },
-  { title: 'Book Antiqua / Palatino',
-    stack: '"Book Antiqua", palatino, "Palatino Linotype", serif' },
-  { title: 'Courier', stack: 'courier, monospace' },
-  { title: 'Courier New', stack: '"Courier New", monospace' },
-  { title: 'Webdings', stack: '"Webdings"' },
-  { title: 'Wingdings', stack: '"Wingdings"' },
+  'Helvetica',
+  'Arial',
+  'Georgia',
+  'Book Antiqua',
+  'Palatino',
+  'Courier',
+  'Courier New',
+  'Webdings',
+  'Wingdings'
 ];
 
 

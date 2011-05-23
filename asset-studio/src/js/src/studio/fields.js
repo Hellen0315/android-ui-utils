@@ -110,6 +110,47 @@ studio.forms.TextField = studio.forms.Field.extend({
   }
 });
 
+studio.forms.AutocompleteTextField = studio.forms.Field.extend({
+  createUI: function(container) {
+    var fieldContainer = $('.form-field-container', this.base(container));
+    var me = this;
+
+    this.el_ = $('<input>')
+      .attr('type', 'text')
+      .val(this.getValue())
+      .bind('keydown change', function() {
+        var inputEl = this;
+        window.setTimeout(function() {
+          me.setValue($(inputEl).val());
+          me.form_.notifyChanged_();
+        }, 0);
+      })
+      .appendTo(fieldContainer);
+
+    this.el_.autocompletewithbutton({
+      source: this.params_.items || [],
+      delay: 0,
+      minLength: 0,
+      selected: function(evt, val) {
+        me.setValue(val);
+        me.form_.notifyChanged_();
+      }
+    });
+  },
+
+  getValue: function() {
+    var value = this.value_;
+    if (typeof value != 'string') {
+      value = this.params_.defaultValue || '';
+    }
+    return value;
+  },
+
+  setValue: function(val) {
+    this.value_ = val;
+  }
+});
+
 studio.forms.ColorField = studio.forms.Field.extend({
   createUI: function(container) {
     var fieldContainer = $('.form-field-container', this.base(container));

@@ -620,7 +620,6 @@ studio.checkBrowser = function() {
           },
           select: function( event, ui ) {
             ui.item.option.selected = true;
-            window.foo = self;
             self._trigger( "selected", event, {
               item: ui.item.option
             });
@@ -645,6 +644,56 @@ studio.checkBrowser = function() {
           }
         })
         .addClass( "ui-widget ui-widget-content ui-corner-left" );
+
+      input.data( "autocomplete" )._renderItem = function( ul, item ) {
+        return $( "<li></li>" )
+          .data( "item.autocomplete", item )
+          .append( "<a>" + item.label + "</a>" )
+          .appendTo( ul );
+      };
+
+      $( "<button>&nbsp;</button>" )
+        .attr( "tabIndex", -1 )
+        .attr( "title", "Show All Items" )
+        .insertAfter( input )
+        .button({
+          icons: {
+            primary: "ui-icon-triangle-1-s"
+          },
+          text: false
+        })
+        .removeClass( "ui-corner-all" )
+        .addClass( "ui-corner-right ui-button-icon" )
+        .click(function() {
+          // close if already visible
+          if ( input.autocomplete( "widget" ).is( ":visible" ) ) {
+            input.autocomplete( "close" );
+            return;
+          }
+
+          // pass empty string as value to search for, displaying all results
+          input.autocomplete( "search", "" );
+          input.focus();
+        });
+    }
+  });
+})( jQuery );// Based on sample code at http://jqueryui.com/demos/autocomplete/#combobox
+
+(function( $ ) {
+  $.widget( "ui.autocompletewithbutton", {
+    _create: function() {
+      var self = this,
+        input = this.element,
+        value = input.text();
+
+      input
+        .autocomplete($.extend(this.options, {
+          select: function( event, ui ) {
+            self._trigger( "selected", event, ui.item.value);
+          }
+        }))
+        .addClass( "form-text ui-widget ui-widget-content ui-corner-left " +
+                   "ui-autocomplete-input" );
 
       input.data( "autocomplete" )._renderItem = function( ul, item ) {
         return $( "<li></li>" )
@@ -819,6 +868,47 @@ studio.forms.TextField = studio.forms.Field.extend({
         }, 0);
       })
       .appendTo(fieldContainer);
+  },
+
+  getValue: function() {
+    var value = this.value_;
+    if (typeof value != 'string') {
+      value = this.params_.defaultValue || '';
+    }
+    return value;
+  },
+
+  setValue: function(val) {
+    this.value_ = val;
+  }
+});
+
+studio.forms.AutocompleteTextField = studio.forms.Field.extend({
+  createUI: function(container) {
+    var fieldContainer = $('.form-field-container', this.base(container));
+    var me = this;
+
+    this.el_ = $('<input>')
+      .attr('type', 'text')
+      .val(this.getValue())
+      .bind('keydown change', function() {
+        var inputEl = this;
+        window.setTimeout(function() {
+          me.setValue($(inputEl).val());
+          me.form_.notifyChanged_();
+        }, 0);
+      })
+      .appendTo(fieldContainer);
+
+    this.el_.autocompletewithbutton({
+      source: this.params_.items || [],
+      delay: 0,
+      minLength: 0,
+      selected: function(evt, val) {
+        me.setValue(val);
+        me.form_.notifyChanged_();
+      }
+    });
   },
 
   getValue: function() {
@@ -1204,22 +1294,13 @@ studio.forms.ImageField = studio.forms.Field.extend({
       .hide()
       .appendTo(this.el_);
 
-    var fontOptions = [];
-    for (var i = 0; i < studio.forms.ImageField.fontList_.length; i++) {
-      fontOptions.push({
-        id: i + 1,
-        title: studio.forms.ImageField.fontList_[i].title
-      });
-    }
-
     this.textForm_ = new studio.forms.Form(
       this.form_.id_ + '-' + this.id_ + '-textform', {
         onChange: function() {
           var values = me.textForm_.getValues();
           me.textParams_.text = values['text'];
           me.textParams_.fontStack = values['font']
-              ? studio.forms.ImageField.fontList_[values['font'] - 1].stack
-              : 'sans-serif';
+              ? values['font'] : 'sans-serif';
           me.valueFilename_ = values['text'];
           me.renderValueAndNotifyChanged_();
         },
@@ -1227,9 +1308,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
           new studio.forms.TextField('text', {
             title: 'Text',
           }),
-          new studio.forms.EnumField('font', {
+          new studio.forms.AutocompleteTextField('font', {
             title: 'Font',
-            options: fontOptions
+            items: studio.forms.ImageField.fontList_
           }),
         ]
       });
@@ -1536,14 +1617,15 @@ studio.forms.ImageField.clipartList_ = [
 ];
 
 studio.forms.ImageField.fontList_ = [
-  { title: 'Helvetica / Arial', stack: 'helvetica, arial, sans-serif' },
-  { title: 'Georgia', stack: 'georgia, serif' },
-  { title: 'Book Antiqua / Palatino',
-    stack: '"Book Antiqua", palatino, "Palatino Linotype", serif' },
-  { title: 'Courier', stack: 'courier, monospace' },
-  { title: 'Courier New', stack: '"Courier New", monospace' },
-  { title: 'Webdings', stack: '"Webdings"' },
-  { title: 'Wingdings', stack: '"Wingdings"' },
+  'Helvetica',
+  'Arial',
+  'Georgia',
+  'Book Antiqua',
+  'Palatino',
+  'Courier',
+  'Courier New',
+  'Webdings',
+  'Wingdings'
 ];
 
 

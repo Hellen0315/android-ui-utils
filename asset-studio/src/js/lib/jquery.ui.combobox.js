@@ -32,7 +32,6 @@
           },
           select: function( event, ui ) {
             ui.item.option.selected = true;
-            window.foo = self;
             self._trigger( "selected", event, {
               item: ui.item.option
             });

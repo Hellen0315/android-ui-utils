@@ -15,3 +15,4 @@ limitations under the License.
 */
 
 //#INSERTFILE "../../lib/jquery.ui.combobox.js"
+//#INSERTFILE "../../lib/jquery.ui.autocompletewithbutton.js"
