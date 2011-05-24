@@ -70,7 +70,7 @@ imagelib.drawing.drawCenterCrop = function(dstCtx, src, dstRect, srcRect) {
 };
 
 imagelib.drawing.trimRectWorkerJS_ = [
-"onmessage = function(event) {                                               ",
+"self['onmessage'] = function(event) {                                       ",
 "  var l = event.data.size.w, t = event.data.size.h, r = 0, b = 0;           ",
 "                                                                            ",
 "  var alpha;                                                                ",
@@ -111,16 +111,14 @@ imagelib.drawing.getTrimRect = function(ctx, size, minAlpha, callback) {
 
   minAlpha = minAlpha || 1;
 
-  var worker = imagelib.util.createWorkerFromString(
-      imagelib.drawing.trimRectWorkerJS_);
-  worker.addEventListener('message', function(evt) {
-    callback(evt.data);
-  }, false);
-  worker.postMessage({
-    imageData: ctx.getImageData(0, 0, size.w, size.h),
-    size: size,
-    minAlpha: minAlpha
-  });
+  var worker = imagelib.util.runWorkerJs(
+      imagelib.drawing.trimRectWorkerJS_,
+      {
+        imageData: ctx.getImageData(0, 0, size.w, size.h),
+        size: size,
+        minAlpha: minAlpha
+      },
+      callback);
 
   return worker;
 };
