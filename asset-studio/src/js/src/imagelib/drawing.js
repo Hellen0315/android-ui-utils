@@ -69,7 +69,36 @@ imagelib.drawing.drawCenterCrop = function(dstCtx, src, dstRect, srcRect) {
   }
 };
 
-imagelib.drawing.getTrimRect = function(ctx, size, minAlpha) {
+imagelib.drawing.trimRectWorkerJS_ = [
+"onmessage = function(event) {                                               ",
+"  var l = event.data.size.w, t = event.data.size.h, r = 0, b = 0;           ",
+"                                                                            ",
+"  var alpha;                                                                ",
+"  for (var y = 0; y < event.data.size.h; y++) {                             ",
+"    for (var x = 0; x < event.data.size.w; x++) {                           ",
+"      alpha = event.data.imageData.data[                                    ",
+"          ((y * event.data.size.w + x) << 2) + 3];                          ",
+"      if (alpha > event.data.minAlpha) {                                    ",
+"        l = Math.min(x, l);                                                 ",
+"        t = Math.min(y, t);                                                 ",
+"        r = Math.max(x, r);                                                 ",
+"        b = Math.max(y, b);                                                 ",
+"      }                                                                     ",
+"    }                                                                       ",
+"  }                                                                         ",
+"                                                                            ",
+"  if (l > r) {                                                              ",
+"    // no pixels, couldn't trim                                             ",
+"    postMessage({ x: 0, y: 0, w: event.data.size.w, h: event.data.size.h });",
+"  }                                                                         ",
+"                                                                            ",
+"  postMessage({ x: l, y: t, w: r - l + 1, h: b - t + 1 });                  ",
+"};                                                                          ",
+""].join('\n');
+
+imagelib.drawing.getTrimRect = function(ctx, size, minAlpha, callback) {
+  callback = callback || function(){};
+
   if (!ctx.canvas) {
     // Likely an image
     var src = ctx;
@@ -78,30 +107,22 @@ imagelib.drawing.getTrimRect = function(ctx, size, minAlpha) {
   }
 
   if (minAlpha == 0)
-    return { x: 0, y: 0, w: size.w, h: size.h };
+    callback({ x: 0, y: 0, w: size.w, h: size.h });
 
   minAlpha = minAlpha || 1;
 
-  var l = size.w, t = size.h, r = 0, b = 0;
+  var worker = imagelib.util.createWorkerFromString(
+      imagelib.drawing.trimRectWorkerJS_);
+  worker.addEventListener('message', function(evt) {
+    callback(evt.data);
+  }, false);
+  worker.postMessage({
+    imageData: ctx.getImageData(0, 0, size.w, size.h),
+    size: size,
+    minAlpha: minAlpha
+  });
 
-  var data = ctx.getImageData(0, 0, size.w, size.h).data;
-  var alpha;
-  for (var y = 0; y < size.h; y++) {
-    for (var x = 0; x < size.w; x++) {
-      alpha = data[((y * size.w + x) << 2) + 3];
-      if (alpha > minAlpha) {
-        l = Math.min(x, l);
-        t = Math.min(y, t);
-        r = Math.max(x, r);
-        b = Math.max(y, b);
-      }
-    }
-  }
-
-  if (l > r)
-    return { x: 0, y: 0, w: size.w, h: size.h }; // no pixels, couldn't trim
-
-  return { x: l, y: t, w: r - l + 1, h: b - t + 1 };
+  return worker;
 };
 
 imagelib.drawing.copyAsAlpha = function(dstCtx, src, size, onColor, offColor) {

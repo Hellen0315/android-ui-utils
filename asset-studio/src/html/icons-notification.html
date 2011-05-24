@@ -171,88 +171,83 @@
         zipper.setZipFilename(iconName + '.zip');
 
         // TODO: just add support for required inputs
-        if (!values['source'].uri) {
+        if (!values['source'].ctx) {
           return;
         }
 
-        imagelib.loadFromUri(values['source'].uri, function(srcImg) {
-          if (!srcImg) {
-            return;
-          }
+        var srcCtx = values['source'].ctx;
+        var srcSize = { w: srcCtx.canvas.width, h: srcCtx.canvas.height };
+        var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
-          var srcSize = { w: srcImg.naturalWidth, h: srcImg.naturalHeight };
-          var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
+        var shape = values['shape'];
+        for (var version in {'X':1, '11':1, '9':1}) {
+          for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+            var versionStr = (version == 'X') ? '' : ('-v' + version);
 
-          var shape = values['shape'];
-          for (var version in {'X':1, '11':1, '9':1}) {
-            for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
-              var versionStr = (version == 'X') ? '' : ('-v' + version);
+            var iconSize = PARAM_RESOURCES[version + '-' + density + '-iconSize'];
+            var targetRect = PARAM_RESOURCES[version + '-' + shape + '-' + density + '-targetRect'];
 
-              var iconSize = PARAM_RESOURCES[version + '-' + density + '-iconSize'];
-              var targetRect = PARAM_RESOURCES[version + '-' + shape + '-' + density + '-targetRect'];
+            var outCtx = imagelib.drawing.context(iconSize);
+            var tmpCtx = imagelib.drawing.context(iconSize);
 
-              var outCtx = imagelib.drawing.context(iconSize);
-              var tmpCtx = imagelib.drawing.context(iconSize);
+            if (version == 'X') {
+              tmpCtx.save();
+              imagelib.drawing.drawCenterInside(tmpCtx, srcCtx, targetRect, srcRect);
+              tmpCtx.globalCompositeOperation = 'source-atop';
+              tmpCtx.fillStyle = '#fff';
+              tmpCtx.fillRect(0, 0, iconSize.w, iconSize.h);
+              tmpCtx.restore();
 
-              if (version == 'X') {
-                tmpCtx.save();
-                imagelib.drawing.drawCenterInside(tmpCtx, srcImg, targetRect, srcRect);
-                tmpCtx.globalCompositeOperation = 'source-atop';
-                tmpCtx.fillStyle = '#fff';
-                tmpCtx.fillRect(0, 0, iconSize.w, iconSize.h);
-                tmpCtx.restore();
+              imagelib.drawing.copy(outCtx, IMAGE_RESOURCES[version + '-' + shape + '-' + density], iconSize);
+              imagelib.drawing.copy(outCtx, tmpCtx, iconSize);
+            } else if (version == '11') {
+              imagelib.drawing.drawCenterInside(tmpCtx, srcCtx, targetRect, srcRect);
 
-                imagelib.drawing.copy(outCtx, IMAGE_RESOURCES[version + '-' + shape + '-' + density], iconSize);
-                imagelib.drawing.copy(outCtx, tmpCtx, iconSize);
-              } else if (version == '11') {
-                imagelib.drawing.drawCenterInside(tmpCtx, srcImg, targetRect, srcRect);
+              imagelib.drawing.fx([
+                {
+                  effect: 'fill-color',
+                  color: '#fff'
+                }
+              ], outCtx, tmpCtx, iconSize);
+            } else if (version == '9') {
+              imagelib.drawing.drawCenterInside(tmpCtx, srcCtx, targetRect, srcRect);
 
-                imagelib.drawing.fx([
-                  {
-                    effect: 'fill-color',
-                    color: '#fff'
-                  }
-                ], outCtx, tmpCtx, iconSize);
-              } else if (version == '9') {
-                imagelib.drawing.drawCenterInside(tmpCtx, srcImg, targetRect, srcRect);
-
-                imagelib.drawing.fx([
-                  {
-                    effect: 'inner-shadow',
-                    color: '#fff',
-                    opacity: 0.10,
-                    translate: { y: 1 }
-                  },
-                  {
-                    effect: 'fill-lineargradient',
-                    from: { x: 0, y: 0 },
-                    to: { x: 0, y: iconSize.h },
-                    colors: [
-                      { offset: 0, color: '#919191' },
-                      { offset: 1.0, color: '#828282' }
-                    ]
-                  }
-                ], outCtx, tmpCtx, iconSize);
-              }
-
-              zipper.add({
-                name: 'res/drawable-' + density + versionStr + '/' + iconName + '.png',
-                base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
-              });
-
-              if (showGuides)
-                studio.ui.drawImageGuideRects(outCtx, iconSize, [
-                  targetRect
-                ]);
-
-              imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(version, density) {
-                return function(img) {
-                  $('#out-icon-' + version + '-' + density).attr('src', img.src);
-                };
-              }(version, density));
+              imagelib.drawing.fx([
+                {
+                  effect: 'inner-shadow',
+                  color: '#fff',
+                  opacity: 0.10,
+                  translate: { y: 1 }
+                },
+                {
+                  effect: 'fill-lineargradient',
+                  from: { x: 0, y: 0 },
+                  to: { x: 0, y: iconSize.h },
+                  colors: [
+                    { offset: 0, color: '#919191' },
+                    { offset: 1.0, color: '#828282' }
+                  ]
+                }
+              ], outCtx, tmpCtx, iconSize);
             }
+
+            zipper.add({
+              name: 'res/drawable-' + density + versionStr + '/' + iconName + '.png',
+              base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
+            });
+
+            if (showGuides)
+              studio.ui.drawImageGuideRects(outCtx, iconSize, [
+                targetRect
+              ]);
+
+            imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(version, density) {
+              return function(img) {
+                $('#out-icon-' + version + '-' + density).attr('src', img.src);
+              };
+            }(version, density));
           }
-        });
+        }
       }
 
       var form = new studio.forms.Form('icon-form', {

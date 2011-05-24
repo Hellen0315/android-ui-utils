@@ -164,69 +164,64 @@
           return;
         }
 
-        if (!values['source'].uri) {
+        if (!values['source'].ctx) {
           return;
         }
 
-        imagelib.loadFromUri(values['source'].uri, function(srcImg) {
-          if (!srcImg) {
-            return;
+        var srcCtx = values['source'].ctx;
+        var srcSize = { w: srcCtx.canvas.width, h: srcCtx.canvas.height };
+        var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
+
+        for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+          var iconSize = PARAM_RESOURCES[density + '-iconSize'];
+          var fxMult = PARAM_RESOURCES[density + '-fxMult'];
+          var guideRect = PARAM_RESOURCES[density + '-guideRect'];
+          var targetRect = PARAM_RESOURCES[density + '-targetRect'];
+
+          var outCtx = imagelib.drawing.context(iconSize);
+          var tmpCtx = imagelib.drawing.context(iconSize);
+
+          imagelib.drawing.drawCenterInside(tmpCtx, srcCtx, targetRect, srcRect);
+
+          if (values['theme'] == 'light') {
+            imagelib.drawing.fx([
+              {
+                effect: 'fill-color',
+                color: '#898989'
+              }
+            ], outCtx, tmpCtx, iconSize);
+          } else {
+            imagelib.drawing.fx([
+              {
+                effect: 'fill-color',
+                color: '#999' // TODO: should be white @ 60% opacity, but
+                              // the fill then blends with the drop shadow
+              },
+              {
+                effect: 'outer-shadow',
+                color: '#000',
+                opacity: 0.85,
+                blur: 3 * fxMult
+              },
+            ], outCtx, tmpCtx, iconSize);
           }
 
-          var srcSize = { w: srcImg.naturalWidth, h: srcImg.naturalHeight };
-          var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
+          zipper.add({
+            name: 'res/drawable-' + density + '/' + iconName + '.png',
+            base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
+          });
 
-          for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
-            var iconSize = PARAM_RESOURCES[density + '-iconSize'];
-            var fxMult = PARAM_RESOURCES[density + '-fxMult'];
-            var guideRect = PARAM_RESOURCES[density + '-guideRect'];
-            var targetRect = PARAM_RESOURCES[density + '-targetRect'];
+          if (showGuides)
+            studio.ui.drawImageGuideRects(outCtx, iconSize, [
+              guideRect
+            ]);
 
-            var outCtx = imagelib.drawing.context(iconSize);
-            var srcCtx = imagelib.drawing.context(iconSize);
-
-            imagelib.drawing.drawCenterInside(srcCtx, srcImg, targetRect, srcRect);
-
-            if (values['theme'] == 'light') {
-              imagelib.drawing.fx([
-                {
-                  effect: 'fill-color',
-                  color: '#898989'
-                }
-              ], outCtx, srcCtx, iconSize);
-            } else {
-              imagelib.drawing.fx([
-                {
-                  effect: 'fill-color',
-                  color: '#999' // TODO: should be white @ 60% opacity, but
-                                // the fill then blends with the drop shadow
-                },
-                {
-                  effect: 'outer-shadow',
-                  color: '#000',
-                  opacity: 0.85,
-                  blur: 3 * fxMult
-                },
-              ], outCtx, srcCtx, iconSize);
-            }
-
-            zipper.add({
-              name: 'res/drawable-' + density + '/' + iconName + '.png',
-              base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
-            });
-
-            if (showGuides)
-              studio.ui.drawImageGuideRects(outCtx, iconSize, [
-                guideRect
-              ]);
-
-            imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
-              return function(img) {
-                $('#out-icon-' + density).attr('src', img.src);
-              };
-            }(density));
-          }
-        });
+          imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
+            return function(img) {
+              $('#out-icon-' + density).attr('src', img.src);
+            };
+          }(density));
+        }
       }
 
       var form = new studio.forms.Form('icon-form', {

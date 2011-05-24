@@ -32,7 +32,7 @@ studio.checkBrowser = function() {
                 'style="float:left; margin:0 7px 50px 0;">'))
       .append($('<p>')
         .html('Currently only ' +
-              '<a href="http://www.google.com/chrome">Chrome 6+</a> ' +
+              '<a href="http://www.google.com/chrome">Google Chrome</a> ' +
               'is recommended and supported. Your mileage may vary with ' +
               'other browsers.'))
       .prependTo('body');

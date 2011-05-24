@@ -184,77 +184,72 @@
           return;
         }
 
-        if (!values['source'].uri) {
+        if (!values['source'].ctx) {
           return;
         }
 
-        imagelib.loadFromUri(values['source'].uri, function(srcImg) {
-          if (!srcImg) {
-            return;
-          }
+        var srcCtx = values['source'].ctx;
+        var srcSize = { w: srcCtx.canvas.width, h: srcCtx.canvas.height };
+        var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
-          var srcSize = { w: srcImg.naturalWidth, h: srcImg.naturalHeight };
-          var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
+        for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+          var iconSize = PARAM_RESOURCES[density + '-iconSize'];
+          var fxMult = PARAM_RESOURCES[density + '-fxMult'];
+          var guideRect = PARAM_RESOURCES[density + '-guideRect'];
+          var targetRect = PARAM_RESOURCES[density + '-targetRect'];
 
-          for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
-            var iconSize = PARAM_RESOURCES[density + '-iconSize'];
-            var fxMult = PARAM_RESOURCES[density + '-fxMult'];
-            var guideRect = PARAM_RESOURCES[density + '-guideRect'];
-            var targetRect = PARAM_RESOURCES[density + '-targetRect'];
+          var outCtx = imagelib.drawing.context(iconSize);
+          var tmpCtx = imagelib.drawing.context(iconSize);
 
-            var outCtx = imagelib.drawing.context(iconSize);
-            var srcCtx = imagelib.drawing.context(iconSize);
+          imagelib.drawing.drawCenterInside(tmpCtx, srcCtx, targetRect, srcRect);
 
-            imagelib.drawing.drawCenterInside(srcCtx, srcImg, targetRect, srcRect);
+          imagelib.drawing.fx([
+            {
+              effect: 'inner-shadow',
+              color: '#000',
+              opacity: 0.2,
+              blur: 3 * fxMult,
+              translate: { y: 3 * fxMult }
+            },
+            {
+              effect: 'inner-shadow',
+              color: '#000',
+              opacity: 0.35,
+              translate: { y: 1 }
+            },
+            {
+              effect: 'inner-shadow',
+              color: '#fff',
+              opacity: 0.35,
+              translate: { y: -1 }
+            },
+            {
+              effect: 'fill-lineargradient',
+              from: { x: 0, y: 0 },
+              to: { x: 0, y: iconSize.h },
+              colors: [
+                { offset: 0, color: '#a3a3a3' },
+                { offset: 1.0, color: '#787878' }
+              ]
+            }
+          ], outCtx, tmpCtx, iconSize);
 
-            imagelib.drawing.fx([
-              {
-                effect: 'inner-shadow',
-                color: '#000',
-                opacity: 0.2,
-                blur: 3 * fxMult,
-                translate: { y: 3 * fxMult }
-              },
-              {
-                effect: 'inner-shadow',
-                color: '#000',
-                opacity: 0.35,
-                translate: { y: 1 }
-              },
-              {
-                effect: 'inner-shadow',
-                color: '#fff',
-                opacity: 0.35,
-                translate: { y: -1 }
-              },
-              {
-                effect: 'fill-lineargradient',
-                from: { x: 0, y: 0 },
-                to: { x: 0, y: iconSize.h },
-                colors: [
-                  { offset: 0, color: '#a3a3a3' },
-                  { offset: 1.0, color: '#787878' }
-                ]
-              }
-            ], outCtx, srcCtx, iconSize);
+          zipper.add({
+            name: 'res/drawable-' + density + '/' + iconName + '.png',
+            base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
+          });
 
-            zipper.add({
-              name: 'res/drawable-' + density + '/' + iconName + '.png',
-              base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
-            });
+          if (showGuides)
+            studio.ui.drawImageGuideRects(outCtx, iconSize, [
+              guideRect
+            ]);
 
-            if (showGuides)
-              studio.ui.drawImageGuideRects(outCtx, iconSize, [
-                guideRect
-              ]);
-
-            imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
-              return function(img) {
-                $('#out-icon-' + density).attr('src', img.src);
-              };
-            }(density));
-          }
-        });
+          imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
+            return function(img) {
+              $('#out-icon-' + density).attr('src', img.src);
+            };
+          }(density));
+        }
       }
 
       var form = new studio.forms.Form('icon-form', {

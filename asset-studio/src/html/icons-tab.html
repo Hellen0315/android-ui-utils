@@ -147,155 +147,150 @@
         zipper.clear();
         zipper.setZipFilename(iconName + '.zip');
 
-        if (!values['source'].uri) {
+        if (!values['source'].ctx) {
           return;
         }
 
-        imagelib.loadFromUri(values['source'].uri, function(srcImg) {
-          if (!srcImg) {
-            return;
-          }
+        var srcCtx = values['source'].ctx;
+        var srcSize = { w: srcCtx.canvas.width, h: srcCtx.canvas.height };
+        var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
-          var srcSize = { w: srcImg.naturalWidth, h: srcImg.naturalHeight };
-          var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
+        for (var version in {'X':1, '5':1}) {
+          for (var type in {'selected':1, 'unselected':1}) {
+            for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+              var versionStr = (version == 'X') ? '' : ('-v' + version);
 
-          for (var version in {'X':1, '5':1}) {
-            for (var type in {'selected':1, 'unselected':1}) {
-              for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
-                var versionStr = (version == 'X') ? '' : ('-v' + version);
+              var iconSize = PARAM_RESOURCES[density + '-iconSize'];
+              var fxMult = PARAM_RESOURCES[density + '-fxMult'];
+              var targetRect = PARAM_RESOURCES[density + '-targetRect'];
 
-                var iconSize = PARAM_RESOURCES[density + '-iconSize'];
-                var fxMult = PARAM_RESOURCES[density + '-fxMult'];
-                var targetRect = PARAM_RESOURCES[density + '-targetRect'];
+              var outCtx = imagelib.drawing.context(iconSize);
+              var tmpCtx = imagelib.drawing.context(iconSize);
 
-                var outCtx = imagelib.drawing.context(iconSize);
-                var srcCtx = imagelib.drawing.context(iconSize);
+              imagelib.drawing.drawCenterInside(tmpCtx, srcCtx, targetRect, srcRect);
 
-                imagelib.drawing.drawCenterInside(srcCtx, srcImg, targetRect, srcRect);
-
-                var effects = [];
-                if (version == 'X') {
-                  if (type == 'selected') {
-                    effects = [
-                      {
-                        effect: 'inner-shadow',
-                        color: '#000',
-                        opacity: 0.2,
-                        blur: 3 * fxMult,
-                        translate: { y: 3 * fxMult }
-                      },
-                      {
-                        effect: 'inner-shadow',
-                        color: '#000',
-                        opacity: 0.35,
-                        translate: { y: 1 }
-                      },
-                      {
-                        effect: 'inner-shadow',
-                        color: '#fff',
-                        opacity: 0.35,
-                        translate: { y: -1 }
-                      },
-                      {
-                        effect: 'fill-lineargradient',
-                        from: { x: 0, y: 0 },
-                        to: { x: 0, y: iconSize.h },
-                        colors: [
-                          { offset: 0, color: '#a3a3a3' },
-                          { offset: 1.0, color: '#787878' }
-                        ]
-                      }
-                    ];
-                  } else {
-                    effects = [
-                      {
-                        effect: 'inner-shadow',
-                        color: '#000',
-                        opacity: 0.1,
-                        blur: 3 * fxMult,
-                        translate: { y: 3 * fxMult }
-                      },
-                      {
-                        effect: 'inner-shadow',
-                        color: '#000',
-                        opacity: 0.35,
-                        translate: { y: 1 }
-                      },
-                      {
-                        effect: 'inner-shadow',
-                        color: '#fff',
-                        opacity: 0.35,
-                        translate: { y: -1 }
-                      },
-                      {
-                        effect: 'fill-lineargradient',
-                        from: { x: 0, y: 0 },
-                        to: { x: 0, y: iconSize.h },
-                        colors: [
-                          { offset: 0.25, color: '#f9f9f9' },
-                          { offset: 1.0, color: '#dfdfdf' }
-                        ]
-                      }
-                    ];
-                  }
-                } else if (version == '5') {
-                  if (type == 'selected') {
-                    effects = [
-                      {
-                        effect: 'outer-shadow',
-                        color: '#000',
-                        opacity: 0.25,
-                        blur: 5 * fxMult
-                      },
-                      {
-                        effect: 'fill-color',
-                        color: '#fff'
-                      }
-                    ];
-                  } else {
-                    effects = [
-                      {
-                        effect: 'fill-color',
-                        color: '#808080'
-                      }
-                    ];
-                  }
+              var effects = [];
+              if (version == 'X') {
+                if (type == 'selected') {
+                  effects = [
+                    {
+                      effect: 'inner-shadow',
+                      color: '#000',
+                      opacity: 0.2,
+                      blur: 3 * fxMult,
+                      translate: { y: 3 * fxMult }
+                    },
+                    {
+                      effect: 'inner-shadow',
+                      color: '#000',
+                      opacity: 0.35,
+                      translate: { y: 1 }
+                    },
+                    {
+                      effect: 'inner-shadow',
+                      color: '#fff',
+                      opacity: 0.35,
+                      translate: { y: -1 }
+                    },
+                    {
+                      effect: 'fill-lineargradient',
+                      from: { x: 0, y: 0 },
+                      to: { x: 0, y: iconSize.h },
+                      colors: [
+                        { offset: 0, color: '#a3a3a3' },
+                        { offset: 1.0, color: '#787878' }
+                      ]
+                    }
+                  ];
+                } else {
+                  effects = [
+                    {
+                      effect: 'inner-shadow',
+                      color: '#000',
+                      opacity: 0.1,
+                      blur: 3 * fxMult,
+                      translate: { y: 3 * fxMult }
+                    },
+                    {
+                      effect: 'inner-shadow',
+                      color: '#000',
+                      opacity: 0.35,
+                      translate: { y: 1 }
+                    },
+                    {
+                      effect: 'inner-shadow',
+                      color: '#fff',
+                      opacity: 0.35,
+                      translate: { y: -1 }
+                    },
+                    {
+                      effect: 'fill-lineargradient',
+                      from: { x: 0, y: 0 },
+                      to: { x: 0, y: iconSize.h },
+                      colors: [
+                        { offset: 0.25, color: '#f9f9f9' },
+                        { offset: 1.0, color: '#dfdfdf' }
+                      ]
+                    }
+                  ];
                 }
-
-                imagelib.drawing.fx(effects, outCtx, srcCtx, iconSize);
-
-                /*imagelib.drawing.applyFilter(
-                  new ConvolutionFilter(
-                    [-1, -1,  0,
-                     -1,  1,  1,
-                      0,  1,  1], 2, -128),
-                  outCtx, iconSize);*/
-
-                zipper.add({
-                  name: 'res/drawable-' + density + versionStr + '/' +
-                        iconName + '_' + type + '.png',
-                  base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
-                });
-
-                if (showGuides)
-                  studio.ui.drawImageGuideRects(outCtx, iconSize, [
-                    targetRect
-                  ]);
-
-                imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(version, type, density) {
-                  return function(img) {
-                    $('#out-icon-' + version + '-' + type + '-' + density).attr('src', img.src);
-                  };
-                }(version, type, density));
+              } else if (version == '5') {
+                if (type == 'selected') {
+                  effects = [
+                    {
+                      effect: 'outer-shadow',
+                      color: '#000',
+                      opacity: 0.25,
+                      blur: 5 * fxMult
+                    },
+                    {
+                      effect: 'fill-color',
+                      color: '#fff'
+                    }
+                  ];
+                } else {
+                  effects = [
+                    {
+                      effect: 'fill-color',
+                      color: '#808080'
+                    }
+                  ];
+                }
               }
+
+              imagelib.drawing.fx(effects, outCtx, tmpCtx, iconSize);
+
+              /*imagelib.drawing.applyFilter(
+                new ConvolutionFilter(
+                  [-1, -1,  0,
+                   -1,  1,  1,
+                    0,  1,  1], 2, -128),
+                outCtx, iconSize);*/
+
+              zipper.add({
+                name: 'res/drawable-' + density + versionStr + '/' +
+                      iconName + '_' + type + '.png',
+                base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
+              });
+
+              if (showGuides)
+                studio.ui.drawImageGuideRects(outCtx, iconSize, [
+                  targetRect
+                ]);
+
+              imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(version, type, density) {
+                return function(img) {
+                  $('#out-icon-' + version + '-' + type + '-' + density).attr('src', img.src);
+                };
+              }(version, type, density));
             }
           }
+        }
 
-          // Add drawable XML to the zip file
-          zipper.add({
-            name: 'res/drawable/' + iconName + '.xml',
-            textData: drawableXmlTemplate.replace(/%s/g, iconName)
-          });
+        // Add drawable XML to the zip file
+        zipper.add({
+          name: 'res/drawable/' + iconName + '.xml',
+          textData: drawableXmlTemplate.replace(/%s/g, iconName)
         });
       }
 

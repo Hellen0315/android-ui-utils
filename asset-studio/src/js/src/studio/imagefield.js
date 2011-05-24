@@ -238,7 +238,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
     this.trimFormValues_ = this.trimForm_.getValues();
 
     // Create image preview element
-    this.imagePreview_ = $('<img>')
+    this.imagePreview_ = $('<canvas>')
       .addClass('form-image-preview')
       .hide()
       .appendTo(fieldContainer.parent());
@@ -325,14 +325,14 @@ studio.forms.ImageField = studio.forms.Field.extend({
   clearValue: function() {
     this.valueType_ = null;
     this.valueFilename_ = null;
-    this.valueUri_ = null;
+    this.valueCtx_ = null;
     this.fileEl_.val('');
     this.imagePreview_.hide();
   },
 
   getValue: function() {
     return {
-      uri: this.valueUri_,
+      ctx: this.valueCtx_,
       name: this.valueFilename_
     };
   },
@@ -340,7 +340,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
   // this function is asynchronous
   renderValueAndNotifyChanged_: function() {
     if (!this.valueType_) {
-      this.valueUri_ = null;
+      this.valueCtx_ = null;
     }
 
     var me = this;
@@ -396,7 +396,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
                     (this.textParams_.fontStack || 'sans-serif');
         ctx.textBaseline = 'bottom';
         ctx.fillText(text, 0, size.h);
-        size.w = ctx.measureText(text).width || size.w;
+        size.w = Math.min(ctx.measureText(text).width, size.w) || size.w;
 
         continue_(ctx, size);
         break;
@@ -404,11 +404,21 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
     function continue_(srcCtx, srcSize) {
       // Apply trimming
-      var trimRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
       if (me.trimFormValues_['trim']) {
-        trimRect = imagelib.drawing.getTrimRect(srcCtx, srcSize);
+        if (me.trimWorker_) {
+          me.trimWorker_.terminate();
+        }
+        me.trimWorker_ = imagelib.drawing.getTrimRect(srcCtx, srcSize, 1,
+            function(trimRect) {
+                continue2_(srcCtx, srcSize, trimRect);
+            });
+      } else {
+        continue2_(srcCtx, srcSize,
+            /*trimRect*/{ x: 0, y: 0, w: srcSize.w, h: srcSize.h });
       }
+    }
 
+    function continue2_(srcCtx, srcSize, trimRect) {
       // If trimming, add a tiny bit of padding to fix artifacts around the
       // edges.
       var extraPadding = me.trimFormValues_['trim'] ? 0.001 : 0;
@@ -426,10 +436,15 @@ studio.forms.ImageField = studio.forms.Field.extend({
       imagelib.drawing.drawCenterInside(outCtx, srcCtx, targetRect, trimRect);
 
       // Set the final URI value and show a preview
-      me.valueUri_ = outCtx.canvas.toDataURL();
+      me.valueCtx_ = outCtx;
 
       if (me.imagePreview_) {
-        me.imagePreview_.attr('src', me.valueUri_);
+        me.imagePreview_.attr('width', outCtx.canvas.width);
+        me.imagePreview_.attr('height', outCtx.canvas.height);
+
+        var previewCtx = me.imagePreview_.get(0).getContext('2d');
+        previewCtx.drawImage(outCtx.canvas, 0, 0);
+
         me.imagePreview_.show();
       }
 
