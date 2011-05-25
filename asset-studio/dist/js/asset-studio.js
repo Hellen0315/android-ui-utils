@@ -871,7 +871,7 @@ studio.forms.Form = Base.extend({
 
   /**
    * Returns all available serialized values of the form fields, as an object.
-   * All keys and values in the returned object are strings.
+   * All values in the returned object are either strings or objects.
    * @type Object
    */
   getValuesSerialized: function() {
@@ -1135,6 +1135,7 @@ studio.forms.ColorField = studio.forms.Field.extend({
     var computedValue = this.getValue();
     $('.form-color-preview', this.el_)
         .css('background-color', computedValue.color);
+    $(this.el_).ColorPickerSetColor(computedValue.color);
     if (!pauseUi) {
       if (this.alphaEl_) {
         $(this.alphaEl_).slider('value', computedValue.alpha);
@@ -1145,16 +1146,12 @@ studio.forms.ColorField = studio.forms.Field.extend({
 
   serializeValue: function() {
     var computedValue = this.getValue();
-    var s = computedValue.color;
-    if (computedValue.alpha != 100) {
-      s += '|' + computedValue.alpha;
-    }
-    return s;
+    return computedValue.color.replace(/^#/, '') + ',' + computedValue.alpha;
   },
 
   deserializeValue: function(s) {
     var val = {};
-    var arr = s.split('|', 2);
+    var arr = s.split(',', 2);
     if (arr.length >= 1) {
       val.color = arr[0];
     }
@@ -1274,6 +1271,14 @@ studio.forms.BooleanField = studio.forms.EnumField.extend({
 
   setValue: function(val, pauseUi) {
     this.base(val ? '1' : '0', pauseUi);
+  },
+
+  serializeValue: function() {
+    return this.getValue() ? '1' : '0';
+  },
+
+  deserializeValue: function(s) {
+    this.setValue(s == '1');
   }
 });
 
@@ -1318,7 +1323,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
   setValue: function(val, pauseUi) {
     this.value_ = val;
     if (!pauseUi) {
-      $(this.alphaEl_).slider('value', val);
+      $(this.el_).slider('value', val);
     }
 		if (this.textEl_) {
 		  this.textEl_.text(this.params_.textFn(val));
@@ -1331,7 +1336,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
   },
 
   deserializeValue: function(s) {
-    this.setValue(parseInt(s, 10));
+    this.setValue(Number(s)); // don't use parseInt nor parseFloat
   }
 });
 
@@ -1408,30 +1413,47 @@ studio.hash.hashToParams = function(hash) {
 
   var pairs = hash.split('&');
   for (var i = 0; i < pairs.length; i++) {
-    var p = pairs[i].split('=');
-    var key = p[0] ? decodeURIComponent(p[0]) : p[0];
-    var val = p[1] ? decodeURIComponent(p[1]) : p[1];
-    if (val === '0')
-      val = 0;
-    if (val === '1')
-      val = 1;
-    if (key in params) {
+    var parts = pairs[i].split('=', 2);
+
+    // Most of the time path == key, but for objects like a.b=1, we need to
+    // descend into the hierachy.
+    var path = parts[0] ? decodeURIComponent(parts[0]) : parts[0];
+    var val = parts[1] ? decodeURIComponent(parts[1]) : parts[1];
+    var pathArr = path.split('.');
+    var obj = params;
+    for (var j = 0; j < pathArr.length - 1; j++) {
+      obj[pathArr[j]] = obj[pathArr[j]] || {};
+      obj = obj[pathArr[j]];
+    }
+    var key = pathArr[pathArr.length - 1];
+    if (key in obj) {
       // Handle array values.
-      if (params[key] && 'push' in params[key]) {
-        params[key].push(val);
+      if (obj[key] && obj[key].splice) {
+        obj[key].push(val);
       } else {
-        params[key] = [params[key], val];
+        obj[key] = [obj[key], val];
       }
     } else {
-      params[key] = val;
+      obj[key] = val;
     }
   }
 
   return params;
-}
+};
 
-studio.hash.paramsToHash = function(params) {
+studio.hash.paramsToHash = function(params, prefix) {
   var hashArr = [];
+
+  var keyPath_ = function(k) {
+    return encodeURIComponent((prefix ? prefix + '.' : '') + k);
+  };
+
+  var pushKeyValue_ = function(k, v) {
+    if (v === false) v = 0;
+    if (v === true)  v = 1;
+    hashArr.push(keyPath_(k) + '=' +
+                 encodeURIComponent(v.toString()));
+  };
 
   for (var key in params) {
     var val = params[key];
@@ -1439,27 +1461,24 @@ studio.hash.paramsToHash = function(params) {
       continue;
     }
 
-    if (typeof val === 'object' &&
-        'split' in val &&
-        'splice' in val &&
-        val.length) {
-      for (var i = 0; i < val.length; i++) {
-        var subVal = val[i];
-        if (subVal === false) subVal = 0;
-        if (subVal === true) subVal = 1;
-        hashArr.push(encodeURIComponent(key) + '=' +
-                     encodeURIComponent(subVal.toString()));
+    if (typeof val == 'object') {
+      if (val.splice && val.length) {
+        // Arrays
+        for (var i = 0; i < val.length; i++) {
+          pushKeyValue_(key, val[i]);
+        }
+      } else {
+        // Objects
+        hashArr.push(studio.hash.paramsToHash(val, keyPath_(key)));
       }
     } else {
-      if (val === false) val = 0;
-      if (val === true) val = 1;
-      hashArr.push(encodeURIComponent(key) + '=' +
-                   encodeURIComponent(val.toString()));
+      // All other values
+      pushKeyValue_(key, val);
     }
   }
 
   return hashArr.join('&');
-}
+};
 
 
 /**
@@ -1478,7 +1497,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
     this.valueType_ = null;
     this.textParams_ = {};
     this.imageParams_ = {};
-    this.trimFormValues_ = {};
+    this.spaceFormValues_ = {}; // cache
     this.base(id, params);
   },
 
@@ -1585,16 +1604,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
         .attr('src', clipartSrc)
         .click(function(clipartSrc) {
           return function() {
-            var useCanvg = USE_CANVG && clipartSrc.match(/\.svg$/);
-
-            $('img', clipartParamsEl).removeClass('selected');
-            $(this).addClass('selected');
-            me.imageParams_ = {
-              canvgSvgUri: useCanvg ? clipartSrc : null,
-              uri: useCanvg ? null : clipartSrc
-            };
-            me.valueFilename_ = clipartSrc.match(/[^/]+$/)[0];
-            me.renderValueAndNotifyChanged_();
+            me.loadClipart_(clipartSrc);
           };
         }(clipartSrc))
         .appendTo(clipartListEl);
@@ -1651,12 +1661,12 @@ studio.forms.ImageField = studio.forms.Field.extend({
       me.renderValueAndNotifyChanged_();
     });
 
-    // Create trim subform
-    this.trimFormValues_ = {};
-    this.trimForm_ = new studio.forms.Form(
-      this.form_.id_ + '-' + this.id_ + '-trimform', {
+    // Create spacing subform
+    this.spaceFormValues_ = {};
+    this.spaceForm_ = new studio.forms.Form(
+      this.form_.id_ + '-' + this.id_ + '-spaceform', {
         onChange: function() {
-          me.trimFormValues_ = me.trimForm_.getValues();
+          me.spaceFormValues_ = me.spaceForm_.getValues();
           me.renderValueAndNotifyChanged_();
         },
         fields: [
@@ -1678,10 +1688,10 @@ studio.forms.ImageField = studio.forms.Field.extend({
           }),
         ]
       });
-    this.trimForm_.createUI($('<div>')
+    this.spaceForm_.createUI($('<div>')
       .addClass('form-subform')
       .appendTo(fieldContainer));
-    this.trimFormValues_ = this.trimForm_.getValues();
+    this.spaceFormValues_ = this.spaceForm_.getValues();
 
     // Create image preview element
     this.imagePreview_ = $('<canvas>')
@@ -1698,6 +1708,21 @@ studio.forms.ImageField = studio.forms.Field.extend({
       $('label[for=' + this.getHtmlId() + '-' + type + ']').addClass('ui-state-active');
       $('.form-image-type-params-' + type, this.el_).show();
     }
+  },
+
+  loadClipart_: function(clipartSrc) {
+    var useCanvg = USE_CANVG && clipartSrc.match(/\.svg$/);
+
+    $('img.form-image-clipart-item', this.el_).removeClass('selected');
+    $('img[src="' + clipartSrc + '"]').addClass('selected');
+    
+    this.imageParams_ = {
+      canvgSvgUri: useCanvg ? clipartSrc : null,
+      uri: useCanvg ? null : clipartSrc
+    };
+    this.clipartSrc_ = clipartSrc;
+    this.valueFilename_ = clipartSrc.match(/[^/]+$/)[0];
+    this.renderValueAndNotifyChanged_();
   },
 
   loadFromFileList_: function(fileList, callback) {
@@ -1846,11 +1871,14 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
         continue_(ctx, size);
         break;
+
+      default:
+        me.form_.notifyChanged_();
     }
 
     function continue_(srcCtx, srcSize) {
       // Apply trimming
-      if (me.trimFormValues_['trim']) {
+      if (me.spaceFormValues_['trim']) {
         if (me.trimWorker_) {
           me.trimWorker_.terminate();
         }
@@ -1867,9 +1895,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
     function continue2_(srcCtx, srcSize, trimRect) {
       // If trimming, add a tiny bit of padding to fix artifacts around the
       // edges.
-      var extraPadding = me.trimFormValues_['trim'] ? 0.001 : 0;
+      var extraPadding = me.spaceFormValues_['trim'] ? 0.001 : 0;
 
-      var padPx = ((me.trimFormValues_['pad'] || 0) + extraPadding) *
+      var padPx = ((me.spaceFormValues_['pad'] || 0) + extraPadding) *
                   Math.min(trimRect.w, trimRect.h);
       var targetRect = { x: padPx, y: padPx, w: trimRect.w, h: trimRect.h };
 
@@ -1899,11 +1927,29 @@ studio.forms.ImageField = studio.forms.Field.extend({
   },
 
   serializeValue: function() {
-    return studio.hash.paramsToHash(this.trimForm_.getValuesSerialized());
+    return {
+      type: this.valueType_,
+      space: this.spaceForm_.getValuesSerialized(),
+      clipart: (this.valueType_ == 'clipart') ? this.clipartSrc_ : null,
+      text: (this.valueType_ == 'text') ? this.textForm_.getValuesSerialized()
+                                        : null
+    };
   },
 
-  deserializeValue: function(s) {
-    this.trimForm_.setValuesSerialized(studio.hash.hashToParams(s));
+  deserializeValue: function(o) {
+    if (o.type) {
+      this.setValueType_(o.type);
+    }
+    if (o.space) {
+      this.spaceForm_.setValuesSerialized(o.space);
+      this.spaceFormValues_ = this.spaceForm_.getValues();
+    }
+    if (o.clipart && this.valueType_ == 'clipart') {
+      this.loadClipart_(o.clipart);
+    }
+    if (o.text && this.valueType_ == 'text') {
+      this.textForm_.setValuesSerialized(o.text);
+    }
   }
 });
 

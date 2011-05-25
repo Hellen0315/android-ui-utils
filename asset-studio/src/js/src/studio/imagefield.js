@@ -32,7 +32,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
     this.valueType_ = null;
     this.textParams_ = {};
     this.imageParams_ = {};
-    this.trimFormValues_ = {};
+    this.spaceFormValues_ = {}; // cache
     this.base(id, params);
   },
 
@@ -139,16 +139,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
         .attr('src', clipartSrc)
         .click(function(clipartSrc) {
           return function() {
-            var useCanvg = USE_CANVG && clipartSrc.match(/\.svg$/);
-
-            $('img', clipartParamsEl).removeClass('selected');
-            $(this).addClass('selected');
-            me.imageParams_ = {
-              canvgSvgUri: useCanvg ? clipartSrc : null,
-              uri: useCanvg ? null : clipartSrc
-            };
-            me.valueFilename_ = clipartSrc.match(/[^/]+$/)[0];
-            me.renderValueAndNotifyChanged_();
+            me.loadClipart_(clipartSrc);
           };
         }(clipartSrc))
         .appendTo(clipartListEl);
@@ -205,12 +196,12 @@ studio.forms.ImageField = studio.forms.Field.extend({
       me.renderValueAndNotifyChanged_();
     });
 
-    // Create trim subform
-    this.trimFormValues_ = {};
-    this.trimForm_ = new studio.forms.Form(
-      this.form_.id_ + '-' + this.id_ + '-trimform', {
+    // Create spacing subform
+    this.spaceFormValues_ = {};
+    this.spaceForm_ = new studio.forms.Form(
+      this.form_.id_ + '-' + this.id_ + '-spaceform', {
         onChange: function() {
-          me.trimFormValues_ = me.trimForm_.getValues();
+          me.spaceFormValues_ = me.spaceForm_.getValues();
           me.renderValueAndNotifyChanged_();
         },
         fields: [
@@ -232,10 +223,10 @@ studio.forms.ImageField = studio.forms.Field.extend({
           }),
         ]
       });
-    this.trimForm_.createUI($('<div>')
+    this.spaceForm_.createUI($('<div>')
       .addClass('form-subform')
       .appendTo(fieldContainer));
-    this.trimFormValues_ = this.trimForm_.getValues();
+    this.spaceFormValues_ = this.spaceForm_.getValues();
 
     // Create image preview element
     this.imagePreview_ = $('<canvas>')
@@ -252,6 +243,21 @@ studio.forms.ImageField = studio.forms.Field.extend({
       $('label[for=' + this.getHtmlId() + '-' + type + ']').addClass('ui-state-active');
       $('.form-image-type-params-' + type, this.el_).show();
     }
+  },
+
+  loadClipart_: function(clipartSrc) {
+    var useCanvg = USE_CANVG && clipartSrc.match(/\.svg$/);
+
+    $('img.form-image-clipart-item', this.el_).removeClass('selected');
+    $('img[src="' + clipartSrc + '"]').addClass('selected');
+    
+    this.imageParams_ = {
+      canvgSvgUri: useCanvg ? clipartSrc : null,
+      uri: useCanvg ? null : clipartSrc
+    };
+    this.clipartSrc_ = clipartSrc;
+    this.valueFilename_ = clipartSrc.match(/[^/]+$/)[0];
+    this.renderValueAndNotifyChanged_();
   },
 
   loadFromFileList_: function(fileList, callback) {
@@ -400,11 +406,14 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
         continue_(ctx, size);
         break;
+
+      default:
+        me.form_.notifyChanged_();
     }
 
     function continue_(srcCtx, srcSize) {
       // Apply trimming
-      if (me.trimFormValues_['trim']) {
+      if (me.spaceFormValues_['trim']) {
         if (me.trimWorker_) {
           me.trimWorker_.terminate();
         }
@@ -421,9 +430,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
     function continue2_(srcCtx, srcSize, trimRect) {
       // If trimming, add a tiny bit of padding to fix artifacts around the
       // edges.
-      var extraPadding = me.trimFormValues_['trim'] ? 0.001 : 0;
+      var extraPadding = me.spaceFormValues_['trim'] ? 0.001 : 0;
 
-      var padPx = ((me.trimFormValues_['pad'] || 0) + extraPadding) *
+      var padPx = ((me.spaceFormValues_['pad'] || 0) + extraPadding) *
                   Math.min(trimRect.w, trimRect.h);
       var targetRect = { x: padPx, y: padPx, w: trimRect.w, h: trimRect.h };
 
@@ -453,11 +462,29 @@ studio.forms.ImageField = studio.forms.Field.extend({
   },
 
   serializeValue: function() {
-    return studio.hash.paramsToHash(this.trimForm_.getValuesSerialized());
+    return {
+      type: this.valueType_,
+      space: this.spaceForm_.getValuesSerialized(),
+      clipart: (this.valueType_ == 'clipart') ? this.clipartSrc_ : null,
+      text: (this.valueType_ == 'text') ? this.textForm_.getValuesSerialized()
+                                        : null
+    };
   },
 
-  deserializeValue: function(s) {
-    this.trimForm_.setValuesSerialized(studio.hash.hashToParams(s));
+  deserializeValue: function(o) {
+    if (o.type) {
+      this.setValueType_(o.type);
+    }
+    if (o.space) {
+      this.spaceForm_.setValuesSerialized(o.space);
+      this.spaceFormValues_ = this.spaceForm_.getValues();
+    }
+    if (o.clipart && this.valueType_ == 'clipart') {
+      this.loadClipart_(o.clipart);
+    }
+    if (o.text && this.valueType_ == 'text') {
+      this.textForm_.setValuesSerialized(o.text);
+    }
   }
 });
 

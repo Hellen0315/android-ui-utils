@@ -79,7 +79,7 @@ studio.forms.Form = Base.extend({
 
   /**
    * Returns all available serialized values of the form fields, as an object.
-   * All keys and values in the returned object are strings.
+   * All values in the returned object are either strings or objects.
    * @type Object
    */
   getValuesSerialized: function() {

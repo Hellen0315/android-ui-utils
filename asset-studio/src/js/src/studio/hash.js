@@ -87,30 +87,47 @@ studio.hash.hashToParams = function(hash) {
 
   var pairs = hash.split('&');
   for (var i = 0; i < pairs.length; i++) {
-    var p = pairs[i].split('=');
-    var key = p[0] ? decodeURIComponent(p[0]) : p[0];
-    var val = p[1] ? decodeURIComponent(p[1]) : p[1];
-    if (val === '0')
-      val = 0;
-    if (val === '1')
-      val = 1;
-    if (key in params) {
+    var parts = pairs[i].split('=', 2);
+
+    // Most of the time path == key, but for objects like a.b=1, we need to
+    // descend into the hierachy.
+    var path = parts[0] ? decodeURIComponent(parts[0]) : parts[0];
+    var val = parts[1] ? decodeURIComponent(parts[1]) : parts[1];
+    var pathArr = path.split('.');
+    var obj = params;
+    for (var j = 0; j < pathArr.length - 1; j++) {
+      obj[pathArr[j]] = obj[pathArr[j]] || {};
+      obj = obj[pathArr[j]];
+    }
+    var key = pathArr[pathArr.length - 1];
+    if (key in obj) {
       // Handle array values.
-      if (params[key] && 'push' in params[key]) {
-        params[key].push(val);
+      if (obj[key] && obj[key].splice) {
+        obj[key].push(val);
       } else {
-        params[key] = [params[key], val];
+        obj[key] = [obj[key], val];
       }
     } else {
-      params[key] = val;
+      obj[key] = val;
     }
   }
 
   return params;
-}
+};
 
-studio.hash.paramsToHash = function(params) {
+studio.hash.paramsToHash = function(params, prefix) {
   var hashArr = [];
+
+  var keyPath_ = function(k) {
+    return encodeURIComponent((prefix ? prefix + '.' : '') + k);
+  };
+
+  var pushKeyValue_ = function(k, v) {
+    if (v === false) v = 0;
+    if (v === true)  v = 1;
+    hashArr.push(keyPath_(k) + '=' +
+                 encodeURIComponent(v.toString()));
+  };
 
   for (var key in params) {
     var val = params[key];
@@ -118,24 +135,21 @@ studio.hash.paramsToHash = function(params) {
       continue;
     }
 
-    if (typeof val === 'object' &&
-        'split' in val &&
-        'splice' in val &&
-        val.length) {
-      for (var i = 0; i < val.length; i++) {
-        var subVal = val[i];
-        if (subVal === false) subVal = 0;
-        if (subVal === true) subVal = 1;
-        hashArr.push(encodeURIComponent(key) + '=' +
-                     encodeURIComponent(subVal.toString()));
+    if (typeof val == 'object') {
+      if (val.splice && val.length) {
+        // Arrays
+        for (var i = 0; i < val.length; i++) {
+          pushKeyValue_(key, val[i]);
+        }
+      } else {
+        // Objects
+        hashArr.push(studio.hash.paramsToHash(val, keyPath_(key)));
       }
     } else {
-      if (val === false) val = 0;
-      if (val === true) val = 1;
-      hashArr.push(encodeURIComponent(key) + '=' +
-                   encodeURIComponent(val.toString()));
+      // All other values
+      pushKeyValue_(key, val);
     }
   }
 
   return hashArr.join('&');
-}
+};

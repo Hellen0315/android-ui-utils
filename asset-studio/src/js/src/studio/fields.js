@@ -245,6 +245,7 @@ studio.forms.ColorField = studio.forms.Field.extend({
     var computedValue = this.getValue();
     $('.form-color-preview', this.el_)
         .css('background-color', computedValue.color);
+    $(this.el_).ColorPickerSetColor(computedValue.color);
     if (!pauseUi) {
       if (this.alphaEl_) {
         $(this.alphaEl_).slider('value', computedValue.alpha);
@@ -255,16 +256,12 @@ studio.forms.ColorField = studio.forms.Field.extend({
 
   serializeValue: function() {
     var computedValue = this.getValue();
-    var s = computedValue.color;
-    if (computedValue.alpha != 100) {
-      s += '|' + computedValue.alpha;
-    }
-    return s;
+    return computedValue.color.replace(/^#/, '') + ',' + computedValue.alpha;
   },
 
   deserializeValue: function(s) {
     var val = {};
-    var arr = s.split('|', 2);
+    var arr = s.split(',', 2);
     if (arr.length >= 1) {
       val.color = arr[0];
     }
@@ -384,6 +381,14 @@ studio.forms.BooleanField = studio.forms.EnumField.extend({
 
   setValue: function(val, pauseUi) {
     this.base(val ? '1' : '0', pauseUi);
+  },
+
+  serializeValue: function() {
+    return this.getValue() ? '1' : '0';
+  },
+
+  deserializeValue: function(s) {
+    this.setValue(s == '1');
   }
 });
 
@@ -428,7 +433,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
   setValue: function(val, pauseUi) {
     this.value_ = val;
     if (!pauseUi) {
-      $(this.alphaEl_).slider('value', val);
+      $(this.el_).slider('value', val);
     }
 		if (this.textEl_) {
 		  this.textEl_.text(this.params_.textFn(val));
@@ -441,6 +446,6 @@ studio.forms.RangeField = studio.forms.Field.extend({
   },
 
   deserializeValue: function(s) {
-    this.setValue(parseInt(s, 10));
+    this.setValue(Number(s)); // don't use parseInt nor parseFloat
   }
 });
