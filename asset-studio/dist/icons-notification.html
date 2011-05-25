@@ -124,7 +124,9 @@
       var IMAGE_RESOURCES = {};
       imagelib.loadImageResources(resList, function(r) {
         IMAGE_RESOURCES = r;
+        IMAGE_RESOURCES._loaded = true;
         regenerate();
+        studio.hash.bindFormToDocumentHash(form);
       });
 
       var PARAM_RESOURCES = {
@@ -163,6 +165,9 @@
        * Main image generation routine.
        */
       function regenerate() {
+        if (!IMAGE_RESOURCES._loaded)
+          return;
+
         var values = form.getValues();
         var showGuides = $('#output-show-guides').is(':checked');
 
@@ -250,7 +255,7 @@
         }
       }
 
-      var form = new studio.forms.Form('icon-form', {
+      var form = new studio.forms.Form('iconform', {
         onChange: regenerate,
         fields: [
           new studio.forms.ImageField('source', {

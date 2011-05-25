@@ -42,11 +42,19 @@ studio.forms.Field = Base.extend({
   },
 
   /**
+   * Returns a complete ID.
+   * @type String
+   */
+  getLongId: function() {
+    return this.form_.id_ + '-' + this.id_;
+  },
+
+  /**
    * Returns the ID for the form's UI element (or container).
    * @type String
    */
   getHtmlId: function() {
-    return '_frm-' + this.form_.id_ + '-' + this.id_;
+    return '_frm-' + this.getLongId();
   },
 
   /**
@@ -90,8 +98,7 @@ studio.forms.TextField = studio.forms.Field.extend({
       .bind('keydown change', function() {
         var inputEl = this;
         window.setTimeout(function() {
-          me.setValue($(inputEl).val());
-          me.form_.notifyChanged_();
+          me.setValue($(inputEl).val(), true);
         }, 0);
       })
       .appendTo(fieldContainer);
@@ -105,8 +112,20 @@ studio.forms.TextField = studio.forms.Field.extend({
     return value;
   },
 
-  setValue: function(val) {
+  setValue: function(val, pauseUi) {
     this.value_ = val;
+    if (!pauseUi) {
+      $(this.el_).val(val);
+    }
+    this.form_.notifyChanged_();
+  },
+
+  serializeValue: function() {
+    return this.getValue();
+  },
+
+  deserializeValue: function(s) {
+    this.setValue(s);
   }
 });
 
@@ -121,8 +140,7 @@ studio.forms.AutocompleteTextField = studio.forms.Field.extend({
       .bind('keydown change', function() {
         var inputEl = this;
         window.setTimeout(function() {
-          me.setValue($(inputEl).val());
-          me.form_.notifyChanged_();
+          me.setValue($(inputEl).val(), true);
         }, 0);
       })
       .appendTo(fieldContainer);
@@ -132,8 +150,7 @@ studio.forms.AutocompleteTextField = studio.forms.Field.extend({
       delay: 0,
       minLength: 0,
       selected: function(evt, val) {
-        me.setValue(val);
-        me.form_.notifyChanged_();
+        me.setValue(val, true);
       }
     });
   },
@@ -146,8 +163,20 @@ studio.forms.AutocompleteTextField = studio.forms.Field.extend({
     return value;
   },
 
-  setValue: function(val) {
+  setValue: function(val, pauseUi) {
     this.value_ = val;
+    if (!pauseUi) {
+      $(this.el_).val(val);
+    }
+    this.form_.notifyChanged_();
+  },
+
+  serializeValue: function() {
+    return this.getValue();
+  },
+
+  deserializeValue: function(s) {
+    this.setValue(s);
   }
 });
 
@@ -168,10 +197,7 @@ studio.forms.ColorField = studio.forms.Field.extend({
     this.el_.ColorPicker({
       color: this.getValue().color,
       onChange: function(hsb, hex, rgb) {
-        me.setValue('#' + hex);
-        $('.form-color-preview', me.el_)
-          .css('background-color', me.getValue().color);
-        me.form_.notifyChanged_();
+        me.setValue({ color:'#' + hex }, true);
       }
     });
 
@@ -184,8 +210,7 @@ studio.forms.ColorField = studio.forms.Field.extend({
           range: 'min',
           value: this.getValue().alpha,
     			slide: function(evt, ui) {
-    				me.setAlpha(ui.value);
-    				me.form_.notifyChanged_();
+    				me.setValue({ alpha: ui.value }, true);
     			}
         })
         .appendTo(fieldContainer);
@@ -194,8 +219,9 @@ studio.forms.ColorField = studio.forms.Field.extend({
 
   getValue: function() {
     var color = this.value_ || this.params_.defaultValue || '#000000';
-    if (/^([0-9a-f]{6}|[0-9a-f]{3})$/i.test(color))
+    if (/^([0-9a-f]{6}|[0-9a-f]{3})$/i.test(color)) {
       color = '#' + color;
+    }
 
     var alpha = this.alpha_;
     if (typeof alpha != 'number') {
@@ -207,12 +233,45 @@ studio.forms.ColorField = studio.forms.Field.extend({
     return { color: color, alpha: alpha };
   },
 
-  setValue: function(val) {
-    this.value_ = val;
+  setValue: function(val, pauseUi) {
+    val = val || {};
+    if ('color' in val) {
+      this.value_ = val.color;
+    }
+    if ('alpha' in val) {
+      this.alpha_ = val.alpha;
+    }
+
+    var computedValue = this.getValue();
+    $('.form-color-preview', this.el_)
+        .css('background-color', computedValue.color);
+    if (!pauseUi) {
+      if (this.alphaEl_) {
+        $(this.alphaEl_).slider('value', computedValue.alpha);
+      }
+    }
+    this.form_.notifyChanged_();
   },
 
-  setAlpha: function(val) {
-    this.alpha_ = val;
+  serializeValue: function() {
+    var computedValue = this.getValue();
+    var s = computedValue.color;
+    if (computedValue.alpha != 100) {
+      s += '|' + computedValue.alpha;
+    }
+    return s;
+  },
+
+  deserializeValue: function(s) {
+    var val = {};
+    var arr = s.split('|', 2);
+    if (arr.length >= 1) {
+      val.color = arr[0];
+    }
+    if (arr.length >= 2) {
+      val.alpha = parseInt(arr[1], 10);
+    }
+    this.setValue(val);
   }
 });
 
@@ -236,7 +295,7 @@ studio.forms.EnumField = studio.forms.Field.extend({
             value: option.id
           })
           .change(function() {
-            me.form_.notifyChanged_();
+            me.setValueInternal_($(this).val(), true);
           })
           .appendTo(this.el_);
         $('<label>')
@@ -244,13 +303,13 @@ studio.forms.EnumField = studio.forms.Field.extend({
           .text(option.title)
           .appendTo(this.el_);
       }
-      this.findAndSetValue(this.params_.defaultValue || this.params_.options[0].id);
+      this.setValueInternal_(this.getValue());
       this.el_.buttonset();
     } else {
       this.el_ = $('<select>')
         .attr('id', this.getHtmlId())
         .change(function() {
-          me.form_.notifyChanged_();
+          me.setValueInternal_($(this).val(), true);
         })
         .appendTo(fieldContainer);
       for (var i = 0; i < this.params_.options.length; i++) {
@@ -270,24 +329,41 @@ studio.forms.EnumField = studio.forms.Field.extend({
   },
 
   getValue: function() {
-    return this.params_.buttons ? $('input:checked', this.el_).val()
-                                : this.el_.val();
-  },
-
-  setValue: function(val) {
-    this.findAndSetValue(val);
-  },
-
-  findAndSetValue: function(val) {
-    // Note, this needs to be its own function because setValue gets
-    // overridden in BooleanField
-    if (this.params_.buttons) {
-      $('input', this.el_).each(function(i, el) {
-        $(el).attr('checked', $(el).val() == val);
-      });
-    } else {
-      this.el_.val(val);
+    var value = this.value_;
+    if (value === undefined) {
+      value = this.params_.defaultValue || this.params_.options[0].id;
     }
+    return value;
+  },
+
+  setValue: function(val, pauseUi) {
+    this.setValueInternal_(val, pauseUi);
+  },
+
+  setValueInternal_: function(val, pauseUi) {
+    // Note, this needs to be its own function because setValue gets
+    // overridden in BooleanField and we need access to this method
+    // from createUI.
+    this.value_ = val;
+    if (!pauseUi) {
+      if (this.params_.buttons) {
+        $('input', this.el_).each(function(i, el) {
+          $(el).attr('checked', $(el).val() == val);
+        });
+        $(this.el_).buttonset('refresh');
+      } else {
+        this.el_.val(val);
+      }
+    }
+    this.form_.notifyChanged_();
+  },
+
+  serializeValue: function() {
+    return this.getValue();
+  },
+
+  deserializeValue: function(s) {
+    this.setValue(s);
   }
 });
 
@@ -306,8 +382,8 @@ studio.forms.BooleanField = studio.forms.EnumField.extend({
     return this.base() == '1';
   },
 
-  setValue: function(val) {
-    this.base(val ? '1' : '0');
+  setValue: function(val, pauseUi) {
+    this.base(val ? '1' : '0', pauseUi);
   }
 });
 
@@ -325,11 +401,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
         range: 'min',
         value: this.getValue(),
   			slide: function(evt, ui) {
-  				me.setValue(ui.value);
-  				if (me.textEl_) {
-  				  me.textEl_.text(me.params_.textFn(ui.value));
-				  }
-  				me.form_.notifyChanged_();
+  				me.setValue(ui.value, true);
   			}
       })
       .appendTo(fieldContainer);
@@ -353,7 +425,22 @@ studio.forms.RangeField = studio.forms.Field.extend({
     return value;
   },
 
-  setValue: function(val) {
+  setValue: function(val, pauseUi) {
     this.value_ = val;
+    if (!pauseUi) {
+      $(this.alphaEl_).slider('value', val);
+    }
+		if (this.textEl_) {
+		  this.textEl_.text(this.params_.textFn(val));
+	  }
+		this.form_.notifyChanged_();
+  },
+
+  serializeValue: function() {
+    return this.getValue().toString();
+  },
+
+  deserializeValue: function(s) {
+    this.setValue(parseInt(s, 10));
   }
 });

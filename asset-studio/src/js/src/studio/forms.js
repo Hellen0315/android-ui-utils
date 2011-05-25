@@ -30,6 +30,7 @@ studio.forms.Form = Base.extend({
     this.id_ = id;
     this.params_ = params;
     this.fields_ = params.fields;
+    this.pauseNotify_ = false;
 
     for (var i = 0; i < this.fields_.length; i++) {
       this.fields_[i].setForm_(this);
@@ -55,6 +56,9 @@ studio.forms.Form = Base.extend({
    * @private
    */
   notifyChanged_: function() {
+    if (this.pauseNotify_) {
+      return;
+    }
     this.onChange();
   },
 
@@ -71,5 +75,41 @@ studio.forms.Form = Base.extend({
     }
 
     return values;
+  },
+
+  /**
+   * Returns all available serialized values of the form fields, as an object.
+   * All keys and values in the returned object are strings.
+   * @type Object
+   */
+  getValuesSerialized: function() {
+    var values = {};
+
+    for (var i = 0; i < this.fields_.length; i++) {
+      var field = this.fields_[i];
+      var value = field.serializeValue ? field.serializeValue() : undefined;
+      if (value !== undefined) {
+        values[field.id_] = field.serializeValue();
+      }
+    }
+
+    return values;
+  },
+
+  /**
+   * Sets the form field values for the key/value pairs in the given object.
+   * Values must be serialized forms of the form values. The form must be
+   * initialized before calling this method.
+   */
+  setValuesSerialized: function(serializedValues) {
+    this.pauseNotify_ = true;
+    for (var i = 0; i < this.fields_.length; i++) {
+      var field = this.fields_[i];
+      if (field.id_ in serializedValues && field.deserializeValue) {
+        field.deserializeValue(serializedValues[field.id_]);
+      }
+    }
+    this.pauseNotify_ = false;
+    this.notifyChanged_();
   }
 });

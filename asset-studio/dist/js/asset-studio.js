@@ -822,6 +822,7 @@ studio.forms.Form = Base.extend({
     this.id_ = id;
     this.params_ = params;
     this.fields_ = params.fields;
+    this.pauseNotify_ = false;
 
     for (var i = 0; i < this.fields_.length; i++) {
       this.fields_[i].setForm_(this);
@@ -847,6 +848,9 @@ studio.forms.Form = Base.extend({
    * @private
    */
   notifyChanged_: function() {
+    if (this.pauseNotify_) {
+      return;
+    }
     this.onChange();
   },
 
@@ -863,6 +867,42 @@ studio.forms.Form = Base.extend({
     }
 
     return values;
+  },
+
+  /**
+   * Returns all available serialized values of the form fields, as an object.
+   * All keys and values in the returned object are strings.
+   * @type Object
+   */
+  getValuesSerialized: function() {
+    var values = {};
+
+    for (var i = 0; i < this.fields_.length; i++) {
+      var field = this.fields_[i];
+      var value = field.serializeValue ? field.serializeValue() : undefined;
+      if (value !== undefined) {
+        values[field.id_] = field.serializeValue();
+      }
+    }
+
+    return values;
+  },
+
+  /**
+   * Sets the form field values for the key/value pairs in the given object.
+   * Values must be serialized forms of the form values. The form must be
+   * initialized before calling this method.
+   */
+  setValuesSerialized: function(serializedValues) {
+    this.pauseNotify_ = true;
+    for (var i = 0; i < this.fields_.length; i++) {
+      var field = this.fields_[i];
+      if (field.id_ in serializedValues && field.deserializeValue) {
+        field.deserializeValue(serializedValues[field.id_]);
+      }
+    }
+    this.pauseNotify_ = false;
+    this.notifyChanged_();
   }
 });
 
@@ -892,11 +932,19 @@ studio.forms.Field = Base.extend({
   },
 
   /**
+   * Returns a complete ID.
+   * @type String
+   */
+  getLongId: function() {
+    return this.form_.id_ + '-' + this.id_;
+  },
+
+  /**
    * Returns the ID for the form's UI element (or container).
    * @type String
    */
   getHtmlId: function() {
-    return '_frm-' + this.form_.id_ + '-' + this.id_;
+    return '_frm-' + this.getLongId();
   },
 
   /**
@@ -940,8 +988,7 @@ studio.forms.TextField = studio.forms.Field.extend({
       .bind('keydown change', function() {
         var inputEl = this;
         window.setTimeout(function() {
-          me.setValue($(inputEl).val());
-          me.form_.notifyChanged_();
+          me.setValue($(inputEl).val(), true);
         }, 0);
       })
       .appendTo(fieldContainer);
@@ -955,8 +1002,20 @@ studio.forms.TextField = studio.forms.Field.extend({
     return value;
   },
 
-  setValue: function(val) {
+  setValue: function(val, pauseUi) {
     this.value_ = val;
+    if (!pauseUi) {
+      $(this.el_).val(val);
+    }
+    this.form_.notifyChanged_();
+  },
+
+  serializeValue: function() {
+    return this.getValue();
+  },
+
+  deserializeValue: function(s) {
+    this.setValue(s);
   }
 });
 
@@ -971,8 +1030,7 @@ studio.forms.AutocompleteTextField = studio.forms.Field.extend({
       .bind('keydown change', function() {
         var inputEl = this;
         window.setTimeout(function() {
-          me.setValue($(inputEl).val());
-          me.form_.notifyChanged_();
+          me.setValue($(inputEl).val(), true);
         }, 0);
       })
       .appendTo(fieldContainer);
@@ -982,8 +1040,7 @@ studio.forms.AutocompleteTextField = studio.forms.Field.extend({
       delay: 0,
       minLength: 0,
       selected: function(evt, val) {
-        me.setValue(val);
-        me.form_.notifyChanged_();
+        me.setValue(val, true);
       }
     });
   },
@@ -996,8 +1053,20 @@ studio.forms.AutocompleteTextField = studio.forms.Field.extend({
     return value;
   },
 
-  setValue: function(val) {
+  setValue: function(val, pauseUi) {
     this.value_ = val;
+    if (!pauseUi) {
+      $(this.el_).val(val);
+    }
+    this.form_.notifyChanged_();
+  },
+
+  serializeValue: function() {
+    return this.getValue();
+  },
+
+  deserializeValue: function(s) {
+    this.setValue(s);
   }
 });
 
@@ -1018,10 +1087,7 @@ studio.forms.ColorField = studio.forms.Field.extend({
     this.el_.ColorPicker({
       color: this.getValue().color,
       onChange: function(hsb, hex, rgb) {
-        me.setValue('#' + hex);
-        $('.form-color-preview', me.el_)
-          .css('background-color', me.getValue().color);
-        me.form_.notifyChanged_();
+        me.setValue({ color:'#' + hex }, true);
       }
     });
 
@@ -1034,8 +1100,7 @@ studio.forms.ColorField = studio.forms.Field.extend({
           range: 'min',
           value: this.getValue().alpha,
     			slide: function(evt, ui) {
-    				me.setAlpha(ui.value);
-    				me.form_.notifyChanged_();
+    				me.setValue({ alpha: ui.value }, true);
     			}
         })
         .appendTo(fieldContainer);
@@ -1044,8 +1109,9 @@ studio.forms.ColorField = studio.forms.Field.extend({
 
   getValue: function() {
     var color = this.value_ || this.params_.defaultValue || '#000000';
-    if (/^([0-9a-f]{6}|[0-9a-f]{3})$/i.test(color))
+    if (/^([0-9a-f]{6}|[0-9a-f]{3})$/i.test(color)) {
       color = '#' + color;
+    }
 
     var alpha = this.alpha_;
     if (typeof alpha != 'number') {
@@ -1057,12 +1123,45 @@ studio.forms.ColorField = studio.forms.Field.extend({
     return { color: color, alpha: alpha };
   },
 
-  setValue: function(val) {
-    this.value_ = val;
+  setValue: function(val, pauseUi) {
+    val = val || {};
+    if ('color' in val) {
+      this.value_ = val.color;
+    }
+    if ('alpha' in val) {
+      this.alpha_ = val.alpha;
+    }
+
+    var computedValue = this.getValue();
+    $('.form-color-preview', this.el_)
+        .css('background-color', computedValue.color);
+    if (!pauseUi) {
+      if (this.alphaEl_) {
+        $(this.alphaEl_).slider('value', computedValue.alpha);
+      }
+    }
+    this.form_.notifyChanged_();
   },
 
-  setAlpha: function(val) {
-    this.alpha_ = val;
+  serializeValue: function() {
+    var computedValue = this.getValue();
+    var s = computedValue.color;
+    if (computedValue.alpha != 100) {
+      s += '|' + computedValue.alpha;
+    }
+    return s;
+  },
+
+  deserializeValue: function(s) {
+    var val = {};
+    var arr = s.split('|', 2);
+    if (arr.length >= 1) {
+      val.color = arr[0];
+    }
+    if (arr.length >= 2) {
+      val.alpha = parseInt(arr[1], 10);
+    }
+    this.setValue(val);
   }
 });
 
@@ -1086,7 +1185,7 @@ studio.forms.EnumField = studio.forms.Field.extend({
             value: option.id
           })
           .change(function() {
-            me.form_.notifyChanged_();
+            me.setValueInternal_($(this).val(), true);
           })
           .appendTo(this.el_);
         $('<label>')
@@ -1094,13 +1193,13 @@ studio.forms.EnumField = studio.forms.Field.extend({
           .text(option.title)
           .appendTo(this.el_);
       }
-      this.findAndSetValue(this.params_.defaultValue || this.params_.options[0].id);
+      this.setValueInternal_(this.getValue());
       this.el_.buttonset();
     } else {
       this.el_ = $('<select>')
         .attr('id', this.getHtmlId())
         .change(function() {
-          me.form_.notifyChanged_();
+          me.setValueInternal_($(this).val(), true);
         })
         .appendTo(fieldContainer);
       for (var i = 0; i < this.params_.options.length; i++) {
@@ -1120,24 +1219,41 @@ studio.forms.EnumField = studio.forms.Field.extend({
   },
 
   getValue: function() {
-    return this.params_.buttons ? $('input:checked', this.el_).val()
-                                : this.el_.val();
-  },
-
-  setValue: function(val) {
-    this.findAndSetValue(val);
-  },
-
-  findAndSetValue: function(val) {
-    // Note, this needs to be its own function because setValue gets
-    // overridden in BooleanField
-    if (this.params_.buttons) {
-      $('input', this.el_).each(function(i, el) {
-        $(el).attr('checked', $(el).val() == val);
-      });
-    } else {
-      this.el_.val(val);
+    var value = this.value_;
+    if (value === undefined) {
+      value = this.params_.defaultValue || this.params_.options[0].id;
     }
+    return value;
+  },
+
+  setValue: function(val, pauseUi) {
+    this.setValueInternal_(val, pauseUi);
+  },
+
+  setValueInternal_: function(val, pauseUi) {
+    // Note, this needs to be its own function because setValue gets
+    // overridden in BooleanField and we need access to this method
+    // from createUI.
+    this.value_ = val;
+    if (!pauseUi) {
+      if (this.params_.buttons) {
+        $('input', this.el_).each(function(i, el) {
+          $(el).attr('checked', $(el).val() == val);
+        });
+        $(this.el_).buttonset('refresh');
+      } else {
+        this.el_.val(val);
+      }
+    }
+    this.form_.notifyChanged_();
+  },
+
+  serializeValue: function() {
+    return this.getValue();
+  },
+
+  deserializeValue: function(s) {
+    this.setValue(s);
   }
 });
 
@@ -1156,8 +1272,8 @@ studio.forms.BooleanField = studio.forms.EnumField.extend({
     return this.base() == '1';
   },
 
-  setValue: function(val) {
-    this.base(val ? '1' : '0');
+  setValue: function(val, pauseUi) {
+    this.base(val ? '1' : '0', pauseUi);
   }
 });
 
@@ -1175,11 +1291,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
         range: 'min',
         value: this.getValue(),
   			slide: function(evt, ui) {
-  				me.setValue(ui.value);
-  				if (me.textEl_) {
-  				  me.textEl_.text(me.params_.textFn(ui.value));
-				  }
-  				me.form_.notifyChanged_();
+  				me.setValue(ui.value, true);
   			}
       })
       .appendTo(fieldContainer);
@@ -1203,10 +1315,151 @@ studio.forms.RangeField = studio.forms.Field.extend({
     return value;
   },
 
-  setValue: function(val) {
+  setValue: function(val, pauseUi) {
     this.value_ = val;
+    if (!pauseUi) {
+      $(this.alphaEl_).slider('value', val);
+    }
+		if (this.textEl_) {
+		  this.textEl_.text(this.params_.textFn(val));
+	  }
+		this.form_.notifyChanged_();
+  },
+
+  serializeValue: function() {
+    return this.getValue().toString();
+  },
+
+  deserializeValue: function(s) {
+    this.setValue(parseInt(s, 10));
   }
 });
+
+studio.hash = {};
+
+studio.hash.boundFormOldOnChange_ = null;
+studio.hash.boundForm_ = null;
+studio.hash.currentParams_ = {};
+studio.hash.currentHash_ = null; // The URI encoded, currently loaded state.
+
+studio.hash.bindFormToDocumentHash = function(form) {
+  if (!studio.hash.boundForm_) {
+    // Checks for changes in the document hash
+    // and reloads the form if necessary.
+    var hashChecker_ = function() {
+      // Don't use document.location.hash because it automatically
+      // resolves URI-escaped entities.
+      var docHash = studio.hash.paramsToHash(studio.hash.hashToParams(
+          (document.location.href.match(/#.*/) || [''])[0]));
+
+      if (docHash != studio.hash.currentHash_) {
+        var newHash = docHash;
+        var newParams = studio.hash.hashToParams(newHash);
+
+        studio.hash.onHashParamsChanged_(newParams);
+        studio.hash.currentParams_ = newParams;
+        studio.hash.currentHash_ = newHash;
+      };
+
+      window.setTimeout(hashChecker_, 100);
+    }
+
+    window.setTimeout(hashChecker_, 0);
+  }
+
+  if (studio.hash.boundFormOldOnChange_ && studio.hash.boundForm_) {
+    studio.hash.boundForm_.onChange = studio.hash.boundFormOldOnChange_;
+  }
+
+  studio.hash.boundFormOldOnChange_ = form.onChange;
+
+  studio.hash.boundForm_ = form;
+  var formChangeTimeout = null;
+  studio.hash.boundForm_.onChange = function() {
+    if (formChangeTimeout) {
+      window.clearTimeout(formChangeTimeout);
+    }
+    formChangeTimeout = window.setTimeout(function() {
+      studio.hash.onFormChanged_();
+    }, 500);
+    (studio.hash.boundFormOldOnChange_ || function(){}).apply(form, arguments);
+  };
+};
+
+studio.hash.onHashParamsChanged_ = function(newParams) {
+  if (studio.hash.boundForm_) {
+    studio.hash.boundForm_.setValuesSerialized(newParams);
+  }
+};
+
+studio.hash.onFormChanged_ = function() {
+  if (studio.hash.boundForm_) {
+    // We set this to prevent feedback in the hash checker.
+    studio.hash.currentParams_ = studio.hash.boundForm_.getValuesSerialized();
+    studio.hash.currentHash_ = studio.hash.paramsToHash(
+        studio.hash.currentParams_);
+    document.location.hash = studio.hash.currentHash_;
+  }
+};
+
+studio.hash.hashToParams = function(hash) {
+  var params = {};
+  hash = hash.replace(/^[?#]/, '');
+
+  var pairs = hash.split('&');
+  for (var i = 0; i < pairs.length; i++) {
+    var p = pairs[i].split('=');
+    var key = p[0] ? decodeURIComponent(p[0]) : p[0];
+    var val = p[1] ? decodeURIComponent(p[1]) : p[1];
+    if (val === '0')
+      val = 0;
+    if (val === '1')
+      val = 1;
+    if (key in params) {
+      // Handle array values.
+      if (params[key] && 'push' in params[key]) {
+        params[key].push(val);
+      } else {
+        params[key] = [params[key], val];
+      }
+    } else {
+      params[key] = val;
+    }
+  }
+
+  return params;
+}
+
+studio.hash.paramsToHash = function(params) {
+  var hashArr = [];
+
+  for (var key in params) {
+    var val = params[key];
+    if (val === undefined || val === null) {
+      continue;
+    }
+
+    if (typeof val === 'object' &&
+        'split' in val &&
+        'splice' in val &&
+        val.length) {
+      for (var i = 0; i < val.length; i++) {
+        var subVal = val[i];
+        if (subVal === false) subVal = 0;
+        if (subVal === true) subVal = 1;
+        hashArr.push(encodeURIComponent(key) + '=' +
+                     encodeURIComponent(subVal.toString()));
+      }
+    } else {
+      if (val === false) val = 0;
+      if (val === true) val = 1;
+      hashArr.push(encodeURIComponent(key) + '=' +
+                   encodeURIComponent(val.toString()));
+    }
+  }
+
+  return hashArr.join('&');
+}
 
 
 /**
@@ -1643,6 +1896,14 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
       me.form_.notifyChanged_();
     }
+  },
+
+  serializeValue: function() {
+    return studio.hash.paramsToHash(this.trimForm_.getValuesSerialized());
+  },
+
+  deserializeValue: function(s) {
+    this.trimForm_.setValuesSerialized(studio.hash.hashToParams(s));
   }
 });
 

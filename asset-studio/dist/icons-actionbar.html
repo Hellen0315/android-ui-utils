@@ -224,7 +224,7 @@
         }
       }
 
-      var form = new studio.forms.Form('icon-form', {
+      var form = new studio.forms.Form('iconform', {
         onChange: regenerate,
         fields: [
           new studio.forms.ImageField('source', {
@@ -249,6 +249,7 @@
         ]
       });
       form.createUI($('#inputs-form').get(0));
+      studio.hash.bindFormToDocumentHash(form);
     </script>
   </body>
 </html>

@@ -450,6 +450,14 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
       me.form_.notifyChanged_();
     }
+  },
+
+  serializeValue: function() {
+    return studio.hash.paramsToHash(this.trimForm_.getValuesSerialized());
+  },
+
+  deserializeValue: function(s) {
+    this.trimForm_.setValuesSerialized(studio.hash.hashToParams(s));
   }
 });
 
