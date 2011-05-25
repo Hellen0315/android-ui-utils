@@ -39,11 +39,6 @@
     <link rel="stylesheet" href="lib/jquery-ui-1.8.4.android-theme/theme.css">
 
     <link rel="stylesheet" href="css/studio.css">
-    <style>
-      .out-image-block {
-        width: 15em;
-      }
-    </style>
     <script src="js/asset-studio.pack.js"></script>
 
     <!-- TODO: remove Analytics tracking if you're building the tools locally! -->
@@ -104,33 +99,29 @@
         var versionStr = (version == 'X') ? '' : ('-v' + version);
 
         for (var type in {'selected':1, 'unselected':1 }) {
-          for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1})
-            studio.ui.createImageOutputSlot({
-              container: $('#outputs').get(0),
-              id: 'out-icon-' + version + '-' + type + '-' + density,
-              label: 'drawable-' + density + versionStr + ', ' + type
-            });
+          var group = studio.ui.createImageOutputGroup({
+            container: $('#outputs'),
+            label: type + ((version == 'X') ? '' : ', API ' + version)
+          });
 
-          $('<hr>').appendTo($('#outputs'));
+          for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1})
+            studio.ui.createImageOutputSlot({
+              container: group,
+              id: 'out-icon-' + version + '-' + type + '-' + density,
+              label: density
+            });
         }
       }
 
       var PARAM_RESOURCES = {
         'hdpi-iconSize': { w: 48, h: 48 },
-        'mdpi-iconSize': { w: 32, h: 32 },
-        'ldpi-iconSize': { w: 24, h: 24 },
-        'hdpi-targetRect': { x: 3, y: 3, w: 42, h: 42 },
-        'mdpi-targetRect': { x: 2, y: 2, w: 28, h: 28 },
-        'ldpi-targetRect': { x: 1, y: 1, w: 22, h: 22 },
-        'hdpi-fxMult': 1.0,
-        'mdpi-fxMult': 0.666667,
-        'ldpi-fxMult': 0.5
+        'hdpi-targetRect': { x: 3, y: 3, w: 42, h: 42 }
       };
 
       var drawableXmlTemplate = [
         '<?xml version="1.0" encoding="utf-8"?>',
         '<selector xmlns:android="http://schemas.android.com/apk/res/android">',
-        '  <item android:state_selected="true" android:state_pressed="false" android:drawable="@drawable/%s_selected" />',
+        '  <item android:drawable="@drawable/%s_selected" android:state_selected="true" android:state_pressed="false" />',
         '  <item android:drawable="@drawable/%s_unselected" />',
         '</selector>',
         ''
@@ -157,12 +148,14 @@
 
         for (var version in {'X':1, '5':1}) {
           for (var type in {'selected':1, 'unselected':1}) {
-            for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+            for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1}) {
               var versionStr = (version == 'X') ? '' : ('-v' + version);
 
-              var iconSize = PARAM_RESOURCES[density + '-iconSize'];
-              var fxMult = PARAM_RESOURCES[density + '-fxMult'];
-              var targetRect = PARAM_RESOURCES[density + '-targetRect'];
+              var mult = studio.util.getMultBaseHdpi(density);
+              var iconSize = studio.util.multRound(
+                  PARAM_RESOURCES['hdpi-iconSize'], mult);
+              var targetRect = studio.util.multRound(
+                  PARAM_RESOURCES['hdpi-targetRect'], mult);
 
               var outCtx = imagelib.drawing.context(iconSize);
               var tmpCtx = imagelib.drawing.context(iconSize);
@@ -177,8 +170,8 @@
                       effect: 'inner-shadow',
                       color: '#000',
                       opacity: 0.2,
-                      blur: 3 * fxMult,
-                      translate: { y: 3 * fxMult }
+                      blur: 3 * mult,
+                      translate: { y: 3 * mult }
                     },
                     {
                       effect: 'inner-shadow',
@@ -208,8 +201,8 @@
                       effect: 'inner-shadow',
                       color: '#000',
                       opacity: 0.1,
-                      blur: 3 * fxMult,
-                      translate: { y: 3 * fxMult }
+                      blur: 3 * mult,
+                      translate: { y: 3 * mult }
                     },
                     {
                       effect: 'inner-shadow',
@@ -241,7 +234,7 @@
                       effect: 'outer-shadow',
                       color: '#000',
                       opacity: 0.25,
-                      blur: 5 * fxMult
+                      blur: 5 * mult
                     },
                     {
                       effect: 'fill-color',

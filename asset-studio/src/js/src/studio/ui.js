@@ -16,10 +16,21 @@ limitations under the License.
 
 studio.ui = {};
 
+studio.ui.createImageOutputGroup = function(params) {
+  return $('<div>')
+    .addClass('out-image-group')
+    .append($('<div>')
+      .addClass('label')
+      .text(params.label))
+    .appendTo(params.container);
+};
+
+
 studio.ui.createImageOutputSlot = function(params) {
-  $('<div>')
+  return $('<div>')
     .addClass('out-image-block')
     .append($('<div>')
+      .addClass('label')
       .text(params.label))
     .append($('<img>')
       .addClass('out-image')

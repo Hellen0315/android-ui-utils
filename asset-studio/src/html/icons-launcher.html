@@ -39,11 +39,6 @@
     <link rel="stylesheet" href="lib/jquery-ui-1.8.4.android-theme/theme.css">
 
     <link rel="stylesheet" href="css/studio.css">
-    <style>
-      .out-image-block {
-        min-width: 15em;
-      }
-    </style>
     <script src="js/asset-studio.pack.js"></script>
 
     <!-- TODO: remove Analytics tracking if you're building the tools locally! -->
@@ -100,18 +95,21 @@
       var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
 
       // Create image output slots
-      for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1})
+      var group = studio.ui.createImageOutputGroup({
+        container: $('#outputs')
+      });
+      for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1})
         studio.ui.createImageOutputSlot({
-          container: $('#outputs').get(0),
+          container: group,
           id: 'out-icon-' + density,
-          label: (density == 'web') ? ('web, hi-res') : ('drawable-' + density)
+          label: (density == 'web') ? 'web, hi-res' : density
         });
 
       // Load image resources (stencils)
       var resList = {};
-      for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1})
+      for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1})
         for (var shape in {'square':1, 'circle':1})
-          for (var type in {'back':1, 'fore1':1, 'fore2':1, 'mask':1})
+          for (var type in {'back':1, 'fore1':1, 'fore2':1, 'fore3':1, 'mask':1})
             resList[shape + '-' + density + '-' + type] = (
               'res/launcher-stencil/' + shape + '/' + density + '/' + type + '.png');
 
@@ -124,18 +122,22 @@
       });
 
       var PARAM_RESOURCES = {
-        'web-iconSize': { w: 512, h: 512 },
-        'hdpi-iconSize': { w: 72, h: 72 },
-        'mdpi-iconSize': { w: 48, h: 48 },
-        'ldpi-iconSize': { w: 36, h: 36 },
-        'square-web-targetRect': { x: 57, y: 57, w: 398, h: 398 },
-        'circle-web-targetRect': { x: 43, y: 43, w: 426, h: 426 },
-        'square-hdpi-targetRect': { x: 8, y: 8, w: 56, h: 56 },
-        'circle-hdpi-targetRect': { x: 6, y: 6, w: 60, h: 60 },
-        'square-mdpi-targetRect': { x: 5, y: 5, w: 38, h: 38 },
-        'circle-mdpi-targetRect': { x: 4, y: 4, w: 40, h: 40 },
-        'square-ldpi-targetRect': { x: 4, y: 4, w: 28, h: 28 },
-        'circle-ldpi-targetRect': { x: 3, y: 3, w: 30, h: 30 }
+          'web-iconSize': { w: 512, h: 512 },
+        'xhdpi-iconSize': { w:  96, h:  96 },
+         'hdpi-iconSize': { w:  72, h:  72 },
+         'mdpi-iconSize': { w:  48, h:  48 },
+         'ldpi-iconSize': { w:  36, h:  36 },
+
+          'square-web-targetRect': { x: 57, y: 57, w: 398, h: 398 },
+          'circle-web-targetRect': { x: 43, y: 43, w: 426, h: 426 },
+        'square-xhdpi-targetRect': { x: 11, y: 11, w:  74, h:  74 },
+        'circle-xhdpi-targetRect': { x:  8, y:  8, w:  80, h:  80 },
+         'square-hdpi-targetRect': { x:  8, y:  8, w:  56, h:  56 },
+         'circle-hdpi-targetRect': { x:  6, y:  6, w:  60, h:  60 },
+         'square-mdpi-targetRect': { x:  5, y:  5, w:  38, h:  38 },
+         'circle-mdpi-targetRect': { x:  4, y:  4, w:  40, h:  40 },
+         'square-ldpi-targetRect': { x:  4, y:  4, w:  28, h:  28 },
+         'circle-ldpi-targetRect': { x:  3, y:  3, w:  30, h:  30 }
       };
 
       /**
@@ -154,7 +156,7 @@
 
         var continue_ = function(foreCtx) {
           var shape = values['shape'];
-          for (var density in {'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1}) {
+          for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1}) {
             var iconSize = PARAM_RESOURCES[density + '-iconSize'];
             var targetRect = PARAM_RESOURCES[shape + '-' + density + '-targetRect'];
 
@@ -221,7 +223,7 @@
 
             zipper.add({
               name: (density == 'web') ?
-                  ('web_hires_512.png') :
+                  ('web_hi_res_512.png') :
                   ('res/drawable-' + density + '/ic_launcher.png'),
               base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
             });
@@ -284,7 +286,8 @@
             buttons: true,
             options: [
               { id: '1', title: 'Simple' },
-              { id: '2', title: 'Fancy' }
+              { id: '2', title: 'Fancy' },
+              { id: '3', title: 'Glossy' }
             ],
             defaultValue: '1'
           })

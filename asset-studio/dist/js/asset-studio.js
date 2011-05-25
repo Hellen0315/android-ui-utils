@@ -2089,10 +2089,21 @@ studio.forms.ImageField.makeDragleaveHandler_ = function(el) {
 
 studio.ui = {};
 
+studio.ui.createImageOutputGroup = function(params) {
+  return $('<div>')
+    .addClass('out-image-group')
+    .append($('<div>')
+      .addClass('label')
+      .text(params.label))
+    .appendTo(params.container);
+};
+
+
 studio.ui.createImageOutputSlot = function(params) {
-  $('<div>')
+  return $('<div>')
     .addClass('out-image-block')
     .append($('<div>')
+      .addClass('label')
       .text(params.label))
     .append($('<img>')
       .addClass('out-image')
@@ -2122,6 +2133,34 @@ studio.ui.drawImageGuideRects = function(ctx, size, guides) {
 studio.ui.drawImageGuideRects.guideColors_ = [
   '#f00'
 ];
+
+studio.util = {};
+
+studio.util.getMultBaseHdpi = function(density) {
+  switch (density) {
+    case 'xhdpi': return 1.333333;
+    case  'hdpi': return 1.0;
+    case  'mdpi': return 0.666667;
+    case  'ldpi': return 0.5;
+  }
+  return 1.0;
+};
+
+studio.util.mult = function(s, mult) {
+  var d = {};
+  for (k in s) {
+    d[k] = s[k] * mult;
+  }
+  return d;
+};
+
+studio.util.multRound = function(s, mult) {
+  var d = {};
+  for (k in s) {
+    d[k] = Math.round(s[k] * mult);
+  }
+  return d;
+};
 
 studio.zip = {};
 

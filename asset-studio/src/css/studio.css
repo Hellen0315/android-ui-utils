@@ -292,16 +292,27 @@ a {
 
 /* output images */
 
+.out-image-group {
+  display: inline-block;
+  background-color: #eee;
+  padding: 8px 10px;
+  margin-right: 12px;
+  margin-bottom: 12px;
+  border-radius: 12px;
+}
+
+.out-image-group > .label {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
 .out-image-block {
   display: inline-block;
   vertical-align: top;
-  margin-right: 12px;
-  margin-bottom: 12px;
+  margin-right: 6px;
+  margin-bottom: 6px;
   font-size: 11px;
   line-height: 12px;
-  background-color: #eee;
-  padding: 8px 10px;
-  border-radius: 12px;
   text-align: center;
 }
 
