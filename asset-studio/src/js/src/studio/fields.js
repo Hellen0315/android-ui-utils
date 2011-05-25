@@ -245,8 +245,8 @@ studio.forms.ColorField = studio.forms.Field.extend({
     var computedValue = this.getValue();
     $('.form-color-preview', this.el_)
         .css('background-color', computedValue.color);
-    $(this.el_).ColorPickerSetColor(computedValue.color);
     if (!pauseUi) {
+      $(this.el_).ColorPickerSetColor(computedValue.color);
       if (this.alphaEl_) {
         $(this.alphaEl_).slider('value', computedValue.alpha);
       }
