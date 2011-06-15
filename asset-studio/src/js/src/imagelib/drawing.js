@@ -78,7 +78,7 @@ imagelib.drawing.trimRectWorkerJS_ = [
 "    for (var x = 0; x < event.data.size.w; x++) {                           ",
 "      alpha = event.data.imageData.data[                                    ",
 "          ((y * event.data.size.w + x) << 2) + 3];                          ",
-"      if (alpha > event.data.minAlpha) {                                    ",
+"      if (alpha >= event.data.minAlpha) {                                   ",
 "        l = Math.min(x, l);                                                 ",
 "        t = Math.min(y, t);                                                 ",
 "        r = Math.max(x, r);                                                 ",

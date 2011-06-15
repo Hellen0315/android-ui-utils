@@ -288,7 +288,7 @@ imagelib.drawing.trimRectWorkerJS_ = [
 "    for (var x = 0; x < event.data.size.w; x++) {                           ",
 "      alpha = event.data.imageData.data[                                    ",
 "          ((y * event.data.size.w + x) << 2) + 3];                          ",
-"      if (alpha > event.data.minAlpha) {                                    ",
+"      if (alpha >= event.data.minAlpha) {                                   ",
 "        l = Math.min(x, l);                                                 ",
 "        t = Math.min(y, t);                                                 ",
 "        r = Math.max(x, r);                                                 ",
@@ -1884,7 +1884,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
         }
         me.trimWorker_ = imagelib.drawing.getTrimRect(srcCtx, srcSize, 1,
             function(trimRect) {
-                continue2_(srcCtx, srcSize, trimRect);
+              continue2_(srcCtx, srcSize, trimRect);
             });
       } else {
         continue2_(srcCtx, srcSize,
@@ -1896,6 +1896,10 @@ studio.forms.ImageField = studio.forms.Field.extend({
       // If trimming, add a tiny bit of padding to fix artifacts around the
       // edges.
       var extraPadding = me.spaceFormValues_['trim'] ? 0.001 : 0;
+      if (trimRect.x == 0 && trimRect.y == 0 &&
+          trimRect.w == srcSize.w && trimRect.h == srcSize.h) {
+        extraPadding = 0;
+      }
 
       var padPx = ((me.spaceFormValues_['pad'] || 0) + extraPadding) *
                   Math.min(trimRect.w, trimRect.h);
