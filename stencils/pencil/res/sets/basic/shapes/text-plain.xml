@@ -1,0 +1,43 @@
+<Shape id="text-plain" displayName="Text - Plain" icon="icons/text-plain.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="disabled" displayName="Disabled" type="Bool">false</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Text">
+      <Property name="label" displayName="Label" type="PlainText">Plain text</Property>
+      <Property name="textColor" displayName="Color" type="Color">
+        <E>$$defaultTextColor</E>
+      </Property>
+      <Property name="textFont" displayName="Font" type="Font">
+        <E>$$defaultTextFont</E>
+      </Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="text">
+      <TextContent>$label</TextContent>
+      <Fill>$textColor</Fill>
+      <Font>$textFont</Font>
+      <BoxFit>
+        <Arg>new Bound(0, 0, 100, 12)</Arg>
+        <Arg>new Alignment(0, 1)</Arg>
+      </BoxFit>
+    </For>
+  </Behaviors>
+  <Actions>
+    <Action id="generateLoremShort" displayName="Generate Short Random Texts">
+      <Impl><![CDATA[
+           this.setProperty("label", PlainText.fromLoremIpsum(4));
+       ]]></Impl>
+    </Action>
+    <Action id="generateLoremLong" displayName="Generate Long Random Texts">
+      <Impl><![CDATA[
+           this.setProperty("label", PlainText.fromLoremIpsum(15));
+       ]]></Impl>
+    </Action>
+  </Actions>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <text id="text" y="9.0077095" x="17.999992"
+      style="font-size: 12px; font-style: normal; font-weight: normal; text-align: left; text-anchor: start; dominant-baseline: central; fill:#000000; font-family: 'Droid Sans'" xml:space="preserve">Plain text</text>
+  </p:Content>
+</Shape>

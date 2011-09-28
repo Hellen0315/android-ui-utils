@@ -1,0 +1,44 @@
+<Shape id="%(id)s" displayName="TODO" icon="%(icon_uri)s">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension">TODO,TODO</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Text">
+      <Property name="text" displayName="Text" type="PlainText">Default Text</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="htmlObject">
+      <Box>
+        new Dimension($box.w, $box.h)
+      </Box>
+    </For>
+
+    <For ref="text">
+      <TextContent>$text</TextContent>
+      <Font>Font.fromString("Droid Sans|normal|normal|21px")</Font>
+      <BoxFit>
+        <Arg>new Bound(
+                 %(pad_l)d,
+                 %(pad_t)d,
+                 $box.w - %(pad_r)d - %(pad_l)d,
+                 $box.h - %(pad_b)d - %(pad_t)d)</Arg>
+        <Arg>new Alignment(0, 0)</Arg>
+      </BoxFit>
+    </For>
+  </Behaviors>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <foreignObject x="0" y="0" width="100" height="100" id="htmlObject">
+      <div xmlns="http://www.w3.org/1999/xhtml" id="contentDiv"
+        style="
+          font-size: 0;
+          line-height: 0;
+          -moz-box-sizing: border-box;
+          height: 100%%;
+          border-width: %(height_t)spx %(width_r)spx %(height_b)spx %(width_l)spx;
+          -moz-border-image: url(%(image_uri)s) %(height_t)s %(width_r)s %(height_b)s %(width_l)s stretch stretch;
+        "></div>
+    </foreignObject>
+    <text x="%(pad_l)d" y="%(pad_t)d" id="text" xml:space="preserve"></text>
+  </p:Content>
+</Shape>

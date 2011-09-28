@@ -1,0 +1,11 @@
+<Shape id="%(id)s" displayName="TODO" icon="%(icon_uri)s">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension" p:lockHeight="true" p:lockWidth="true">%(width)d,%(height)d</Property>
+    </PropertyGroup>
+  </Properties>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <image xlink:href="%(image_uri)s"
+      x="0" y="0" width="%(width)d" height="%(height)d"/>
+  </p:Content>
+</Shape>

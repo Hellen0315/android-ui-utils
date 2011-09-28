@@ -1,0 +1,86 @@
+<Shape id="list-item" displayName="List Item" icon="icons/list-item.png">
+    <Properties>
+      <PropertyGroup>
+        <Property name="box" type="Dimension">480,97</Property>
+        <Property name="darkTheme" type="Bool" displayName="Dark Theme">false</Property>
+        <Property name="withDivider" type="Bool" displayName="With Divider">true</Property>
+      </PropertyGroup>
+      <PropertyGroup name="Background">
+        <Property name="fillColor" displayName="Fill Color" type="Color">#ffffff00</Property>
+      </PropertyGroup>
+      <PropertyGroup name="Text">
+        <Property name="primaryTextContent" displayName="Text 1" type="PlainText">Text 1</Property>
+        <Property name="secondaryTextContent" displayName="Text 2" type="PlainText">Text 2</Property>
+        <Property name="primaryTextFont" displayName="Primary Text Font" type="Font">Droid Sans|normal|normal|33px</Property>
+        <Property name="secondaryTextFont" displayName="Secondary Text Font" type="Font">Droid Sans|normal|normal|21px</Property>
+      </PropertyGroup>
+      <PropertyGroup name="Handles">
+        <Property name="leftPadding" displayName="Left Padding" type="Handle" p:lockY="true" p:minX="9" p:maxX="$box.w / 2">9,0</Property>
+      </PropertyGroup>
+    </Properties>
+    <Behaviors>
+        <For ref="bgRect">
+            <Fill>$fillColor</Fill>
+            <Box>new Dimension($box.w, $box.h)</Box>
+        </For>
+        <For ref="dividerRect">
+            <Box>new Dimension($box.w, 1)</Box>
+            <Fill>Color.fromString($darkTheme.value ? "#ffffff33" : "#00000026")</Fill>
+            <Transform>"translate(0," + $box.h + ")"</Transform>
+            <Visibility>$withDivider</Visibility>
+        </For>
+        <For ref="primaryText">
+            <TextContent>$primaryTextContent</TextContent>
+            <Fill>Color.fromString($darkTheme.value ? "#ffffffff" : "#000000ff")</Fill>
+            <Font>$primaryTextFont</Font>
+            <BoxFit>
+                <Arg>new Bound($leftPadding.x, 0, $box.w - 9, $secondaryTextContent.value ? ($box.h * 0.57) : $box.h)</Arg>
+                <Arg>new Alignment(0, $secondaryTextContent.value ? 2 : 1)</Arg>
+            </BoxFit>
+        </For>
+        <For ref="secondaryText">
+            <TextContent>$secondaryTextContent</TextContent>
+            <Fill>Color.fromString($darkTheme.value ? "#bebebeff" : "#323232ff")</Fill>
+            <Font>$secondaryTextFont</Font>
+            <BoxFit>
+                <Arg>new Bound($leftPadding.x, $box.h * 0.57, $box.w - 9, $box.h * 0.43)</Arg>
+                <Arg>new Alignment(0, 0)</Arg>
+            </BoxFit>
+            <Visibility>!!$secondaryTextContent.value</Visibility>
+        </For>
+    </Behaviors>
+    <Actions>
+      <Action id="getSnappingGuide">
+        <Impl><![CDATA[
+          var b = this.getBounding();
+          return [
+            new SnappingData("WidgetTop", b.y , "Bottom", false, this.id),
+            new SnappingData("WidgetBottom", b.y + b.height , "Top", false, this.id)
+          ];
+        ]]></Impl>
+      </Action>
+      <Action id="setToPreferredHeight" displayName="Set to Preferred List Item Height">
+        <Impl><![CDATA[
+          var box = this.getProperty("box");
+          this.setProperty("box", new Dimension(box.w, 97));
+        ]]></Impl>
+      </Action>
+    </Actions>
+    <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil"
+               xmlns="http://www.w3.org/2000/svg">
+        <defs>
+        </defs>
+        <rect x="0" y="0" width="480" height="96" style="stroke: none;" id="bgRect"/>
+        <rect x="0" y="-1" width="480" height="1" style="stroke: none;" id="dividerRect"/>
+        <text
+            x="0"
+            y="0"
+            id="primaryText"
+            xml:space="preserve">Text 1</text>
+        <text
+            x="0"
+            y="0"
+            id="secondaryText"
+            xml:space="preserve">Text 2</text>
+    </p:Content>
+</Shape>

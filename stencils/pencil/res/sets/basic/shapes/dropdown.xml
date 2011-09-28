@@ -1,0 +1,44 @@
+<Shape id="dropdown" displayName="Dropdown" icon="icons/dropdown.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension" p:lockHeight="true">350,72</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Text">
+      <Property name="text" displayName="Text" type="PlainText">Selected Item Text</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="htmlObject">
+      <Box>
+        new Dimension($box.w, $box.h)
+      </Box>
+    </For>
+
+    <For ref="text">
+      <TextContent>$text</TextContent>
+      <Font>Font.fromString("Droid Sans|normal|normal|21px")</Font>
+      <BoxFit>
+        <Arg>new Bound(
+                 16,
+                 11,
+                 $box.w - 77 - 16,
+                 $box.h - 17 - 11)</Arg>
+        <Arg>new Alignment(0, 1)</Arg>
+      </BoxFit>
+    </For>
+  </Behaviors>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <foreignObject x="0" y="0" width="100" height="100" id="htmlObject">
+      <div xmlns="http://www.w3.org/1999/xhtml" id="contentDiv"
+        style="
+          font-size: 0;
+          line-height: 0;
+          -moz-box-sizing: border-box;
+          height: 100%;
+          border-width: 8px 46px 43px 11px;
+          -moz-border-image: url(data:image/png;base64,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) 8 46 43 11 stretch stretch;
+        "></div>
+    </foreignObject>
+    <text x="16" y="11" id="text" xml:space="preserve"></text>
+  </p:Content>
+</Shape>

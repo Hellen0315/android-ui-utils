@@ -1,0 +1,22 @@
+<Shape id="button-checkbox" displayName="Button - Checkbox" icon="icons/button-checkbox.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension" p:lockHeight="true" p:lockWidth="true">57,72</Property>
+      <Property name="checked" type="Bool" displayName="Checked">false</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="offImage">
+      <Visibility>!$checked.value</Visibility>
+    </For>
+    <For ref="onImage">
+      <Visibility>$checked</Visibility>
+    </For>
+  </Behaviors>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <image xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADkAAABICAYAAABMZl3hAAABoElEQVR4nO2aMU7DQBBF3yBoyQnCNVA6ajo6CkuufAAKzkBBwSkokJDouAAFokgXLpCcALdEWorYFAteG2I7m9l5khXLG0f/+8/Y62jFOYd2DnYtYAzMpBbMpBbMpBbMpBbMpBbMpBYOW8bOgVPgaBw5/+YTeAOegbU/KIFXrQtgNpyuQXgFnvyDoXKdAVIUxVxEShGZRLqVRVHMAaEhlFCStwAi8gFM/3I5d8DKOTep9q/9wVBP1kwBnHN3farqCxG5YqOxbPpOF5PSm6JhaNUXMhm7OZ9GvV2SrNnbf7ySnwzUxF621pOQSE9aufYoZAy2KtfYzW6VpI/Know9QR8r164nx16uaSeZ/NxVvM9YadWZfJI+sd94GrFy1UISSSbfkzX7kmQjNkFvOzkSLEmwR8g3sSdq75OQSJLJ92TsCfpYuaonCZPWkxUr4EREbvrT0ztL4LhpMFSua4A8z9+rH4mVZZZli2r/x5IzCC9WugTOBhA1JC/AvX8wVK6PbBYO7tMCwoffBkNJqiGJR4iZ1IKZ1IKZ1IKZ1IKZ1MIXdlVAh2+Y1HcAAAAASUVORK5CYII="
+      id="offImage" x="0" y="0" width="57" height="72"/>
+    <image xlink:href="data:image/png;base64,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"
+      id="onImage" x="0" y="0" width="57" height="72"/>
+  </p:Content>
+</Shape>

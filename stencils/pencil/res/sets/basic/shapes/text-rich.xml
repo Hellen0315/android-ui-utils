@@ -1,0 +1,44 @@
+<Shape id="text-rich" displayName="Text - Rich text" icon="icons/text-rich.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="width" displayName="Width" type="Handle" lockY="true" minX="0">200,0</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Text">
+      <Property name="textContent" displayName="Content" type="RichText"><![CDATA[Text pane]]></Property>
+      <Property name="textFont" displayName="Font" type="Font">Droid Sans|normal|normal|27px</Property>
+      <Property name="textColor" displayName="Color" type="Color">#000000</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="text">
+      <TextContent>$textContent</TextContent>
+      <Font>$textFont</Font>
+      <Color>$textColor</Color>
+      <RichTextFit>$width.x</RichTextFit>
+    </For>
+  </Behaviors>
+  <Actions>
+    <Action id="generateLoremShortRichTextBox" displayName="Generate Short Random Texts">
+      <Impl><![CDATA[
+           this.setProperty("textContent", RichText.fromLoremIpsum(10));
+       ]]></Impl>
+    </Action>
+    <Action id="generateLoremLongRichTextBox" displayName="Generate Long Random Texts">
+      <Impl><![CDATA[
+           this.setProperty("textContent", RichText.fromLoremIpsum(45));
+       ]]></Impl>
+    </Action>
+    <Action id="generateLoremExtraLongRichTextBox" displayName="Generate Longer Random Texts">
+      <Impl><![CDATA[
+           this.setProperty("textContent", RichText.fromLoremIpsum(150));
+       ]]></Impl>
+    </Action>
+  </Actions>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <foreignObject x="0" y="0" width="200" height="150" id="text">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        Rich <strong>text</strong> pane contains <a href="#">hyper text</a>
+      </div>
+    </foreignObject>
+  </p:Content>
+</Shape>

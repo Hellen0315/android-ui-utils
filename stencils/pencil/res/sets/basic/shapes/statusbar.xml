@@ -1,0 +1,37 @@
+<Shape id="statusbar" displayName="Status Bar" icon="icons/statusbar.png">
+    <Properties>
+      <PropertyGroup>
+        <Property name="box" type="Dimension" p:lockHeight="true">480,38</Property>
+      </PropertyGroup>
+    </Properties>
+    <Behaviors>
+        <For ref="htmlObject">
+            <Box>new Dimension($box.w, 38)</Box>
+        </For>
+    </Behaviors>
+    <Actions>
+      <Action id="getSnappingGuide">
+        <Impl>
+          <![CDATA[
+            var b = this.getBounding();
+            return [
+              new SnappingData("WidgetBottom", b.y + 38 , "Top", false, this.id)
+            ];
+          ]]>
+        </Impl>
+      </Action>
+    </Actions>
+    <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil"
+               xmlns="http://www.w3.org/2000/svg">
+      <foreignObject x="0" y="0" width="480" height="38" id="htmlObject">
+        <div xmlns="http://www.w3.org/1999/xhtml"
+          style="
+            width: 100%;
+            height: 100%;
+            -moz-box-sizing: border-box;
+            border-width: 0px 180px 0px 0px;
+            -moz-border-image: url(data:image/png;base64,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) 0 180 0 0 stretch stretch;
+            "></div>
+      </foreignObject>
+    </p:Content>
+</Shape>

@@ -1,0 +1,12 @@
+\.DS_Store
+Thumbs\.db
+.*\.pyc
+.*/_sandbox$
+local\.properties
+asset-studio/out
+icon-templates/demo-app/bin/
+icon-templates/demo-app/gen/
+icon-templates/demo-app/build.xml
+icon-templates/demo-app/build.properties
+icon-templates/demo-app/default.properties
+_sandbox

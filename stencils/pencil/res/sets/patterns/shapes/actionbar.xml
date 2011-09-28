@@ -1,0 +1,161 @@
+<Shape id="actionbar" displayName="Action Bar" icon="icons/actionbar.png">
+    <Properties>
+      <PropertyGroup>
+        <Property name="box" type="Dimension" p:lockHeight="true">480,68</Property>
+        <Property name="style" displayName="Style" type="Enum" p:enumValues="['logo|Logo', 'icontext|Icon &amp; Text']">icontext</Property>
+        <Property name="homeIconStyle" displayName="Home Icon Style" type="Enum" p:enumValues="['standard|Standard', 'grid|Grid/Dashboard', 'icon|App Icon (Empty space)']">standard</Property>
+        <Property name="withGradient" type="Bool" displayName="With Gradient">true</Property>
+        <Property name="numButtons" displayName="Number of Buttons" type="PlainText">2</Property>
+
+        <Property name="buttonRefresh" type="Bool" displayName="Refresh Button (example)">false</Property>
+        <Property name="buttonSearch" type="Bool" displayName="Search Button (example)">false</Property>
+      </PropertyGroup>
+      <PropertyGroup name="Background">
+        <Property name="fillColor" displayName="Color" type="Color">#cc0000</Property>
+      </PropertyGroup>
+      <PropertyGroup name="Text">
+        <Property name="titleText" displayName="Title" type="PlainText">Title</Property>
+      </PropertyGroup>
+    </Properties>
+    <Behaviors>
+        <For ref="actionbarRect">
+            <Box>new Dimension($box.w, 68)</Box>
+        </For>
+        <For ref="startColor">
+          <StopColor>$fillColor</StopColor>
+          <Offset>0.5</Offset>
+        </For>
+        <For ref="endColor">
+            <StopColor>$withGradient.value ? $fillColor.shaded(0.2) : $fillColor</StopColor>
+            <Offset>1</Offset>
+        </For>
+        <For ref="text">
+            <TextContent>$titleText</TextContent>
+            <Fill>Color.fromString("#ffffffff")</Fill>
+            <Font>Font.fromString("Droid Sans|bold|normal|21px")</Font>
+            <BoxFit>
+                <Arg>
+                  new Bound(83, 0, $box.w - 83 - 14, 68)
+                </Arg>
+                <Arg>new Alignment(0, 1)</Arg>
+            </BoxFit>
+        </For>
+        <For ref="icontext">
+            <Visibility>$style.value == "icontext"</Visibility>
+        </For>
+        <For ref="actionButtons">
+            <Transform>
+              "translate(" + ($box.w - 69 * ($numButtons.value || 0)) + ",0)"
+            </Transform>
+            <Box>
+              new Dimension(69 * ($numButtons.value || 0), 68)
+            </Box>
+            <DomContent>
+              <![CDATA[
+                var REFRESH_IMG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpGNzdGMTE3NDA3MjA2ODExODFENEQ5OTNEMkIyQjRBRCIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozMDRDMDkyMDBBRUQxMUUwODUxQ0I5MTE0MDRFNUQwQSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozMDRDMDkxRjBBRUQxMUUwODUxQ0I5MTE0MDRFNUQwQSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZCN0YxMTc0MDcyMDY4MTE5Nzg0QjQ1MDM1Mzg5QkMwIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkY3N0YxMTc0MDcyMDY4MTE4MUQ0RDk5M0QyQjJCNEFEIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+pEn9PQAAAk1JREFUeNrsmEFEBFEYx3fbxBKTiFhKbCKilE6b0mkP6RRRYukU3Tqla2ynRHRtSYkisZ06dUoprVKn1ZKykbIp7aVM/4/vkMx87828XfYwHz9tb/bN/Oe97/2/9zZs23aolqMuVOMRCAwEBgKrLHAYpMEF+AI2U+S2NZAQ+neDiPgE8kEfJMG1rR9XIPXvHv3gVfUsr8IaQdb2H4fAAglQ4jbxmWEPlaQDZHlaTKIAWkGU/w9LX9YVaHFOxauwDkSB9Ro3oCTeE8R9gn1wxKND0QMGwQxoNJKvkXdTQk5tgmZFzi4r8lJ8vmoEG9hGnGIBrCr60+i+C9fLpiOYcnnrdc1Vrxq9kqnNOFlKkadO1XdNw3ZKJjZDi6PkkOQrYFEzxXvZAbrYWmL82eJrNP1Nfm2GfO/eoX0AXFbIYixFjoqLpMWl/c5AUJz9NA9uwAN4AltuC0YaQZraCdDGU9PPnztVb63YHNw6tLezWE8jSBaR4ZJUrtCUupn9m0kloW3UD8jxyNH0PPPU5Lktx99RxahLbf40qSQ6saRxn1bw4dB3w3S7pYp5TdPedemfMBEYFYR9g1kNYRGQFjayEdNaLEUbr3a3HKJdzTb/dYpFVe6q9oMWVxMpaJHs8EK5/FNBkmBceEnqM63cLFZAoJ+gFxnSsS8vp7p3thbTOAdjut6qK/AFjIA+cGwgLsP3ea7Ujpp2y4+g+1/7nMdj55nKTvye6po5Dwsu1+lQPsl1OsarOsQjRLX1BByAU98nquAHzEBgIDAQWN34FWAASLUk/X1r+zkAAAAASUVORK5CYII=';
+                var SEARCH_IMG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpGNzdGMTE3NDA3MjA2ODExODFENEQ5OTNEMkIyQjRBRCIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozMDRDMDkyNDBBRUQxMUUwODUxQ0I5MTE0MDRFNUQwQSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozMDRDMDkyMzBBRUQxMUUwODUxQ0I5MTE0MDRFNUQwQSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZCN0YxMTc0MDcyMDY4MTE5Nzg0QjQ1MDM1Mzg5QkMwIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkY3N0YxMTc0MDcyMDY4MTE4MUQ0RDk5M0QyQjJCNEFEIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+YNYPDQAAAjFJREFUeNrsmNFHQ1Ecx1vLJSJGT2NEryOWGGMPGcsy6qWnnkrsdX9A1Ev0kB4S9VLqvUi9LKaU3tJDRESkNCVKU5rm9j38Lj/H7u49tzN3cX987Hfm3LPvzu+e3/mdEzJNs6OdrbOjzS0QGAj027o8PNMLxokoiIMXUAEnYJ8+9ZhIMy4JgyJ4M53tHCQUxrbFbccIKJlq9g0KfxXoJsTdoAQS7LsvsAPK4BYYIElhT1Ef8d0aCIPVVoZ4U5qZYzDQpP8s+GD9f0CqVSEelsStuxw4Bp7Yc5etEngg/YihMHha+nNZLwKb5cEIyLL2AqgpvD0i1Ryxdl53oh6mF1zYOzj0MP4W8zO6BcaYf6M4e5ZdMT+qW2CY+VWPSYI/Z+gWWLWZTRXrZ/6LboEXzB/wKDIjvSZaBYoBH1m7oDh2D5hi7bJugXWwwdpFMKgw9hJbGDVpRWvb6nrAA0u2wo+7SLDzUpJea2U1k6H91LJPMEcVjtw3SXu1bJNeBYZcHjunwbqUeqyFdAf6aCHZ5ToR4hlwTbmxpivEHLGXvirUg6dSVWPZM0VFa8Fq0QsWpUqlUTWdZyF/sylmczpD3MiSdB4xKGRVSiUVqd8uFbKNwj7huMfrODc4sOJwLMh5Lbd02TJVQ43MoBnO+XkuvgdjTQoOIXKbMoFvB/czMNpEpCiO037fLDiJrLfD1YedyCu71ezH3YwQOQT2aCcSBcmI3e4SCm5YA4GBwH8u8FeAAQAuXmTePnLl7AAAAABJRU5ErkJggg==';
+                var ACTION_BUTTON_IMAGE_DOM_SPEC = {
+                  _name: "image",
+                  _uri: "http://www.w3.org/2000/svg",
+                  y: 14,
+                  width: 40,
+                  height: 40
+                };
+
+                var numButtons = $numButtons.value || 0;
+
+                var fragment = null;
+                try {
+                  fragment = F.newDOMFragment([]);
+                } catch (e) {
+                  Console.dumpError(e);
+                }
+
+                var addedPredefButtons = {};
+
+                for (var i = numButtons - 1; i >= 0; i--) {
+                  var x = i * 69;
+
+                  fragment.appendChild(F.newDOMElement({
+                    _name: "rect",
+                    _uri: "http://www.w3.org/2000/svg",
+                    x: x,
+                    y: 0,
+                    width: 1,
+                    height: 68,
+                    style: new CSS()
+                        .set("fill", "#ffffff")
+                        .set("fill-opacity", "0.4")
+                  }));
+
+                  if ($buttonSearch.value && !addedPredefButtons.search) {
+                    var el = F.newDOMElement(ACTION_BUTTON_IMAGE_DOM_SPEC);
+                    el.setAttribute("x", x + 14);
+                    el.setAttributeNS("http://www.w3.org/1999/xlink", "href",
+                        SEARCH_IMG);
+                    fragment.appendChild(el);
+                    addedPredefButtons.search = true;
+
+                  } else if ($buttonRefresh.value && !addedPredefButtons.refresh) {
+                    var el = F.newDOMElement(ACTION_BUTTON_IMAGE_DOM_SPEC);
+                    el.setAttribute("x", x + 14);
+                    el.setAttributeNS("http://www.w3.org/1999/xlink", "href",
+                        REFRESH_IMG);
+                    fragment.appendChild(el);
+                    addedPredefButtons.refresh = true;
+                  }
+                }
+
+                fragment;
+              ]]>
+            </DomContent>
+        </For>
+        <For ref="homeicon">
+          <Image>
+            <![CDATA[
+                //depends: $homeIconStyle
+                var STANDARD_IMG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpGNzdGMTE3NDA3MjA2ODExODFENEQ5OTNEMkIyQjRBRCIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDo1QkRFREIzNzBBRTgxMUUwODUxQ0I5MTE0MDRFNUQwQSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo1QkRFREIzNjBBRTgxMUUwODUxQ0I5MTE0MDRFNUQwQSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZCN0YxMTc0MDcyMDY4MTE5Nzg0QjQ1MDM1Mzg5QkMwIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkY3N0YxMTc0MDcyMDY4MTE4MUQ0RDk5M0QyQjJCNEFEIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+mVuiGAAAAU5JREFUeNrs2E9Kw0AUBvDEQCCruhSEgAcodOtKyAFceYBCdp7AY7jSKwiFQj1Ej6G4E0FIEVxFxi8wgTFk/iR5LxR8Dz6YTMP0x0ugM42VUtExVyxAAQ6vBPmhWuyEEJYiT0iN3JOt2nSQICmyU3/rgWJtikfcdG6DXPd89ojc6vFZ555n5J27g32dU5ZO7jvzn0ji+w5unIk8R1468wsuoAu3HYBkAbpwpX5sdw5kbiDJgT7cFfKGLAORpMAQ3Le+/kBWAciMCujDFQZODUBGFEAXbm3BkSE5cSRIbtxk5By4Sci5cKORc+JGIbvAkhlnbhRcyMIGvETqHlxEiDORWQ+yQi5c7+CNgVwb8xzV/tS1yC/dJO+GtdlcZsiruXVkOBOdIgc9zvX4MPbQ5LoxtswvkCoQyH5oYikBClCAAvzvQPkDU4AC9NSvAAMAwI18LmvLTmQAAAAASUVORK5CYII=';
+                var GRID_IMG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM/rhtAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpGNzdGMTE3NDA3MjA2ODExODFENEQ5OTNEMkIyQjRBRCIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDo1QkRFREIzMzBBRTgxMUUwODUxQ0I5MTE0MDRFNUQwQSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo1QkRFREIzMjBBRTgxMUUwODUxQ0I5MTE0MDRFNUQwQSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZCN0YxMTc0MDcyMDY4MTE5Nzg0QjQ1MDM1Mzg5QkMwIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkY3N0YxMTc0MDcyMDY4MTE4MUQ0RDk5M0QyQjJCNEFEIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+IR8VXwAAAFdJREFUeNrs1cEJACEMBEAj9t9y7MC7h2KE2a9BBiRuZGarnN6KBxDwdsbi7Gu949CcJwYEBKzyD8bPO3bPaRJNAggIqEk0iSaxxYCAmkSTAAK+ApwCDACcbQxi13sZJAAAAABJRU5ErkJggg==';
+                var style = $homeIconStyle.value;
+                var ret = new ImageData(0, 0, '');
+                if (style == 'grid')
+                  ret = new ImageData(40, 40, GRID_IMG);
+                else if (style == 'standard')
+                  ret = new ImageData(40, 40, STANDARD_IMG);
+
+                ret;
+            ]]>
+          </Image>
+        </For>
+    </Behaviors>
+    <Actions>
+      <Action id="getSnappingGuide">
+        <Impl>
+          <![CDATA[
+            var b = this.getBounding();
+            return [
+              new SnappingData("WidgetBottom", b.y + 68 , "Top", false, this.id)
+            ];
+          ]]>
+        </Impl>
+      </Action>
+    </Actions>
+    <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil"
+               xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient x1="0%" y1="0%" x2="0%" y2="100%" id="actionbarGradient">
+              <stop style="stop-color: #9a9a9a; stop-opacity: 1" offset="0.5" id="startColor"/>
+              <stop style="stop-color: #808080; stop-opacity: 1" offset="1" id="endColor"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="400" height="68" style="stroke: none; fill: url(#actionbarGradient);" id="actionbarRect"/>
+        <g id="icontext">
+          <image id="homeicon" x="14" y="14" width="40" height="40"/>
+          <rect x="68" y="0" width="1" height="68" style="fill: #ffffff; fill-opacity: 0.4;"/>
+          <text x="83" y="0" id="text" style="" xml:space="preserve">Title</text>
+        </g>
+
+        <g id="actionButtons" x="0" y="0" width="0" height="68">
+        </g>
+    </p:Content>
+</Shape>

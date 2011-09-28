@@ -1,0 +1,50 @@
+<Shape id="editbox" displayName="Edit Field" icon="icons/editbox.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension">350,74</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Text">
+      <Property name="textContent" displayName="Text Content" type="RichText">Edit text</Property>
+      <Property name="textFont" displayName="Text Font" type="Font">Droid Sans|normal|normal|27px</Property>
+      <Property name="textAlign" displayName="Alignment" type="Alignment">0,1</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="htmlObject">
+      <Box>
+        new Dimension($box.w, $box.h)
+      </Box>
+    </For>
+
+    <For ref="text">
+      <TextContent>$textContent</TextContent>
+      <Font>$textFont</Font>
+      <BoxFit>
+        <Arg>new Bound(
+                 16,
+                 10,
+                 $box.w - 16 - 16,
+                 $box.h - 17 - 10)</Arg>
+        <Arg>$textAlign</Arg>
+      </BoxFit>
+    </For>
+  </Behaviors>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <foreignObject x="0" y="0" width="100" height="100" id="htmlObject">
+      <div xmlns="http://www.w3.org/1999/xhtml" id="contentDiv"
+        style="
+          font-size: 0;
+          line-height: 0;
+          -moz-box-sizing: border-box;
+          height: 100%;
+          border-width: 32px 16px 39px 16px;
+          -moz-border-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAABICAYAAAB4H5z9AAABvElEQVR4nO2aPXLCMBBGP0lo0nnoKDlHqjQ+Qg7la1HlKtR0zICVJssIefWbKJhh3wwDtmXv01o2yItyzuHRbPwFpdQ7AANAdYzpAFydc1+sBIDz8Xg8XC4XF2ZIqXov7hjWWrXb7T789aHE1VoLYwzmef6VACeitYbWGgCuKQkYY2CMuQXmBFJS3BijdbHxF0rMYfCUDIffLjHoZ38hlHB+UE6gRIaCK6XgnLu9+01SEgglajPht40ILFhIhAK12cgF5LazmUhJ5DJS0vPuEi2sU4KjdYAC+THCSnCZqMmGf0WUCuuiVoUCNe18oqej5TLlblLc9hA2E7nvi1gvc21i+xWfjtyBSrf/iUQPRIJ4hMRi0LxsJhaIBMFJ9Jz4FEv8OyJBiATxmhLc743XzATHOiV6zLCqJR6BSBAiQYgEIRKESBAyFyVk8kOIBCESxHNKtFR2miRSZcVUoFyb0pJkdIfwoXmqx34d1H/FiM47Yk/oS09HrMzNzWvuMrHf7w0AaK03YYmhtjjrF+To80+JWlEcVmIcx+00TZ/DMLwVRWzgdDqdx3Hc3omv4f8Tz3mf6IFIECJBrELiG6X8qO/Wci9rAAAAAElFTkSuQmCC) 32 16 39 16 stretch stretch;
+        "></div>
+    </foreignObject>
+    <foreignObject x="16" y="10" width="200" height="150" id="text">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        Edit text content
+      </div>
+    </foreignObject>
+  </p:Content>
+</Shape>

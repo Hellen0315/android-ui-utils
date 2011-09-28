@@ -1,0 +1,86 @@
+<Shape id="titlebar" displayName="Title Bar" icon="icons/titlebar.png">
+    <Properties>
+      <PropertyGroup>
+        <Property name="box" type="Dimension" p:lockHeight="true">480,39</Property>
+        <Property name="withShadow" type="Bool" displayName="With Shadow">false</Property>
+      </PropertyGroup>
+      <PropertyGroup name="Background">
+        <Property name="fillColor" displayName="Color" type="Color">#9a9a9a</Property>
+      </PropertyGroup>
+      <PropertyGroup name="Text">
+        <Property name="titleText" displayName="Title" type="PlainText">Title</Property>
+      </PropertyGroup>
+    </Properties>
+    <Behaviors>
+        <For ref="titleRect">
+            <Box>new Dimension($box.w, 39)</Box>
+        </For>
+        <For ref="startColor">
+          <StopColor>$fillColor</StopColor>
+          <Offset>0</Offset>
+        </For>
+        <For ref="endColor">
+            <StopColor>$fillColor.shaded(0.2)</StopColor>
+            <Offset>1</Offset>
+        </For>
+        <For ref="titleShadow">
+            <Box>new Dimension($box.w, 8)</Box>
+            <Visibility>$withShadow</Visibility>
+        </For>
+        <For ref="text">
+            <TextContent>$titleText</TextContent>
+            <Fill>Color.fromString("#ffffffff")</Fill>
+            <Font>Font.fromString("Droid Sans|bold|normal|21px")</Font>
+            <BoxFit>
+                <Arg>new Bound(4, 0, $box.w - 8, 39)</Arg>
+                <Arg>new Alignment(0, 1)</Arg>
+            </BoxFit>
+        </For>
+    </Behaviors>
+    <Actions>
+      <Action id="getSnappingGuide">
+        <Impl>
+          <![CDATA[
+            var b = this.getBounding();
+            return [
+              new SnappingData("WidgetBottom", b.y + 39 , "Top", false, this.id)
+            ];
+          ]]>
+        </Impl>
+      </Action>
+    </Actions>
+    <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil"
+               xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient x1="0%" y1="0%" x2="0%" y2="100%" id="titleGradient">
+              <stop style="stop-color: #9a9a9a; stop-opacity: 1" offset="0" id="startColor"/>
+              <stop style="stop-color: #808080; stop-opacity: 1" offset="1" id="endColor"/>
+          </linearGradient>
+          <linearGradient x1="0%" y1="0%" x2="0%" y2="100%" id="titleShadowGradient">
+              <stop style="stop-color: #000000; stop-opacity: 0.25" offset="0"/>
+              <stop style="stop-color: #000000; stop-opacity: 0" offset="1"/>
+          </linearGradient>
+          <filter id="titleGlow">
+              <feColorMatrix type="matrix"
+                  values=
+                      "0 0 0 0 0
+                       0 0 0 0 0 
+                       0 0 0 0 0 
+                       0 0 0 1 0"/>
+              <feGaussianBlur stdDeviation="2.6" result="coloredBlur"/>
+              <feMerge>
+                  <feMergeNode in="coloredBlur"/>
+                  <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+          </filter>
+        </defs>
+        <rect x="0" y="0" width="400" height="39" style="stroke: none; fill: url(#titleGradient);" id="titleRect"/>
+        <rect x="0" y="39" width="400" height="8" style="stroke: none; fill: url(#titleShadowGradient);" id="titleShadow"/>
+        <text
+            x="4"
+            y="0"
+            id="text"
+            style="filter: url(#titleGlow);"
+            xml:space="preserve">Title</text>
+    </p:Content>
+</Shape>

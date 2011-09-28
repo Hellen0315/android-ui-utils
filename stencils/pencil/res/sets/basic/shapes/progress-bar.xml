@@ -1,0 +1,72 @@
+<Shape id="progress-bar" displayName="Progress/Seek Bar" icon="icons/progress-bar.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension" p:lockHeight="true">480,44</Property>
+      <Property name="seekBar" type="Bool" displayName="Seek Bar">false</Property>
+      <Property name="showIndeterminate" type="Bool" displayName="Indeterminate">false</Property>
+      <Property name="showProgress" type="Bool" displayName="Show Progress">true</Property>
+      <Property name="showSecondProgress" type="Bool" displayName="Show Secondary Progress">false</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Handles">
+      <Property name="progress" displayName="Progress" type="Handle" p:lockY="true" p:minX="0" p:maxX="$box.w">240,0</Property>
+      <Property name="secondProgress" displayName="Secondary Progress" type="Handle" p:lockY="true" p:minX="0" p:maxX="$box.w">360,44</Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="bgRect">
+      <Box>new Dimension($box.w, 30)</Box>
+    </For>
+    <For ref="indeterminateHtmlContainer">
+      <Box>new Dimension($box.w, 44)</Box>
+      <Visibility>$showIndeterminate</Visibility>
+    </For>
+    <For ref="progressRect">
+      <Box>new Dimension($progress.x, 44)</Box>
+      <Visibility>$showProgress.value &amp;&amp; !$showIndeterminate.value</Visibility>
+    </For>
+    <For ref="secondProgressRect">
+      <Box>new Dimension($secondProgress.x, 44)</Box>
+      <Visibility>$showSecondProgress.value &amp;&amp; !$showIndeterminate.value</Visibility>
+    </For>
+    <For ref="seekThumb">
+      <Transform>"translate(" + (Math.max(12, Math.min($box.w - 12, $progress.x)) - 24) + ",0)"</Transform>
+      <Visibility>$seekBar.value &amp;&amp; !$showIndeterminate.value</Visibility>
+    </For>
+  </Behaviors>
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil"
+             xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient x1="0%" y1="0%" x2="0%" y2="100%" id="bgGradient">
+        <stop style="stop-color: #9d9e9d; stop-opacity: 1" offset="0"/>
+        <stop style="stop-color: #747674; stop-opacity: 1" offset="1"/>
+      </linearGradient>
+      <linearGradient x1="0%" y1="0%" x2="0%" y2="100%" id="progressGradient">
+        <stop style="stop-color: #ffd300; stop-opacity: 1" offset="0"/>
+        <stop style="stop-color: #ffb600; stop-opacity: 1" offset="1"/>
+      </linearGradient>
+      <linearGradient x1="0%" y1="0%" x2="0%" y2="100%" id="secondProgressGradient">
+        <stop style="stop-color: #ffd300; stop-opacity: 0.5" offset="0"/>
+        <stop style="stop-color: #ffb600; stop-opacity: 0.5" offset="1"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="7" rx="8" ry="8" style="fill: url(#bgGradient);" id="bgRect"/>
+    <clipPath id="mainClip">
+      <use xlink:href="#bgRect"/>
+    </clipPath>
+    <foreignObject x="0" id="indeterminateHtmlContainer" clip-path="url(#mainClip)">
+      <div xmlns="http://www.w3.org/1999/xhtml"
+        style="
+          background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAeCAIAAADLgysEAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAXxJREFUeNq8lc2ugkAMhQW6QgVRFiLv/zi8hAuUgBiWKJBbM8bwM1Pbyb13NhCdj3NOyxQny7LVdN1ut+v1ulosx3HSNA3DcKVbHAqGYRj/V1UVwWy329l+EQVd1zGZzWYz3mxBwfP5/DBFUWhLhMx6vf7snCnxqbcY4e50OhFKIgoejwfRW8XgHtEbYaIgz3OL6pVlaUHB+Xw29db3/bZttZkul4sFBVoL9BuhrR6HgmVlFaPt01clmponUydD685UPT41EftTpckEUXNFNCOkFPR9jxc8GUEQqHt+Jin1GsTobrfbiSasyiSlXHQXRZH2cYSSHeXu93sLJTvKFX0JaaWvFOCM0bpb/s7JRFNzMXSHE1aqxKQmYnVdI+O6mtomSWJS4lPged7YnYk5HA5EJiYFah/hjqielHqJKeYTUVQ9EQVN0/xDprcY4c7UJzoTQYFFJjxPdhQsDf5un8bUPNnxeIzjWNonJjU51ETF7/c7fp+0M4JP/QgwAOLR4IVPxTqeAAAAAElFTkSuQmCC);
+          position: absolute;
+          left: 0;
+          top: 7px;
+          width: 100%;
+          height: 100%;
+        "> </div>
+    </foreignObject>
+    <rect x="0" y="0" style="fill: url(#progressGradient);" id="progressRect" clip-path="url(#mainClip)"/>
+    <rect x="0" y="0" style="fill: url(#secondProgressGradient);" id="secondProgressRect" clip-path="url(#mainClip)"/>
+    <image xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAsCAYAAAAjFjtnAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAABOhJREFUeNrMWTtLXEEYnbl3X+RRpHAFC5NWTZEikC4QUlhIUEGsDOxPSCn+By3SKfgDIkIaIY8VTIRUNokkRmyFJIUGiXnt496b+db5zNnJ7O7M3cXNwMfdx52558w538zcGZkkibAVKWXTV+NzYLny51BfpVGPSwIRG5FYrlivuSGFPSM6FwRhAg514OfQQhBBIMAIrhF8j437Gcc/JFwImOARaEbHmIqbKq7DfagAPpx7/1DFexX7KuoafA0+C30NgIRIS0Aa4KleVsUlFQ/m5+cnJicnb46MjAy3sqRpz729vcP19fUPS0tLz9RPz1VUdNtVTUQACWvvN9rqkAPcg2yLDIDPqZhYXFx8WCqV7lI7HC4EOJaXl98sLCw8UT+XNfjfmgyrUQebNeUCPcuFgATwDJzihur1RysrK7NxHIu0BIIgEHNzc0/L5fKKttUvHVVQow65k6RJYkxaqpMnz09PT49WKpVGQ0jClQCBp+vMzMyt7e3t26qtr/oWBhtBHiRpkxj9zyoQgeLAwECxVqs1wKclQDE0NHRtcHDwTqFQ+HxwcPAWrJMBErKbJEYF2EJ5BaJQr9dFFEXnBFwLEwjDkCJQdcNisTiiCOxr23Bw/kVpCWAe8ChEKmQJOCnABCicx2Td+1SH6kPJ60QOHSZFr2E0MGyUoQejAmkIkGoGgRyMdqFlMvQiII1AEiGB58A8cLUPE6D6BiYEb06MSTcWwlwICDBbiFXg4a0deFaA/M8jmIGpFfjUFrINqZIthDbyIcCKGRYKDPBti+9SoslO3PNMxJcAf7cQsD1P9EKBJkI8guBI5JPEjaWAIqDrSaOznEpaAoIV4J5nJVwL+Z/As/0UGZkGRDcE6MFNeeAzCvF92kIyLYauFCDA5lDqYyEmYFjowghI9j0ms6+F6NovC0meB3AodS1ooX4q8M9c4EuArETt+CwEe6oA2seHAM4B/VIgwN7nucC1cMJrBfqXA90owOD7qYDkxZhlXd/RPrAWkn1XwDeJ/wcFJK8k8YXG552Y6+o6F28hXH2mIcD36np9UUDiboS5lEAyuFlMv/NqFMBfvAK4mYW9b1MBZ17+bsSFEki4x3AvqB0BGyFjH0kam7/O+z2ugM2gXpcOZwsdf6d2QIG41fN6oQAeSshO63wfEtCeeeDRtYVsJyo04Ce4SYvRykYI3qwDCvD5QGxRw5tAYun5SD8kOcPxd58TR6E2PX0+iQFhvLnuQ8JHAZNA0wYVvZi4JjC/yHBdrQDnY7UFgZ5YiMHTpmuUyWRELpc7313gsd2VQDabbdSndkAFPNyIurWQgMRC8NRLFQUkKhQKTa+GZKN29uFJjAnk83m6v9E5R0dHB5pA1SAR90IBJEAP+XRycvJ9bGzsMvUiv1q6bmxRr7MCCnjl9PT03fHx8TtxdjrTSoXUBND/NT1/bG9tbU2Nj48PEnjzoMNlY5cIUGxubn6pVqsv1N8/DAId88CVgDAIUDe+39nZKa+trV0tlUrDuENtUwFtxQRIhdXV1cPd3V06pfyogf8GC6F9Up1SCmE/4OAzgisqFmZnZ+9PTU0VR0dHr7oqoEB/29jYOFId8FL9/FjFT/H3YK8OBCJhOeDjTnIlICzb63xSQ2TuqRgXZwfe5spSWtSksqvilYrXMPbbgMetVCDsfwQYAOsbJUkVHF9JAAAAAElFTkSuQmCC"
+      id="seekThumb" x="0" y="0" width="48" height="44"/>
+  </p:Content>
+</Shape>

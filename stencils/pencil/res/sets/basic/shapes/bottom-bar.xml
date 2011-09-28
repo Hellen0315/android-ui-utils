@@ -1,0 +1,45 @@
+<Shape id="bottom-bar" displayName="Bottom Button Bar" icon="icons/bottom-bar.png">
+    <Properties>
+      <PropertyGroup>
+        <Property name="box" type="Dimension" p:lockHeight="true">480,82</Property>
+      </PropertyGroup>
+      <PropertyGroup name="Background">
+        <Property name="fillColor" displayName="Color" type="Color">#a5a5a5</Property>
+      </PropertyGroup>
+    </Properties>
+    <Behaviors>
+      <For ref="startColor">
+        <StopColor>$fillColor</StopColor>
+        <Offset>0</Offset>
+      </For>
+      <For ref="endColor">
+          <StopColor>$fillColor.shaded(0.2)</StopColor>
+          <Offset>1</Offset>
+      </For>
+      <For ref="rect">
+          <Box>new Dimension($box.w, 82)</Box>
+      </For>
+    </Behaviors>
+    <Actions>
+      <Action id="getSnappingGuide">
+        <Impl>
+          <![CDATA[
+            var b = this.getBounding();
+            return [
+              new SnappingData("WidgetTop", b.y, "Bottom", false, this.id)
+            ];
+          ]]>
+        </Impl>
+      </Action>
+    </Actions>
+    <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil"
+               xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient x1="0%" y1="0%" x2="0%" y2="100%" id="bgGradient">
+              <stop style="stop-color: #a5a5a5; stop-opacity: 1" offset="0" id="startColor"/>
+              <stop style="stop-color: #848484; stop-opacity: 1" offset="1" id="endColor"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="400" height="82" style="stroke: none; fill: url(#bgGradient);" id="rect"/>
+    </p:Content>
+</Shape>

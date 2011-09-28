@@ -1,0 +1,104 @@
+<Shape id="options-menu" displayName="Options Menu" icon="icons/options-menu.png">
+  <Properties>
+    <PropertyGroup>
+      <Property name="box" type="Dimension">480,217</Property>
+    </PropertyGroup>
+    <PropertyGroup name="Text">
+      <Property name="menuItems" displayName="Menu Items " type="PlainText"
+          p:editInfo="var size = F.elementSize('textDiv'); ({targetName: 'htmlObject', bound: new Bound(0, 0, Math.max(size.w, 80) , Math.max(size.h, 10)), font: $textFont, align: new Alignment(0, 1), multi: true})"><![CDATA[Item 1 | Item 2
+Item 3 | Item 4]]></Property>
+    </PropertyGroup>
+  </Properties>
+  <Behaviors>
+    <For ref="contentDiv">
+      <DomContent>
+        <![CDATA[
+          //depends: $menuItems
+
+          var rows = $menuItems.value.split(/\n/);
+          var specs = [];
+
+          for (var r = 0; r < rows.length; r++) {
+            var row = rows[r];
+
+            var rowSpec = {
+              _name: "div",
+              _uri: "http://www.w3.org/1999/xhtml",
+              style: new CSS()
+                  .set("height", "99px")
+                  .set("border-bottom",
+                      (r < rows.length - 1) ? "1px solid rgba(255,255,255,0.33)"
+                                            : "0"),
+              _children: []
+            };
+
+            var items = row.split(/\|/);
+            for (var i = 0; i < items.length; i++) {
+              var label = items[i];
+
+              rowSpec._children.push({
+                _name: "div",
+                _uri: "http://www.w3.org/1999/xhtml",
+                style: new CSS()
+                    .set("display", "inline-block")
+                    .set("width", (100 / items.length).toFixed(1) + "%")
+                    .set("height", "99px")
+                    .set("position", "relative")
+                    .set("padding", 0)
+                    .set("margin", 0)
+                    .set("border-right",
+                        (i < items.length - 1) ? "1px solid rgba(255,255,255,0.33)"
+                                               : "0")
+                    .set("-moz-box-sizing", "border-box"),
+                
+                _children: [{
+                  _text: label,
+                  style: new CSS()
+                      .set("position", "absolute")
+                      .set("width", "100%")
+                      .set("top", "72px")
+                      .set("left", "0")
+                      .set("height", "1em")
+                      .set("overflow", "hidden")
+                      .set("text-align", "center")
+                      .set("color", "#ffffff")
+                      .set("font-family", "'Droid Sans'")
+                      .set("font-size", "21px")
+                      .set("line-height", "21px")
+                }]
+              });
+            }
+
+            specs.push(rowSpec);
+          }
+
+          var fragment = null;
+          try {
+            fragment = F.newDOMFragment(specs);
+          } catch (e) {
+            Console.dumpError(e);
+          }
+          fragment;
+        ]]>
+      </DomContent>
+    </For>
+    <For ref="htmlObject">
+      <Box>
+        //depends $menuItems
+        new Dimension($box.w, Math.max($box.h, F.elementSize("contentDiv").h))
+      </Box>
+    </For>
+  </Behaviors>  
+  <p:Content xmlns:p="http://www.evolus.vn/Namespace/Pencil" xmlns="http://www.w3.org/2000/svg">
+    <foreignObject x="0" y="0" width="200" height="217" id="htmlObject">
+      <div xmlns="http://www.w3.org/1999/xhtml" id="contentDiv"
+        style="
+          font-size: 0;
+          line-height: 0;
+          -moz-box-sizing: border-box;
+          border-width: 18px 3px 0px 3px;
+          -moz-border-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB8AAAAeCAYAAADU8sWcAAAAPklEQVR4nO3QUQ0AIAzE0BvB+DThCRubCch9rDXwkkZVydWyyeDg4ODg4K/bmXlc+NztIem68LnbwcHBwb/W/pYGVuT1HvwAAAAASUVORK5CYII=) 18 3 0 3 stretch stretch;
+        "></div>
+    </foreignObject>
+  </p:Content>
+</Shape>

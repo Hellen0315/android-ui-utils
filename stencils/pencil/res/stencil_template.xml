@@ -1,0 +1,17 @@
+<Shapes xmlns="http://www.evolus.vn/Namespace/Pencil"
+        xmlns:p="http://www.evolus.vn/Namespace/Pencil"
+        xmlns:svg="http://www.w3.org/2000/svg"
+        xmlns:xlink="http://www.w3.org/1999/xlink"
+        id="com.google.android.pencilstencil.%(id)s"
+        displayName="Android - %(displayname)s"
+        description="%(description)s"
+        author="Roman Nurik (@romannurik)"
+        url="http://code.google.com/p/android-ui-utils">
+    <Properties>
+        <PropertyGroup name="Text">
+            <Property name="defaultTextFont" type="Font" displayName="Default Font">Droid Sans|normal|normal|27px</Property>
+            <Property name="defaultTextColor" type="Color" displayName="Default Text Color">#000000ff</Property>
+        </PropertyGroup>
+    </Properties>
+%(shapes)s
+</Shapes>
