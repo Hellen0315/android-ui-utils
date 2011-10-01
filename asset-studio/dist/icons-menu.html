@@ -114,9 +114,9 @@
         });
 
       var PARAM_RESOURCES = {
-        'hdpi-iconSize': { w: 72, h: 72 },
-        'hdpi-guideRect': { x: 12, y: 12, w: 48, h: 48 }, // 56 pre-Gingerbread
-        'hdpi-targetRect': { x: 12, y: 12, w: 48, h: 48 },
+        'mdpi-iconSize': { w: 48, h: 48 },
+        'mdpi-guideRect': { x: 8, y: 8, w: 32, h: 32 }, // 38 pre-Gingerbread
+        'mdpi-targetRect': { x: 8, y: 8, w: 32, h: 32 },
       };
 
       var sysReplacements = {
@@ -179,13 +179,13 @@
         var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
         for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1}) {
-          var mult = studio.util.getMultBaseHdpi(density);
+          var mult = studio.util.getMultBaseMdpi(density);
           var iconSize = studio.util.multRound(
-              PARAM_RESOURCES['hdpi-iconSize'], mult);
+              PARAM_RESOURCES['mdpi-iconSize'], mult);
           var guideRect = studio.util.multRound(
-              PARAM_RESOURCES['hdpi-guideRect'], mult);
+              PARAM_RESOURCES['mdpi-guideRect'], mult);
           var targetRect = studio.util.multRound(
-              PARAM_RESOURCES['hdpi-targetRect'], mult);
+              PARAM_RESOURCES['mdpi-targetRect'], mult);
 
           var outCtx = imagelib.drawing.context(iconSize);
           var tmpCtx = imagelib.drawing.context(iconSize);

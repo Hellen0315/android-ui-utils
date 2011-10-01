@@ -16,12 +16,12 @@ limitations under the License.
 
 studio.util = {};
 
-studio.util.getMultBaseHdpi = function(density) {
+studio.util.getMultBaseMdpi = function(density) {
   switch (density) {
-    case 'xhdpi': return 1.333333;
-    case  'hdpi': return 1.0;
-    case  'mdpi': return 0.666667;
-    case  'ldpi': return 0.5;
+    case 'xhdpi': return 2.00;
+    case  'hdpi': return 1.50;
+    case  'mdpi': return 1.00;
+    case  'ldpi': return 0.75;
   }
   return 1.0;
 };

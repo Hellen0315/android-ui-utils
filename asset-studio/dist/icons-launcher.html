@@ -108,10 +108,10 @@
       // Load image resources (stencils)
       var resList = {};
       for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1})
-        for (var shape in {'square':1, 'circle':1})
-          for (var type in {'back':1, 'fore1':1, 'fore2':1, 'fore3':1, 'mask':1})
-            resList[shape + '-' + density + '-' + type] = (
-              'res/launcher-stencil/' + shape + '/' + density + '/' + type + '.png');
+        for (var backgroundShape in {'square':1, 'circle':1})
+          for (var type in {'back':1, 'fore1':1, 'mask':1})
+            resList[backgroundShape + '-' + density + '-' + type] = (
+              'res/launcher-stencil/' + backgroundShape + '/' + density + '/' + type + '.png');
 
       var IMAGE_RESOURCES = {};
       imagelib.loadImageResources(resList, function(r) {
@@ -128,22 +128,27 @@
          'mdpi-iconSize': { w:  48, h:  48 },
          'ldpi-iconSize': { w:  36, h:  36 },
 
-          'square-web-targetRect': { x: 21, y: 21, w: 470, h: 470 },
-          'circle-web-targetRect': { x: 21, y: 21, w: 470, h: 470 },
-        'square-xhdpi-targetRect': { x:  4, y:  4, w:  88, h:  88 },
-        'circle-xhdpi-targetRect': { x:  4, y:  4, w:  88, h:  88 },
-         'square-hdpi-targetRect': { x:  3, y:  3, w:  66, h:  66 },
-         'circle-hdpi-targetRect': { x:  3, y:  3, w:  66, h:  66 },
-         'square-mdpi-targetRect': { x:  2, y:  2, w:  44, h:  44 },
-         'circle-mdpi-targetRect': { x:  2, y:  2, w:  44, h:  44 },
-         'square-ldpi-targetRect': { x:  1, y:  1, w:  34, h:  34 },
-         'circle-ldpi-targetRect': { x:  1, y:  1, w:  34, h:  34 }
+          'web-targetRect': { x: 21, y: 21, w: 470, h: 470 },
+        'xhdpi-targetRect': { x:  4, y:  4, w:  88, h:  88 },
+         'hdpi-targetRect': { x:  3, y:  3, w:  66, h:  66 },
+         'mdpi-targetRect': { x:  2, y:  2, w:  44, h:  44 },
+         'ldpi-targetRect': { x:  1, y:  1, w:  34, h:  34 }
       };
 
       /**
        * Main image generation routine.
        */
-      function regenerate() {
+      function regenerate(force) {
+        if (!force) {
+          if (regenerate.timeout_) {
+            clearTimeout(regenerate.timeout_);
+          }
+          regenerate.timeout_ = setTimeout(function() {
+            regenerate(true);
+          }, 1000);
+          return;
+        }
+
         if (!IMAGE_RESOURCES._loaded)
           return;
 
@@ -155,71 +160,137 @@
         zipper.setZipFilename(iconName + '.zip');
 
         var continue_ = function(foreCtx) {
-          var shape = values['shape'];
+          var backgroundShape = values['backgroundShape'];
           for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1}) {
+            var mult = studio.util.getMultBaseMdpi(density);
+            if (density == 'web') {
+              mult = 1;
+            }
+
             var iconSize = PARAM_RESOURCES[density + '-iconSize'];
-            var targetRect = PARAM_RESOURCES[shape + '-' + density + '-targetRect'];
+            var targetRect = PARAM_RESOURCES[density + '-targetRect'];
 
             var outCtx = imagelib.drawing.context(iconSize);
             var tmpCtx = imagelib.drawing.context(iconSize);
 
-            tmpCtx.save();
-            tmpCtx.globalCompositeOperation = 'source-over';
-            imagelib.drawing.copy(tmpCtx, IMAGE_RESOURCES[shape + '-' + density + '-mask'], iconSize);
-            tmpCtx.globalCompositeOperation = 'source-atop';
-            tmpCtx.fillStyle = values['backColor'].color;
-            tmpCtx.fillRect(0, 0, iconSize.w, iconSize.h);
-            if (foreCtx) {
-              var copyFrom = foreCtx;
-              var foreSize = {
-                w: foreCtx.canvas.width,
-                h: foreCtx.canvas.height
-              };
+            if (backgroundShape == 'none') {
+              tmpCtx.save();
+              tmpCtx.globalCompositeOperation = 'source-over';
+              if (foreCtx) {
+                var copyFrom = foreCtx;
+                var foreSize = {
+                  w: foreCtx.canvas.width,
+                  h: foreCtx.canvas.height
+                };
 
-              if (values['foreColor'].alpha) {
-                var tmpCtx2 = imagelib.drawing.context(foreSize);
-                imagelib.drawing.copy(tmpCtx2, foreCtx, foreSize);
-                tmpCtx2.globalCompositeOperation = 'source-atop';
-                tmpCtx2.fillStyle = values['foreColor'].color;
-                tmpCtx2.fillRect(0, 0, foreSize.w, foreSize.h);
-                copyFrom = tmpCtx2;
-
-                /*
-                if (density == 'web') {
-                  var tmpCtx3 = imagelib.drawing.context(foreSize);
-                  imagelib.drawing.fx([
-                    {
-                      effect: 'outer-shadow',
-                      color: '#fff',
-                      opacity: 0.30,
-                      translate: { y: 5 }
-                    },
-                    {
-                      effect: 'outer-shadow',
-                      color: '#000',
-                      opacity: 0.15,
-                      translate: { y: -5 }
-                    }
-                  ], tmpCtx3, tmpCtx2, foreSize);
-                  copyFrom = tmpCtx3;
+                if (values['foreColor'].alpha) {
+                  var tmpCtx2 = imagelib.drawing.context(foreSize);
+                  imagelib.drawing.copy(tmpCtx2, foreCtx, foreSize);
+                  tmpCtx2.globalCompositeOperation = 'source-atop';
+                  tmpCtx2.fillStyle = values['foreColor'].color;
+                  tmpCtx2.fillRect(0, 0, foreSize.w, foreSize.h);
+                  copyFrom = tmpCtx2;
+                  tmpCtx.globalAlpha = values['foreColor'].alpha / 100;
                 }
-                */
 
-                tmpCtx.globalAlpha = values['foreColor'].alpha / 100;
+                imagelib.drawing[values['crop'] ? 'drawCenterCrop' : 'drawCenterInside']
+                  (tmpCtx, copyFrom, targetRect, {
+                    x: 0, y: 0,
+                    w: foreSize.w, h: foreSize.h
+                  });
+              }
+              tmpCtx.restore();
+
+              var foreEffect = 1; //values['foreEffect'];
+
+              if (density == 'web') {
+                imagelib.drawing.fx([
+                  {
+                    effect: 'inner-shadow',
+                    color: '#fff',
+                    opacity: 0.25,
+                    blur: 0,
+                    translate: { y: 5 }
+                  },
+                  {
+                    effect: 'inner-shadow',
+                    color: '#000',
+                    opacity: 0.4,
+                    blur: 5,
+                    translate: { y: -5 }
+                  },
+                  {
+                    effect: 'outer-shadow',
+                    color: '#000',
+                    opacity: 0.4,
+                    blur: 8,
+                    translate: { y: 3 }
+                  }
+                ], outCtx, tmpCtx, iconSize);
+
+              } else {
+                imagelib.drawing.fx([
+                  {
+                    effect: 'inner-shadow',
+                    color: '#fff',
+                    opacity: 0.25,
+                    blur: 0,
+                    translate: { y: Math.ceil(0.5 * mult) }
+                  },
+                  {
+                    effect: 'inner-shadow',
+                    color: '#000',
+                    opacity: 0.6,
+                    blur: Math.ceil(1 * mult),
+                    translate: { y: -Math.ceil(0.5 * mult) }
+                  },
+                  {
+                    effect: 'outer-shadow',
+                    color: '#000',
+                    opacity: 0.3,
+                    blur: Math.ceil(2 * mult),
+                    translate: { y: Math.ceil(0.5 * mult) }
+                  }
+                ], outCtx, tmpCtx, iconSize);
               }
 
-              imagelib.drawing[values['crop'] ? 'drawCenterCrop' : 'drawCenterInside']
-                (tmpCtx, copyFrom, targetRect, {
-                  x: 0, y: 0,
-                  w: foreSize.w, h: foreSize.h
-                });
-            }
-            tmpCtx.restore();
+            } else {
+              tmpCtx.save();
+              tmpCtx.globalCompositeOperation = 'source-over';
+              imagelib.drawing.copy(tmpCtx, IMAGE_RESOURCES[backgroundShape + '-' + density + '-mask'], iconSize);
+              tmpCtx.globalCompositeOperation = 'source-atop';
+              tmpCtx.fillStyle = values['backColor'].color;
+              tmpCtx.fillRect(0, 0, iconSize.w, iconSize.h);
+              if (foreCtx) {
+                var copyFrom = foreCtx;
+                var foreSize = {
+                  w: foreCtx.canvas.width,
+                  h: foreCtx.canvas.height
+                };
 
-            var foreEffect = values['foreEffect'];
-            imagelib.drawing.copy(outCtx, IMAGE_RESOURCES[shape + '-' + density + '-back'], iconSize);
-            imagelib.drawing.copy(outCtx, tmpCtx, iconSize);
-            imagelib.drawing.copy(outCtx, IMAGE_RESOURCES[shape + '-' + density + '-fore' + foreEffect], iconSize);
+                if (values['foreColor'].alpha) {
+                  var tmpCtx2 = imagelib.drawing.context(foreSize);
+                  imagelib.drawing.copy(tmpCtx2, foreCtx, foreSize);
+                  tmpCtx2.globalCompositeOperation = 'source-atop';
+                  tmpCtx2.fillStyle = values['foreColor'].color;
+                  tmpCtx2.fillRect(0, 0, foreSize.w, foreSize.h);
+                  copyFrom = tmpCtx2;
+                  tmpCtx.globalAlpha = values['foreColor'].alpha / 100;
+                }
+
+                imagelib.drawing[values['crop'] ? 'drawCenterCrop' : 'drawCenterInside']
+                  (tmpCtx, copyFrom, targetRect, {
+                    x: 0, y: 0,
+                    w: foreSize.w, h: foreSize.h
+                  });
+              }
+              tmpCtx.restore();
+
+              var foreEffect = 1; //values['foreEffect'];
+              imagelib.drawing.copy(outCtx, IMAGE_RESOURCES[backgroundShape + '-' + density + '-back'], iconSize);
+              imagelib.drawing.copy(outCtx, tmpCtx, iconSize);
+              imagelib.drawing.copy(outCtx, IMAGE_RESOURCES[backgroundShape + '-' + density + '-fore' + foreEffect], iconSize);
+            }
 
             zipper.add({
               name: (density == 'web') ?
@@ -257,18 +328,19 @@
           }),
           new studio.forms.BooleanField('crop', {
             title: 'Foreground scaling',
-            defaultValue: true,
+            defaultValue: false,
             offText: 'Center',
             onText: 'Crop'
           }),
-          new studio.forms.EnumField('shape', {
-            title: 'Shape',
+          new studio.forms.EnumField('backgroundShape', {
+            title: 'Background Shape',
             buttons: true,
             options: [
+              { id: 'none', title: 'None' },
               { id: 'square', title: 'Square' },
               { id: 'circle', title: 'Circle' }
             ],
-            defaultValue: 'square'
+            defaultValue: 'none'
           }),
           new studio.forms.ColorField('backColor', {
             title: 'Background color',
@@ -280,7 +352,7 @@
             defaultValue: '#000000',
             alpha: true,
             defaultAlpha: 0
-          }),
+          })/*,
           new studio.forms.EnumField('foreEffect', {
             title: 'Foreground effects',
             buttons: true,
@@ -290,7 +362,7 @@
               { id: '3', title: 'Glossy' }
             ],
             defaultValue: '1'
-          })
+          })*/
         ]
       });
       form.createUI($('#inputs-form').get(0));

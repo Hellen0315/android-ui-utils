@@ -174,33 +174,54 @@ imagelib.drawing.applyFilter = function(filter, ctx, size) {
   ctx.putImageData(dst, 0, 0);
 };
 
-imagelib.drawing.blur = function(radius, ctx, size) {
-  var rows = Math.ceil(radius);
-  var r = rows * 2 + 1;
-  var matrix = new Array(r * r);
-	var sigma = radius / 3;
-	var sigma22 = 2 * sigma * sigma;
-	var sqrtPiSigma22 = Math.sqrt(Math.PI * sigma22);
-	var radius2 = radius * radius;
-	var total = 0;
-	var index = 0;
-	var distance2;
-	for (var y = -rows; y <= rows; y++) {
-	  for (var x = -rows; x <= rows; x++) {
-  		distance2 = 1.0*x*x + 1.0*y*y;
-  		if (distance2 > radius2)
-  			matrix[index] = 0;
-  		else
-  			matrix[index] = Math.exp(-distance2 / sigma22) / sqrtPiSigma22;
-  		total += matrix[index];
-  		index++;
-		}
-	}
+(function() {
+  imagelib.drawing.blur = function(radius, ctx, size) {
+    try {
+      glfxblur(radius, ctx, size);
 
-  imagelib.drawing.applyFilter(
-    new ConvolutionFilter(matrix, total, 0, true),
-    ctx, size);
-};
+    } catch (e) {
+      // WebGL unavailable, use the slower blur
+      slowblur(radius, ctx, size);
+      return;
+    }
+  };
+
+  function slowblur(radius, ctx, size) {
+    var rows = Math.ceil(radius);
+    var r = rows * 2 + 1;
+    var matrix = new Array(r * r);
+    var sigma = radius / 3;
+    var sigma22 = 2 * sigma * sigma;
+    var sqrtPiSigma22 = Math.sqrt(Math.PI * sigma22);
+    var radius2 = radius * radius;
+    var total = 0;
+    var index = 0;
+    var distance2;
+    for (var y = -rows; y <= rows; y++) {
+      for (var x = -rows; x <= rows; x++) {
+        distance2 = 1.0*x*x + 1.0*y*y;
+        if (distance2 > radius2)
+          matrix[index] = 0;
+        else
+          matrix[index] = Math.exp(-distance2 / sigma22) / sqrtPiSigma22;
+        total += matrix[index];
+        index++;
+      }
+    }
+
+    imagelib.drawing.applyFilter(
+      new ConvolutionFilter(matrix, total, 0, true),
+      ctx, size);
+  }
+
+  function glfxblur(radius, ctx, size) {
+    var canvas = fx.canvas();
+    var texture = canvas.texture(ctx.canvas);
+    canvas.draw(texture).triangleBlur(radius).update();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(canvas, 0, 0);
+  }
+})();
 
 imagelib.drawing.fx = function(effects, dstCtx, src, size) {
   effects = effects || [];
@@ -249,8 +270,11 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
   imagelib.drawing.clear(tmpCtx, size);
   imagelib.drawing.copy(tmpCtx, src.canvas || src, size);
 
+  var fillAlpha = 1.0;
+
   if (fillEffects.length) {
     var effect = fillEffects[0];
+    fillAlpha = effect.alpha || 1.0;
 
     tmpCtx.save();
     tmpCtx.globalCompositeOperation = 'source-atop';
@@ -274,8 +298,9 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
     tmpCtx.restore();
   }
 
-  dstCtx.globalAlpha = 1.0;
+  dstCtx.globalAlpha = fillAlpha;
   imagelib.drawing.copy(dstCtx, tmpCtx, size);
+  dstCtx.globalAlpha = 1.0;
 
   // Render inner effects
   for (var i = 0; i < innerEffects.length; i++) {

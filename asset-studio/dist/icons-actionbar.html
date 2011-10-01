@@ -114,9 +114,9 @@
         });
 
       var PARAM_RESOURCES = {
-        'hdpi-iconSize': { w: 48, h: 48 },
-        'hdpi-guideRect': { x: 6, y: 6, w: 36, h: 36 },
-        'hdpi-targetRect': { x: 6, y: 6, w: 36, h: 36 }
+        'mdpi-iconSize': { w: 24, h: 24 },
+        'mdpi-guideRect': { x: 0, y: 0, w: 24, h: 24 },
+        'mdpi-targetRect': { x: 0, y: 0, w: 24, h: 24 }
       };
 
       /**
@@ -162,13 +162,13 @@
         var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
         for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1}) {
-          var mult = studio.util.getMultBaseHdpi(density);
+          var mult = studio.util.getMultBaseMdpi(density);
           var iconSize = studio.util.multRound(
-              PARAM_RESOURCES['hdpi-iconSize'], mult);
+              PARAM_RESOURCES['mdpi-iconSize'], mult);
           var guideRect = studio.util.multRound(
-              PARAM_RESOURCES['hdpi-guideRect'], mult);
+              PARAM_RESOURCES['mdpi-guideRect'], mult);
           var targetRect = studio.util.multRound(
-              PARAM_RESOURCES['hdpi-targetRect'], mult);
+              PARAM_RESOURCES['mdpi-targetRect'], mult);
 
           var outCtx = imagelib.drawing.context(iconSize);
           var tmpCtx = imagelib.drawing.context(iconSize);
@@ -179,22 +179,17 @@
             imagelib.drawing.fx([
               {
                 effect: 'fill-color',
-                color: '#898989'
+                color: '#333333',
+                alpha: 0.6
               }
             ], outCtx, tmpCtx, iconSize);
           } else {
             imagelib.drawing.fx([
               {
                 effect: 'fill-color',
-                color: '#999' // TODO: should be white @ 60% opacity, but
-                              // the fill then blends with the drop shadow
-              },
-              {
-                effect: 'outer-shadow',
-                color: '#000',
-                opacity: 0.85,
-                blur: 3 * mult
-              },
+                color: '#ffffff',
+                alpha: 0.8
+              }
             ], outCtx, tmpCtx, iconSize);
           }
 

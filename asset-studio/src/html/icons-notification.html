@@ -128,17 +128,17 @@
       });
 
       var PARAM_RESOURCES = {
-        'X-hdpi-iconSize': { w: 38, h: 38 },
-        'X-square-hdpi-targetRect': { x: 6, y: 6, w: 26, h: 26 },
-        'X-circle-hdpi-targetRect': { x: 6, y: 6, w: 26, h: 26 },
+        'X-mdpi-iconSize': { w: 25, h: 25 },
+        'X-square-mdpi-targetRect': { x: 4, y: 4, w: 17, h: 17 },
+        'X-circle-mdpi-targetRect': { x: 4, y: 4, w: 17, h: 17 },
 
-        '11-hdpi-iconSize': { w: 48, h: 48 },
-        '11-square-hdpi-targetRect': { x: 6, y: 6, w: 36, h: 36 },
-        '11-circle-hdpi-targetRect': { x: 6, y: 6, w: 36, h: 36 },
+        '11-mdpi-iconSize': { w: 24, h: 24 },
+        '11-square-mdpi-targetRect': { x: 1, y: 1, w: 22, h: 22 },
+        '11-circle-mdpi-targetRect': { x: 1, y: 1, w: 22, h: 22 },
 
-        '9-hdpi-iconSize': { w: 24, h: 38 },
-        '9-square-hdpi-targetRect': { x: 0, y: 7, w: 24, h: 24 },
-        '9-circle-hdpi-targetRect': { x: 0, y: 7, w: 24, h: 24 }
+        '9-mdpi-iconSize': { w: 16, h: 25 },
+        '9-square-mdpi-targetRect': { x: 0, y: 5, w: 16, h: 16 },
+        '9-circle-mdpi-targetRect': { x: 0, y: 5, w: 16, h: 16 }
       };
 
       /**
@@ -169,11 +169,11 @@
           for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1}) {
             var versionStr = (version == 'X') ? '' : ('-v' + version);
 
-            var mult = studio.util.getMultBaseHdpi(density);
+            var mult = studio.util.getMultBaseMdpi(density);
             var iconSize = studio.util.multRound(
-                PARAM_RESOURCES[version + '-hdpi-iconSize'], mult);
+                PARAM_RESOURCES[version + '-mdpi-iconSize'], mult);
             var targetRect = studio.util.multRound(
-                PARAM_RESOURCES[version + '-' + shape + '-hdpi-targetRect'], mult);
+                PARAM_RESOURCES[version + '-' + shape + '-mdpi-targetRect'], mult);
 
             var outCtx = imagelib.drawing.context(iconSize);
             var tmpCtx = imagelib.drawing.context(iconSize);

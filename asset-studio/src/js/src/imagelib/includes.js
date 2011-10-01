@@ -15,3 +15,4 @@ limitations under the License.
 */
 
 //#INSERTFILE "../../lib/filter.js"
+//#INSERTFILE "../../lib/glfx.js"
