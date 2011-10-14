@@ -1517,7 +1517,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
       fieldUI);
     fieldUI.get(0).ondrop = studio.forms.ImageField.makeDropHandler_(fieldUI,
       function(evt) {
-        me.loadFromFileList_(evt.dataTransfer.files, function(ret) {
+        studio.forms.ImageField.loadImageFromFileList(evt.dataTransfer.files, function(ret) {
           if (!ret)
             return;
 
@@ -1567,7 +1567,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
         accept: 'image/*'
       })
       .change(function() {
-        me.loadFromFileList_(me.fileEl_.get(0).files, function(ret) {
+        studio.forms.ImageField.loadImageFromFileList(me.fileEl_.get(0).files, function(ret) {
           if (!ret)
             return;
 
@@ -1723,74 +1723,6 @@ studio.forms.ImageField = studio.forms.Field.extend({
     this.clipartSrc_ = clipartSrc;
     this.valueFilename_ = clipartSrc.match(/[^/]+$/)[0];
     this.renderValueAndNotifyChanged_();
-  },
-
-  loadFromFileList_: function(fileList, callback) {
-    fileList = fileList || [];
-
-    var me = this;
-
-    var file = null;
-    for (var i = 0; i < fileList.length; i++) {
-      if (studio.forms.ImageField.isValidFile_(fileList[i])) {
-        file = fileList[i];
-        break;
-      }
-    }
-
-    if (!file) {
-      alert('Please choose a valid image file (PNG, JPG, GIF, SVG, etc.)');
-      callback(null);
-      return;
-    }
-
-    var useCanvg = USE_CANVG && file.type == 'image/svg+xml';
-
-    var fileReader = new FileReader();
-
-    // Closure to capture the file information.
-    fileReader.onload = function(e) {
-      callback({
-        uri: useCanvg ? null : e.target.result,
-        canvgSvgText: useCanvg ? e.target.result : null,
-        name: file.name
-      });
-    };
-    fileReader.onerror = function(e) {
-      switch(e.target.error.code) {
-        case e.target.error.NOT_FOUND_ERR:
-          alert('File not found!');
-          break;
-        case e.target.error.NOT_READABLE_ERR:
-          alert('File is not readable');
-          break;
-        case e.target.error.ABORT_ERR:
-          break; // noop
-        default:
-          alert('An error occurred reading this file.');
-      }
-      callback(null);
-    };
-    /*fileReader.onprogress = function(e) {
-      $('#read-progress').css('visibility', 'visible');
-      // evt is an ProgressEvent.
-      if (e.lengthComputable) {
-        $('#read-progress').val(Math.round((e.loaded / e.total) * 100));
-      } else {
-        $('#read-progress').removeAttr('value');
-      }
-    };*/
-    fileReader.onabort = function(e) {
-      alert('File read cancelled');
-      callback(null);
-    };
-    /*fileReader.onloadstart = function(e) {
-      $('#read-progress').css('visibility', 'visible');
-    };*/
-    if (useCanvg)
-      fileReader.readAsText(file);
-    else
-      fileReader.readAsDataURL(file);
   },
 
   clearValue: function() {
@@ -2031,6 +1963,80 @@ studio.forms.ImageField.fontList_ = [
   'Wingdings'
 ];
 
+/**
+ * Loads the first valid image from a FileList (e.g. drag + drop source), as a data URI. This method
+ * will throw an alert() in case of errors and call back with null.
+ * @param {FileList} fileList The FileList to load.
+ * @param {Function} callback The callback to fire once image loading is done (or fails).
+ * @return Returns an object containing 'uri' or 'canvgSvgText' fields representing
+ *      the loaded image. There will also be a 'name' field indicating the file name, if one
+ *      is available.
+ */
+studio.forms.ImageField.loadImageFromFileList = function(fileList, callback) {
+  fileList = fileList || [];
+
+  var file = null;
+  for (var i = 0; i < fileList.length; i++) {
+    if (studio.forms.ImageField.isValidFile_(fileList[i])) {
+      file = fileList[i];
+      break;
+    }
+  }
+
+  if (!file) {
+    alert('Please choose a valid image file (PNG, JPG, GIF, SVG, etc.)');
+    callback(null);
+    return;
+  }
+
+  var useCanvg = USE_CANVG && file.type == 'image/svg+xml';
+
+  var fileReader = new FileReader();
+
+  // Closure to capture the file information.
+  fileReader.onload = function(e) {
+    callback({
+      uri: useCanvg ? null : e.target.result,
+      canvgSvgText: useCanvg ? e.target.result : null,
+      name: file.name
+    });
+  };
+  fileReader.onerror = function(e) {
+    switch(e.target.error.code) {
+      case e.target.error.NOT_FOUND_ERR:
+        alert('File not found!');
+        break;
+      case e.target.error.NOT_READABLE_ERR:
+        alert('File is not readable');
+        break;
+      case e.target.error.ABORT_ERR:
+        break; // noop
+      default:
+        alert('An error occurred reading this file.');
+    }
+    callback(null);
+  };
+  /*fileReader.onprogress = function(e) {
+    $('#read-progress').css('visibility', 'visible');
+    // evt is an ProgressEvent.
+    if (e.lengthComputable) {
+      $('#read-progress').val(Math.round((e.loaded / e.total) * 100));
+    } else {
+      $('#read-progress').removeAttr('value');
+    }
+  };*/
+  fileReader.onabort = function(e) {
+    alert('File read cancelled');
+    callback(null);
+  };
+  /*fileReader.onloadstart = function(e) {
+    $('#read-progress').css('visibility', 'visible');
+  };*/
+  if (useCanvg)
+    fileReader.readAsText(file);
+  else
+    fileReader.readAsDataURL(file);
+};
 
 /**
  * Determines whether or not the given File is a valid value for the image.

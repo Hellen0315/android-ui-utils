@@ -131,7 +131,7 @@ a {
   background-color: #ccc;
 }
 
-#outputs h3 {
+#inputs h3, #outputs h3 {
   font-weight: bold;
   font-size: 16px;
   line-height: 20px;
