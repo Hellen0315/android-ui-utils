@@ -386,6 +386,47 @@ imagelib.drawing.getTrimRect = function(ctx, size, minAlpha, callback) {
   return worker;
 };
 
+imagelib.drawing.getCenterOfMass = function(ctx, size, minAlpha, callback) {
+  callback = callback || function(){};
+
+  if (!ctx.canvas) {
+    // Likely an image
+    var src = ctx;
+    ctx = imagelib.drawing.context(size);
+    imagelib.drawing.copy(ctx, src, size);
+  }
+
+  if (minAlpha == 0)
+    callback({ x: size.w / 2, y: size.h / 2 });
+
+  minAlpha = minAlpha || 1;
+
+  var l = size.w, t = size.h, r = 0, b = 0;
+  var imageData = ctx.getImageData(0, 0, size.w, size.h);
+
+  var sumX = 0;
+  var sumY = 0;
+  var n = 0; // number of pixels > minAlpha
+  var alpha;
+  for (var y = 0; y < size.h; y++) {
+    for (var x = 0; x < size.w; x++) {
+      alpha = imageData.data[((y * size.w + x) << 2) + 3];
+      if (alpha >= minAlpha) {
+        sumX += x;
+        sumY += y;
+        ++n;
+      }
+    }
+  }
+
+  if (n <= 0) {
+    // no pixels > minAlpha, just use center
+    callback({ x: size.w / 2, h: size.h / 2 });
+  }
+
+  callback({ x: Math.round(sumX / n), y: Math.round(sumY / n) });
+};
+
 imagelib.drawing.copyAsAlpha = function(dstCtx, src, size, onColor, offColor) {
   onColor = onColor || '#fff';
   offColor = offColor || '#000';
@@ -440,16 +481,15 @@ imagelib.drawing.applyFilter = function(filter, ctx, size) {
 (function() {
   imagelib.drawing.blur = function(radius, ctx, size) {
     try {
-      glfxblur(radius, ctx, size);
+      glfxblur_(radius, ctx, size);
 
     } catch (e) {
       // WebGL unavailable, use the slower blur
-      slowblur(radius, ctx, size);
-      return;
+      slowblur_(radius, ctx, size);
     }
   };
 
-  function slowblur(radius, ctx, size) {
+  function slowblur_(radius, ctx, size) {
     var rows = Math.ceil(radius);
     var r = rows * 2 + 1;
     var matrix = new Array(r * r);
@@ -473,16 +513,17 @@ imagelib.drawing.applyFilter = function(filter, ctx, size) {
     }
 
     imagelib.drawing.applyFilter(
-      new ConvolutionFilter(matrix, total, 0, true),
-      ctx, size);
+        new ConvolutionFilter(matrix, total, 0, true),
+        ctx, size);
   }
 
-  function glfxblur(radius, ctx, size) {
-    var canvas = fx.canvas();
-    var texture = canvas.texture(ctx.canvas);
-    canvas.draw(texture).triangleBlur(radius).update();
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(canvas, 0, 0);
+  function glfxblur_(radius, ctx, size) {
+    glfxblur_.canvas_ = glfxblur_.canvas_ || fx.canvas();
+    var texture = glfxblur_.canvas_.texture(ctx.canvas);
+    glfxblur_.canvas_.draw(texture).triangleBlur(radius).update();
+
+    ctx.clearRect(0, 0, glfxblur_.canvas_.width, glfxblur_.canvas_.height);
+    ctx.drawImage(glfxblur_.canvas_, 0, 0);
   }
 })();
 
@@ -508,14 +549,17 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
     var effect = outerEffects[i];
 
     dstCtx.save();
+    tmpCtx.save();
 
     switch (effect.effect) {
       case 'outer-shadow':
         imagelib.drawing.clear(tmpCtx, size);
-        imagelib.drawing.copyAsAlpha(tmpCtx, src.canvas || src, size);
+        imagelib.drawing.copy(tmpCtx, src.canvas || src, size);
         if (effect.blur)
           imagelib.drawing.blur(effect.blur, tmpCtx, size);
-        imagelib.drawing.makeAlphaMask(tmpCtx, size, effect.color || '#000');
+        tmpCtx.globalCompositeOperation = 'source-atop';
+        tmpCtx.fillStyle = effect.color || '#000';
+        tmpCtx.fillRect(0, 0, size.w, size.h);
         if (effect.translate)
           dstCtx.translate(effect.translate.x || 0, effect.translate.y || 0);
 
@@ -525,6 +569,7 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
     }
 
     dstCtx.restore();
+    tmpCtx.restore();
   }
 
   dstCtx.save();
@@ -533,11 +578,8 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
   imagelib.drawing.clear(tmpCtx, size);
   imagelib.drawing.copy(tmpCtx, src.canvas || src, size);
 
-  var fillAlpha = 1.0;
-
   if (fillEffects.length) {
     var effect = fillEffects[0];
-    fillAlpha = effect.alpha || 1.0;
 
     tmpCtx.save();
     tmpCtx.globalCompositeOperation = 'source-atop';
@@ -561,9 +603,8 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
     tmpCtx.restore();
   }
 
-  dstCtx.globalAlpha = fillAlpha;
-  imagelib.drawing.copy(dstCtx, tmpCtx, size);
   dstCtx.globalAlpha = 1.0;
+  imagelib.drawing.copy(dstCtx, tmpCtx, size);
 
   // Render inner effects
   for (var i = 0; i < innerEffects.length; i++) {
@@ -1273,9 +1314,6 @@ studio.forms.EnumField = studio.forms.Field.extend({
     } else {
       this.el_ = $('<select>')
         .attr('id', this.getHtmlId())
-        .change(function() {
-          me.setValueInternal_($(this).val(), true);
-        })
         .appendTo(fieldContainer);
       for (var i = 0; i < this.params_.options.length; i++) {
         var option = this.params_.options[i];
@@ -1287,9 +1325,11 @@ studio.forms.EnumField = studio.forms.Field.extend({
 
       this.el_.combobox({
         selected: function(evt, data) {
+          me.setValueInternal_(data.item.value, true);
           me.form_.notifyChanged_();
         }
       });
+      this.setValueInternal_(this.getValue());
     }
   },
 
@@ -1936,15 +1976,17 @@ studio.forms.ImageField = studio.forms.Field.extend({
         break;
 
       case 'text':
-        var size = { w: 4000, h: 800 };
+        var size = { w: 4800, h: 1600 };
+        var textHeight = size.h * 0.75;
         var ctx = imagelib.drawing.context(size);
         var text = this.textParams_.text || '';
+        text = ' ' + text + ' ';
 
         ctx.fillStyle = '#000';
-        ctx.font = 'bold ' + size.h + 'px/' + size.h + 'px ' +
+        ctx.font = 'bold ' + textHeight + 'px/' + size.h + 'px ' +
                     (this.textParams_.fontStack || 'sans-serif');
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(text, 0, size.h);
+        ctx.textBaseline = 'baseline';
+        ctx.fillText(text, 0, textHeight);
         size.w = Math.min(ctx.measureText(text).width, size.w) || size.w;
 
         continue_(ctx, size);

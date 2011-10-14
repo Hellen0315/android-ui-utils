@@ -305,9 +305,6 @@ studio.forms.EnumField = studio.forms.Field.extend({
     } else {
       this.el_ = $('<select>')
         .attr('id', this.getHtmlId())
-        .change(function() {
-          me.setValueInternal_($(this).val(), true);
-        })
         .appendTo(fieldContainer);
       for (var i = 0; i < this.params_.options.length; i++) {
         var option = this.params_.options[i];
@@ -319,9 +316,11 @@ studio.forms.EnumField = studio.forms.Field.extend({
 
       this.el_.combobox({
         selected: function(evt, data) {
+          me.setValueInternal_(data.item.value, true);
           me.form_.notifyChanged_();
         }
       });
+      this.setValueInternal_(this.getValue());
     }
   },
 

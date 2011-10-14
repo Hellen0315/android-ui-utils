@@ -393,15 +393,17 @@ studio.forms.ImageField = studio.forms.Field.extend({
         break;
 
       case 'text':
-        var size = { w: 4000, h: 800 };
+        var size = { w: 4800, h: 1600 };
+        var textHeight = size.h * 0.75;
         var ctx = imagelib.drawing.context(size);
         var text = this.textParams_.text || '';
+        text = ' ' + text + ' ';
 
         ctx.fillStyle = '#000';
-        ctx.font = 'bold ' + size.h + 'px/' + size.h + 'px ' +
+        ctx.font = 'bold ' + textHeight + 'px/' + size.h + 'px ' +
                     (this.textParams_.fontStack || 'sans-serif');
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(text, 0, size.h);
+        ctx.textBaseline = 'baseline';
+        ctx.fillText(text, 0, textHeight);
         size.w = Math.min(ctx.measureText(text).width, size.w) || size.w;
 
         continue_(ctx, size);

@@ -19,26 +19,28 @@
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Android Asset Studio - Icon Generator - Menu icons</title>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="http://yui.yahooapis.com/2.8.1/build/reset/reset-min.css">
-    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/themes/base/jquery.ui.all.css">
+
+    <link rel="stylesheet" href="lib/cssreset-3.4.1.min.css">
+    <link rel="stylesheet" href="lib/jquery-ui/css/android/jquery-ui-1.8.16.custom.css">
+    <link rel="stylesheet" href="css/studio.css">
+
+    <script src="lib/jquery-ui/js/jquery-1.6.2.min.js"></script>
+    <script src="lib/jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
+
     <!-- canvg used to overcome <img src=SVG> toDataURL security issues -->
     <!-- see code.google.com/p/chromium/issues/detail?id=54204 -->
     <script src="lib/canvg/rgbcolor.js"></script> 
     <script src="lib/canvg/canvg.js"></script>
 
+    <!-- prereq. for asset studio lib -->
     <link rel="stylesheet" href="lib/colorpicker/css/colorpicker.css">
     <script src="lib/colorpicker/js/colorpicker.js"></script>
 
     <!-- for .ZIP downloads -->
-    <script src="http://ajax.googleapis.com/ajax/libs/swfobject/2.2/swfobject.js"></script>
+    <script src="lib/swfobject-2.2.js"></script>
     <script src="lib/downloadify/js/downloadify.min.js"></script>
     <script src="lib/jszip/jszip.js"></script>
 
-    <link rel="stylesheet" href="lib/jquery-ui-1.8.4.android-theme/theme.css">
-
-    <link rel="stylesheet" href="css/studio.css">
     <script src="js/asset-studio.pack.js"></script>
 
     <!-- TODO: remove Analytics tracking if you're building the tools locally! -->
@@ -223,21 +225,39 @@
             }
           ], outCtx, tmpCtx, iconSize);
 
-          zipper.add({
-            name: 'res/drawable-' + density + '/' + iconName + '.png',
-            base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
-          });
+          if (values['recenter'] != 'none') {
+            imagelib.drawing.getCenterOfMass(outCtx, iconSize, 1, function(massCenter) {
 
-          if (showGuides)
-            studio.ui.drawImageGuideRects(outCtx, iconSize, [
-              guideRect
-            ]);
+              var recenteredOutCtx = imagelib.drawing.context(iconSize);
+              recenteredOutCtx.drawImage(outCtx.canvas, 0, 0, iconSize.w, iconSize.h,
+                  (values['recenter'] == 'horz' || values['recenter'] == 'both')
+                      ? (iconSize.w / 2 - massCenter.x) : 0,
+                  (values['recenter'] == 'vert' || values['recenter'] == 'both')
+                      ? (iconSize.h / 2 - massCenter.y) : 0,
+                  iconSize.w, iconSize.h);
+              continue_(recenteredOutCtx);
+            });
+          } else {
+            continue_(outCtx);
+          }
 
-          imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
-            return function(img) {
-              $('#out-icon-' + density).attr('src', img.src);
-            };
-          }(density));
+          function continue_(outCtx) {
+            zipper.add({
+              name: 'res/drawable-' + density + '/' + iconName + '.png',
+              base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
+            });
+
+            if (showGuides)
+              studio.ui.drawImageGuideRects(outCtx, iconSize, [
+                guideRect
+              ]);
+
+            imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
+              return function(img) {
+                $('#out-icon-' + density).attr('src', img.src);
+              };
+            }(density));
+          }
         }
       }
 
@@ -249,6 +269,18 @@
             helpText: 'Must be alpha-transparent',
             defaultValueTrim: 1
           }),
+          // new studio.forms.EnumField('recenter', {
+          //   title: 'Recentering',
+          //   helpText: 'Recenters the icon based on its mass',
+          //   buttons: true,
+          //   options: [
+          //     { id: 'none', title: 'None' },
+          //     { id: 'horz', title: 'Horizontal' },
+          //     { id: 'vert', title: 'Vertical' },
+          //     { id: 'both', title: 'Both' }
+          //   ],
+          //   defaultValue: 'none'
+          // }),
           new studio.forms.TextField('name', {
             title: 'Icon name',
             helpText: 'Used when generating ZIP files. Becomes <code>ic_menu_&lt;name&gt;</code>.',
