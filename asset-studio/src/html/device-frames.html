@@ -35,14 +35,26 @@
 
       #inout-container {
         width: 100%;
+        display: box;
+        box-orient: horizontal;
+        box-pack: justify;
+        box-align: justify;
+
         display: -webkit-box;
         -webkit-box-orient: horizontal;
         -webkit-box-pack: justify;
         -webkit-box-align: justify;
+
+        display: -moz-box;
+        -moz-box-orient: horizontal;
+        -moz-box-pack: justify;
+        -moz-box-align: justify;
       }
 
       #inputs {
+                box-flex: 1;
         -webkit-box-flex: 1;
+           -moz-box-flex: 1;
       }
 
       #device-list li {
