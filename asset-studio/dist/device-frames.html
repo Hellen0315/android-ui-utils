@@ -112,6 +112,9 @@
           <h3>1. Choose a device:  <small style="font-weight:normal">(Drag a screenshot from your desktop onto a device.)</small></h3>
           <p></p>
           <ul id="device-list"></ul>
+          <p><strong>Attention, Device Manufacturers! </strong> To get your device(s) listed here,
+            please <a href="http://code.google.com/p/android-ui-utils/issues/entry?template=Feature%20request">
+            file a feature request</a>, and include hi-res, transparent or on-white photos of your device.</p>
         </div>
         <div id="outputs">
           <h3>2. Save your output <small style="font-weight:normal">(Drag out to your desktop to save.)</small></h3>
@@ -132,6 +135,7 @@
         {
           id: 'nexus_one',
           title: 'Nexus One',
+          url: 'http://www.google.com/phone/detail/nexus-one',
           landRes: ['back'],
           landOffset: [200,130],
           portRes: ['back'],
@@ -141,6 +145,7 @@
         {
           id: 'nexus_s',
           title: 'Nexus S',
+          url: 'http://www.google.com/phone/detail/nexus-s',
           landRes: ['back', 'fore'],
           landOffset: [247,135],
           portRes: ['back', 'fore'],
@@ -150,6 +155,7 @@
         {
           id: 'xoom',
           title: 'Motorola XOOM',
+          url: 'http://www.google.com/phone/detail/motorola-xoom',
           landRes: ['back'],
           landOffset: [218,191],
           portRes: ['back'],
@@ -171,8 +177,11 @@
             .append($('<img>')
                 .attr('src', 'res/device-frames/' + this.id + '/thumb.png'))
             .append($('<div>')
-                .html('<strong>' + this.title + '</strong><br>' +
-                      this.portSize[0] + 'x' + this.portSize[1]))
+                .html('<strong>' +
+                  (this.url ? 
+                      ('<a href="' + this.url + '">' + this.title + '</a>') :
+                      this.title) +
+                  '</strong><br>' + this.portSize[0] + 'x' + this.portSize[1]))
             .data('deviceId', this.id)
             .appendTo('#device-list');
       });
