@@ -322,7 +322,9 @@
       }
 
       var form = new studio.forms.Form('iconform', {
-        onChange: regenerate,
+        onChange: function(field) {
+          regenerate();
+        },
         fields: [
           new studio.forms.ImageField('foreground', {
             title: 'Foreground',

@@ -117,7 +117,7 @@ studio.forms.TextField = studio.forms.Field.extend({
     if (!pauseUi) {
       $(this.el_).val(val);
     }
-    this.form_.notifyChanged_();
+    this.form_.notifyChanged_(this);
   },
 
   serializeValue: function() {
@@ -168,7 +168,7 @@ studio.forms.AutocompleteTextField = studio.forms.Field.extend({
     if (!pauseUi) {
       $(this.el_).val(val);
     }
-    this.form_.notifyChanged_();
+    this.form_.notifyChanged_(this);
   },
 
   serializeValue: function() {
@@ -251,7 +251,7 @@ studio.forms.ColorField = studio.forms.Field.extend({
         $(this.alphaEl_).slider('value', computedValue.alpha);
       }
     }
-    this.form_.notifyChanged_();
+    this.form_.notifyChanged_(this);
   },
 
   serializeValue: function() {
@@ -297,7 +297,7 @@ studio.forms.EnumField = studio.forms.Field.extend({
           .appendTo(this.el_);
         $('<label>')
           .attr('for', this.getHtmlId() + '-' + option.id)
-          .text(option.title)
+          .html(option.title)
           .appendTo(this.el_);
       }
       this.setValueInternal_(this.getValue());
@@ -305,6 +305,9 @@ studio.forms.EnumField = studio.forms.Field.extend({
     } else {
       this.el_ = $('<select>')
         .attr('id', this.getHtmlId())
+        .change(function() {
+          me.setValueInternal_($(this).val(), true);
+        })
         .appendTo(fieldContainer);
       for (var i = 0; i < this.params_.options.length; i++) {
         var option = this.params_.options[i];
@@ -317,7 +320,7 @@ studio.forms.EnumField = studio.forms.Field.extend({
       this.el_.combobox({
         selected: function(evt, data) {
           me.setValueInternal_(data.item.value, true);
-          me.form_.notifyChanged_();
+          me.form_.notifyChanged_(me);
         }
       });
       this.setValueInternal_(this.getValue());
@@ -351,7 +354,7 @@ studio.forms.EnumField = studio.forms.Field.extend({
         this.el_.val(val);
       }
     }
-    this.form_.notifyChanged_();
+    this.form_.notifyChanged_(this);
   },
 
   serializeValue: function() {
@@ -437,7 +440,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
 		if (this.textEl_) {
 		  this.textEl_.text(this.params_.textFn(val));
 	  }
-		this.form_.notifyChanged_();
+		this.form_.notifyChanged_(this);
   },
 
   serializeValue: function() {
