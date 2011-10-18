@@ -847,11 +847,11 @@ studio.forms.Form = Base.extend({
    * Notifies that the form contents have changed;
    * @private
    */
-  notifyChanged_: function() {
+  notifyChanged_: function(field) {
     if (this.pauseNotify_) {
       return;
     }
-    this.onChange();
+    this.onChange(field);
   },
 
   /**
@@ -902,7 +902,7 @@ studio.forms.Form = Base.extend({
       }
     }
     this.pauseNotify_ = false;
-    this.notifyChanged_();
+    this.notifyChanged_(null);
   }
 });
 
@@ -1007,7 +1007,7 @@ studio.forms.TextField = studio.forms.Field.extend({
     if (!pauseUi) {
       $(this.el_).val(val);
     }
-    this.form_.notifyChanged_();
+    this.form_.notifyChanged_(this);
   },
 
   serializeValue: function() {
@@ -1058,7 +1058,7 @@ studio.forms.AutocompleteTextField = studio.forms.Field.extend({
     if (!pauseUi) {
       $(this.el_).val(val);
     }
-    this.form_.notifyChanged_();
+    this.form_.notifyChanged_(this);
   },
 
   serializeValue: function() {
@@ -1141,7 +1141,7 @@ studio.forms.ColorField = studio.forms.Field.extend({
         $(this.alphaEl_).slider('value', computedValue.alpha);
       }
     }
-    this.form_.notifyChanged_();
+    this.form_.notifyChanged_(this);
   },
 
   serializeValue: function() {
@@ -1187,7 +1187,7 @@ studio.forms.EnumField = studio.forms.Field.extend({
           .appendTo(this.el_);
         $('<label>')
           .attr('for', this.getHtmlId() + '-' + option.id)
-          .text(option.title)
+          .html(option.title)
           .appendTo(this.el_);
       }
       this.setValueInternal_(this.getValue());
@@ -1209,7 +1209,7 @@ studio.forms.EnumField = studio.forms.Field.extend({
 
       this.el_.combobox({
         selected: function(evt, data) {
-          me.form_.notifyChanged_();
+          me.form_.notifyChanged_(me);
         }
       });
     }
@@ -1242,7 +1242,7 @@ studio.forms.EnumField = studio.forms.Field.extend({
         this.el_.val(val);
       }
     }
-    this.form_.notifyChanged_();
+    this.form_.notifyChanged_(this);
   },
 
   serializeValue: function() {
@@ -1328,7 +1328,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
 		if (this.textEl_) {
 		  this.textEl_.text(this.params_.textFn(val));
 	  }
-		this.form_.notifyChanged_();
+		this.form_.notifyChanged_(this);
   },
 
   serializeValue: function() {
@@ -1534,11 +1534,19 @@ studio.forms.ImageField = studio.forms.Field.extend({
       .addClass('.form-field-buttonset')
       .appendTo(fieldContainer);
 
-    var types = [
-      'image', 'Image',
-      'clipart', 'Clipart',
-      'text', 'Text'
-    ];
+    var types;
+    if (this.params_.imageOnly) {
+      types = [
+        'image', 'Select Image'
+      ];
+    } else {
+      types = [
+        'image', 'Image',
+        'clipart', 'Clipart',
+        'text', 'Text'
+      ];
+    }
+
     var typeEls = {};
 
     for (var i = 0; i < types.length / 2; i++) {
@@ -1588,116 +1596,124 @@ studio.forms.ImageField = studio.forms.Field.extend({
     });
 
     // Prepare UI for the 'clipart' type
-    var clipartParamsEl = $('<div>')
-      .addClass('form-image-type-params form-image-type-params-clipart')
-      .hide()
-      .appendTo(this.el_);
+    if (!this.params_.imageOnly) {
+      var clipartParamsEl = $('<div>')
+        .addClass('form-image-type-params form-image-type-params-clipart')
+        .hide()
+        .appendTo(this.el_);
 
-    var clipartListEl = $('<div>')
-      .addClass('form-image-clipart-list')
-      .appendTo(clipartParamsEl);
+      var clipartListEl = $('<div>')
+        .addClass('form-image-clipart-list')
+        .appendTo(clipartParamsEl);
 
-    for (var i = 0; i < studio.forms.ImageField.clipartList_.length; i++) {
-      var clipartSrc = 'res/clipart/' + studio.forms.ImageField.clipartList_[i];
-      $('<img>')
-        .addClass('form-image-clipart-item')
-        .attr('src', clipartSrc)
-        .click(function(clipartSrc) {
-          return function() {
-            me.loadClipart_(clipartSrc);
-          };
-        }(clipartSrc))
-        .appendTo(clipartListEl);
+      for (var i = 0; i < studio.forms.ImageField.clipartList_.length; i++) {
+        var clipartSrc = 'res/clipart/' + studio.forms.ImageField.clipartList_[i];
+        $('<img>')
+          .addClass('form-image-clipart-item')
+          .attr('src', clipartSrc)
+          .click(function(clipartSrc) {
+            return function() {
+              me.loadClipart_(clipartSrc);
+            };
+          }(clipartSrc))
+          .appendTo(clipartListEl);
+      }
+
+      var clipartAttributionEl = $('<div>')
+        .addClass('form-image-clipart-attribution')
+        .html([
+            'Clipart courtesy of ',
+            '<a href="http://www.yay.se/2011/02/',
+                'native-android-icons-in-vector-format/"',
+            ' target="_blank">Olof Brickarp</a>.'
+          ].join(''))
+        .appendTo(clipartParamsEl);
+
+      typeEls.clipart.click(function(evt) {
+        me.setValueType_('clipart');
+        me.renderValueAndNotifyChanged_();
+      });
+
+      // Prepare UI for the 'text' type
+      var textParamsEl = $('<div>')
+        .addClass(
+          'form-subform ' +
+          'form-image-type-params ' +
+          'form-image-type-params-text')
+        .hide()
+        .appendTo(this.el_);
+
+      this.textForm_ = new studio.forms.Form(
+        this.form_.id_ + '-' + this.id_ + '-textform', {
+          onChange: function() {
+            var values = me.textForm_.getValues();
+            me.textParams_.text = values['text'];
+            me.textParams_.fontStack = values['font']
+                ? values['font'] : 'sans-serif';
+            me.valueFilename_ = values['text'];
+            me.renderValueAndNotifyChanged_();
+          },
+          fields: [
+            new studio.forms.TextField('text', {
+              title: 'Text',
+            }),
+            new studio.forms.AutocompleteTextField('font', {
+              title: 'Font',
+              items: studio.forms.ImageField.fontList_
+            }),
+          ]
+        });
+      this.textForm_.createUI(textParamsEl);
+
+      typeEls.text.click(function(evt) {
+        me.setValueType_('text');
+        me.renderValueAndNotifyChanged_();
+      });
     }
 
-    var clipartAttributionEl = $('<div>')
-      .addClass('form-image-clipart-attribution')
-      .html([
-          'Clipart courtesy of ',
-          '<a href="http://www.yay.se/2011/02/',
-              'native-android-icons-in-vector-format/"',
-          ' target="_blank">Olof Brickarp</a>.'
-        ].join(''))
-      .appendTo(clipartParamsEl);
-
-    typeEls.clipart.click(function(evt) {
-      me.setValueType_('clipart');
-      me.renderValueAndNotifyChanged_();
-    });
-
-    // Prepare UI for the 'text' type
-    var textParamsEl = $('<div>')
-      .addClass(
-        'form-subform ' +
-        'form-image-type-params ' +
-        'form-image-type-params-text')
-      .hide()
-      .appendTo(this.el_);
-
-    this.textForm_ = new studio.forms.Form(
-      this.form_.id_ + '-' + this.id_ + '-textform', {
-        onChange: function() {
-          var values = me.textForm_.getValues();
-          me.textParams_.text = values['text'];
-          me.textParams_.fontStack = values['font']
-              ? values['font'] : 'sans-serif';
-          me.valueFilename_ = values['text'];
-          me.renderValueAndNotifyChanged_();
-        },
-        fields: [
-          new studio.forms.TextField('text', {
-            title: 'Text',
-          }),
-          new studio.forms.AutocompleteTextField('font', {
-            title: 'Font',
-            items: studio.forms.ImageField.fontList_
-          }),
-        ]
-      });
-    this.textForm_.createUI(textParamsEl);
-
-    typeEls.text.click(function(evt) {
-      me.setValueType_('text');
-      me.renderValueAndNotifyChanged_();
-    });
-
     // Create spacing subform
-    this.spaceFormValues_ = {};
-    this.spaceForm_ = new studio.forms.Form(
-      this.form_.id_ + '-' + this.id_ + '-spaceform', {
-        onChange: function() {
-          me.spaceFormValues_ = me.spaceForm_.getValues();
-          me.renderValueAndNotifyChanged_();
-        },
-        fields: [
-          new studio.forms.BooleanField('trim', {
-            title: 'Trim',
-            defaultValue: this.params_.defaultValueTrim || false,
-            offText: 'Don\'t Trim',
-            onText: 'Trim'
-          }),
-          new studio.forms.RangeField('pad', {
-            title: 'Padding',
-            defaultValue: 0,
-            min: -0.1,
-            max: 0.5, // 1/2 of min(width, height)
-            step: 0.05,
-            textFn: function(v) {
-              return (v * 100) + '%';
-            }
-          }),
-        ]
-      });
-    this.spaceForm_.createUI($('<div>')
-      .addClass('form-subform')
-      .appendTo(fieldContainer));
-    this.spaceFormValues_ = this.spaceForm_.getValues();
+    if (!this.params_.noTrimForm) {
+      this.spaceFormValues_ = {};
+      this.spaceForm_ = new studio.forms.Form(
+        this.form_.id_ + '-' + this.id_ + '-spaceform', {
+          onChange: function() {
+            me.spaceFormValues_ = me.spaceForm_.getValues();
+            me.renderValueAndNotifyChanged_();
+          },
+          fields: [
+            new studio.forms.BooleanField('trim', {
+              title: 'Trim',
+              defaultValue: this.params_.defaultValueTrim || false,
+              offText: 'Don\'t Trim',
+              onText: 'Trim'
+            }),
+            new studio.forms.RangeField('pad', {
+              title: 'Padding',
+              defaultValue: 0,
+              min: -0.1,
+              max: 0.5, // 1/2 of min(width, height)
+              step: 0.05,
+              textFn: function(v) {
+                return (v * 100) + '%';
+              }
+            }),
+          ]
+        });
+      this.spaceForm_.createUI($('<div>')
+        .addClass('form-subform')
+        .appendTo(fieldContainer));
+      this.spaceFormValues_ = this.spaceForm_.getValues();
+    } else {
+      this.spaceFormValues_ = {};
+    }
 
     // Create image preview element
-    this.imagePreview_ = $('<canvas>')
-      .addClass('form-image-preview')
-      .hide()
-      .appendTo(fieldContainer.parent());
+    if (!this.params_.noPreview) {
+      this.imagePreview_ = $('<canvas>')
+        .addClass('form-image-preview')
+        .hide()
+        .appendTo(fieldContainer.parent());
+    }
   },
 
   setValueType_: function(type) {
@@ -1730,7 +1746,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
     this.valueFilename_ = null;
     this.valueCtx_ = null;
     this.fileEl_.val('');
-    this.imagePreview_.hide();
+    if (this.imagePreview_) {
+      this.imagePreview_.hide();
+    }
   },
 
   getValue: function() {
@@ -1805,7 +1823,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
         break;
 
       default:
-        me.form_.notifyChanged_();
+        me.form_.notifyChanged_(me);
     }
 
     function continue_(srcCtx, srcSize) {
@@ -1858,7 +1876,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
         me.imagePreview_.show();
       }
 
-      me.form_.notifyChanged_();
+      me.form_.notifyChanged_(me);
     }
   },
 

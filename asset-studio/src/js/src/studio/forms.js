@@ -55,11 +55,11 @@ studio.forms.Form = Base.extend({
    * Notifies that the form contents have changed;
    * @private
    */
-  notifyChanged_: function() {
+  notifyChanged_: function(field) {
     if (this.pauseNotify_) {
       return;
     }
-    this.onChange();
+    this.onChange(field);
   },
 
   /**
@@ -110,6 +110,6 @@ studio.forms.Form = Base.extend({
       }
     }
     this.pauseNotify_ = false;
-    this.notifyChanged_();
+    this.notifyChanged_(null);
   }
 });
