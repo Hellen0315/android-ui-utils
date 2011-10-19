@@ -186,6 +186,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
             me.textParams_.fontStack = values['font']
                 ? values['font'] : 'sans-serif';
             me.valueFilename_ = values['text'];
+            me.tryLoadWebFont_();
             me.renderValueAndNotifyChanged_();
           },
           fields: [
@@ -195,7 +196,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
             new studio.forms.AutocompleteTextField('font', {
               title: 'Font',
               items: studio.forms.ImageField.fontList_
-            }),
+            })
           ]
         });
       this.textForm_.createUI(textParamsEl);
@@ -249,6 +250,37 @@ studio.forms.ImageField = studio.forms.Field.extend({
         .hide()
         .appendTo(fieldContainer.parent());
     }
+  },
+
+  tryLoadWebFont_: function(force) {
+    var desiredFont = this.textForm_.getValues()['font'];
+    if (this.loadedWebFont_ == desiredFont) {
+      return;
+    }
+
+    var me = this;
+    if (!force) {
+      if (this.tryLoadWebFont_.timeout_) {
+        clearTimeout(this.tryLoadWebFont_.timeout_);
+      }
+      this.tryLoadWebFont_.timeout_ = setTimeout(function() {
+        me.tryLoadWebFont_(true);
+      }, 100);
+      return;
+    }
+
+    this.loadedWebFont_ = desiredFont;
+    var webFontNodeId = this.form_.id_ + '-' + this.id_ + '-__webfont-stylesheet__';
+    var $webFontNode = $('#' + webFontNodeId);
+    if (!$webFontNode.length) {
+      $webFontNode = $('<link>')
+          .attr('id', webFontNodeId)
+          .attr('rel', 'stylesheet')
+          .appendTo('head');
+    }
+    $webFontNode.attr(
+        'href', 'http://fonts.googleapis.com/css?family='
+            + encodeURIComponent(desiredFont));
   },
 
   setValueType_: function(type) {
@@ -440,6 +472,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
     }
     if (o.text && this.valueType_ == 'text') {
       this.textForm_.setValuesSerialized(o.text);
+      this.tryLoadWebFont_();
     }
   }
 });
