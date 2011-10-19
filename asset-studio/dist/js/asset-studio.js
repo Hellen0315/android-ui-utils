@@ -1104,10 +1104,17 @@ studio.forms.TextField = studio.forms.Field.extend({
                 'ui-autocomplete-input ui-corner-all')
       .attr('type', 'text')
       .val(this.getValue())
+      .bind('change', function() {
+        me.setValue($(this).val(), true);
+      })
       .bind('keydown change', function() {
         var inputEl = this;
+        var oldVal = me.getValue();
         window.setTimeout(function() {
-          me.setValue($(inputEl).val(), true);
+          var newVal = $(inputEl).val();
+          if (oldVal != newVal) {
+            me.setValue(newVal, true);
+          }
         }, 0);
       })
       .appendTo(fieldContainer);
