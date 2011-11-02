@@ -225,23 +225,7 @@
             }
           ], outCtx, tmpCtx, iconSize);
 
-          if (values['recenter'] != 'none') {
-            imagelib.drawing.getCenterOfMass(outCtx, iconSize, 1, function(massCenter) {
-
-              var recenteredOutCtx = imagelib.drawing.context(iconSize);
-              recenteredOutCtx.drawImage(outCtx.canvas, 0, 0, iconSize.w, iconSize.h,
-                  (values['recenter'] == 'horz' || values['recenter'] == 'both')
-                      ? (iconSize.w / 2 - massCenter.x) : 0,
-                  (values['recenter'] == 'vert' || values['recenter'] == 'both')
-                      ? (iconSize.h / 2 - massCenter.y) : 0,
-                  iconSize.w, iconSize.h);
-              continue_(recenteredOutCtx);
-            });
-          } else {
-            continue_(outCtx);
-          }
-
-          function continue_(outCtx) {
+          var continue_ = function(outCtx) {
             zipper.add({
               name: 'res/drawable-' + density + '/' + iconName + '.png',
               base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
@@ -257,6 +241,22 @@
                 $('#out-icon-' + density).attr('src', img.src);
               };
             }(density));
+          };
+
+          if (values['recenter'] != 'none') {
+            imagelib.drawing.getCenterOfMass(outCtx, iconSize, 1, function(massCenter) {
+
+              var recenteredOutCtx = imagelib.drawing.context(iconSize);
+              recenteredOutCtx.drawImage(outCtx.canvas, 0, 0, iconSize.w, iconSize.h,
+                  (values['recenter'] == 'horz' || values['recenter'] == 'both')
+                      ? (iconSize.w / 2 - massCenter.x) : 0,
+                  (values['recenter'] == 'vert' || values['recenter'] == 'both')
+                      ? (iconSize.h / 2 - massCenter.y) : 0,
+                  iconSize.w, iconSize.h);
+              continue_(recenteredOutCtx);
+            });
+          } else {
+            continue_(outCtx);
           }
         }
       }

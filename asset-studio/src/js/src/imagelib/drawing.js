@@ -90,6 +90,7 @@ imagelib.drawing.trimRectWorkerJS_ = [
 "  if (l > r) {                                                              ",
 "    // no pixels, couldn't trim                                             ",
 "    postMessage({ x: 0, y: 0, w: event.data.size.w, h: event.data.size.h });",
+"    return;                                                                 ",
 "  }                                                                         ",
 "                                                                            ",
 "  postMessage({ x: l, y: t, w: r - l + 1, h: b - t + 1 });                  ",

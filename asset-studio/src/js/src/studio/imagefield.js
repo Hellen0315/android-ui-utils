@@ -384,9 +384,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
         ctx.fillStyle = '#000';
         ctx.font = 'bold ' + textHeight + 'px/' + size.h + 'px ' +
                     (this.textParams_.fontStack || 'sans-serif');
-        ctx.textBaseline = 'baseline';
+        ctx.textBaseline = 'alphabetic';
         ctx.fillText(text, 0, textHeight);
-        size.w = Math.min(ctx.measureText(text).width, size.w) || size.w;
+        size.w = Math.ceil(Math.min(ctx.measureText(text).width, size.w) || size.w);
 
         continue_(ctx, size);
         break;
@@ -420,8 +420,8 @@ studio.forms.ImageField = studio.forms.Field.extend({
         extraPadding = 0;
       }
 
-      var padPx = ((me.spaceFormValues_['pad'] || 0) + extraPadding) *
-                  Math.min(trimRect.w, trimRect.h);
+      var padPx = Math.round(((me.spaceFormValues_['pad'] || 0) + extraPadding) *
+                  Math.min(trimRect.w, trimRect.h));
       var targetRect = { x: padPx, y: padPx, w: trimRect.w, h: trimRect.h };
 
       var outCtx = imagelib.drawing.context({
