@@ -81,6 +81,8 @@
 -->
         <input type="checkbox" id="output-show-guides">
         <label for="output-show-guides">Show Guides</label>
+        <input type="checkbox" id="output-better-scaling">
+        <label for="output-better-scaling">Better Image Smoothing (slow)</label>
       </div>
       <div id="outputs">
         <h3>
@@ -97,6 +99,10 @@
     <script>
       $(studio.checkBrowser);
       $('#output-show-guides').button().click(regenerate);
+      $('#output-better-scaling').button().click(function() {
+        imagelib.ALLOW_MANUAL_RESCALE = $(this).is(':checked');
+        regenerate();
+      });
 
       var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
 

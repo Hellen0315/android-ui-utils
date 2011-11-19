@@ -285,6 +285,7 @@ imagelib.drawing.context = function(size) {
   var canvas = document.createElement('canvas');
   canvas.width = size.w;
   canvas.height = size.h;
+  canvas.style.setProperty('image-rendering', 'optimizeQuality', null);
   return canvas.getContext('2d');
 };
 
@@ -299,14 +300,14 @@ imagelib.drawing.clear = function(ctx, size) {
 imagelib.drawing.drawCenterInside = function(dstCtx, src, dstRect, srcRect) {
   if (srcRect.w / srcRect.h > dstRect.w / dstRect.h) {
     var h = srcRect.h * dstRect.w / srcRect.w;
-    dstCtx.drawImage(src.canvas || src,
+     imagelib.drawing.drawImageScaled(dstCtx, src,
         srcRect.x, srcRect.y,
         srcRect.w, srcRect.h,
         dstRect.x, dstRect.y + (dstRect.h - h) / 2,
         dstRect.w, h);
   } else {
     var w = srcRect.w * dstRect.h / srcRect.h;
-    dstCtx.drawImage(src.canvas || src,
+     imagelib.drawing.drawImageScaled(dstCtx, src,
         srcRect.x, srcRect.y,
         srcRect.w, srcRect.h,
         dstRect.x + (dstRect.w - w) / 2, dstRect.y,
@@ -317,18 +318,79 @@ imagelib.drawing.drawCenterInside = function(dstCtx, src, dstRect, srcRect) {
 imagelib.drawing.drawCenterCrop = function(dstCtx, src, dstRect, srcRect) {
   if (srcRect.w / srcRect.h > dstRect.w / dstRect.h) {
     var w = srcRect.h * dstRect.w / dstRect.h;
-    dstCtx.drawImage(src.canvas || src,
+    imagelib.drawing.drawImageScaled(dstCtx, src,
         srcRect.x + (srcRect.w - w) / 2, srcRect.y,
         w, srcRect.h,
         dstRect.x, dstRect.y,
         dstRect.w, dstRect.h);
   } else {
     var h = srcRect.w * dstRect.h / dstRect.w;
-    dstCtx.drawImage(src.canvas || src,
+    imagelib.drawing.drawImageScaled(dstCtx, src,
         srcRect.x, srcRect.y + (srcRect.h - h) / 2,
         srcRect.w, h,
         dstRect.x, dstRect.y,
         dstRect.w, dstRect.h);
+  }
+};
+
+imagelib.drawing.drawImageScaled = function(dstCtx, src, sx, sy, sw, sh, dx, dy, dw, dh) {
+  if ((dw < sw && dh < sh) && imagelib.ALLOW_MANUAL_RESCALE) {
+    sx = Math.floor(sx);
+    sy = Math.floor(sy);
+    sw =  Math.ceil(sw);
+    sh =  Math.ceil(sh);
+    dx = Math.floor(dx);
+    dy = Math.floor(dy);
+    dw =  Math.ceil(dw);
+    dh =  Math.ceil(dh);
+
+    // scaling down, use an averaging algorithm since canvas.drawImage doesn't do a good
+    // job in all browsers.
+    var tmpCtx = imagelib.drawing.context({ w: sw, h: sh });
+    tmpCtx.drawImage(src.canvas || src, 0, 0);
+    var srcData = tmpCtx.getImageData(0, 0, sw, sh);
+
+    var outCtx = imagelib.drawing.context({ w: dw, h: dh });
+    var outData = outCtx.createImageData(dw, dh);
+
+    var tr, tg, tb, ta; // R/G/B/A totals
+    var numOpaquePixels;
+    var numPixels;
+
+    for (var y = 0; y < dh; y++) {
+      for (var x = 0; x < dw; x++) {
+        tr = tg = tb = ta = 0;
+        numOpaquePixels = numPixels = 0;
+
+        // Average the relevant region from source image
+        for (var j = Math.floor(y * sh / dh); j < (y + 1) * sh / dh; j++) {
+          for (var i = Math.floor(x * sw / dw); i < (x + 1) * sw / dw; i++) {
+            ++numPixels;
+            ta += srcData.data[(j * sw + i) * 4 + 3];
+            if (srcData.data[(j * sw + i) * 4 + 3] == 0) {
+              // disregard transparent pixels when computing average for R/G/B
+              continue;
+            }
+            ++numOpaquePixels;
+            tr += srcData[(j * sw + i) * 4 + 0];
+            tg += srcData[(j * sw + i) * 4 + 1];
+            tb += srcData[(j * sw + i) * 4 + 2];
+          }
+        }
+
+        outData.data[(y * dw + x) * 4 + 0] = tr / numOpaquePixels;
+        outData.data[(y * dw + x) * 4 + 1] = tg / numOpaquePixels;
+        outData.data[(y * dw + x) * 4 + 2] = tb / numOpaquePixels;
+        outData.data[(y * dw + x) * 4 + 3] = ta / numPixels;
+      }
+    }
+
+    outCtx.putImageData(outData, 0, 0);
+    dstCtx.drawImage(outCtx.canvas, dx, dy);
+
+  } else {
+    // scaling up, use canvas.drawImage
+    dstCtx.drawImage(src.canvas || src, sx, sy, sw, sh, dx, dy, dw, dh);
   }
 };
 
@@ -480,16 +542,6 @@ imagelib.drawing.applyFilter = function(filter, ctx, size) {
 };
 
 (function() {
-  imagelib.drawing.blur = function(radius, ctx, size) {
-    try {
-      glfxblur_(radius, ctx, size);
-
-    } catch (e) {
-      // WebGL unavailable, use the slower blur
-      slowblur_(radius, ctx, size);
-    }
-  };
-
   function slowblur_(radius, ctx, size) {
     var rows = Math.ceil(radius);
     var r = rows * 2 + 1;
@@ -519,13 +571,27 @@ imagelib.drawing.applyFilter = function(filter, ctx, size) {
   }
 
   function glfxblur_(radius, ctx, size) {
-    glfxblur_.canvas_ = glfxblur_.canvas_ || fx.canvas();
-    var texture = glfxblur_.canvas_.texture(ctx.canvas);
-    glfxblur_.canvas_.draw(texture).triangleBlur(radius).update();
+    var canvas = fx.canvas();
+    var texture = canvas.texture(ctx.canvas);
+    canvas.draw(texture).triangleBlur(radius).update();
 
-    ctx.clearRect(0, 0, glfxblur_.canvas_.width, glfxblur_.canvas_.height);
-    ctx.drawImage(glfxblur_.canvas_, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(canvas, 0, 0);
   }
+
+  imagelib.drawing.blur = function(radius, ctx, size) {
+    try {
+      if (size.w > 128 || size.h > 128) {
+        glfxblur_(radius, ctx, size);
+      } else {
+        slowblur_(radius, ctx, size);
+      }
+
+    } catch (e) {
+      // WebGL unavailable, use the slower blur
+      slowblur_(radius, ctx, size);
+    }
+  };
 })();
 
 imagelib.drawing.fx = function(effects, dstCtx, src, size) {
@@ -541,48 +607,84 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
     else if (/^fill/.test(effects[i].effect)) fillEffects.push(effects[i]);
   }
 
-  // Setup temporary rendering contexts
-  var tmpCtx = imagelib.drawing.context(size);
-  var tmpCtx2 = imagelib.drawing.context(size);
+  var padLeft = 0, padTop, padRight, padBottom;
+  var paddedSize;
+  var tmpCtx, tmpCtx2;
 
   // Render outer effects
   for (var i = 0; i < outerEffects.length; i++) {
+    padLeft = Math.max(padLeft, outerEffects[i].blur || 0); // blur radius
+  }
+  padTop = padRight = padBottom = padLeft;
+
+  paddedSize = {
+    w: size.w + padLeft + padRight,
+    h: size.h + padTop + padBottom
+  };
+
+  tmpCtx = imagelib.drawing.context(paddedSize);
+
+  for (var i = 0; i < outerEffects.length; i++) {
     var effect = outerEffects[i];
 
-    dstCtx.save();
-    tmpCtx.save();
+    dstCtx.save(); // D1
+    tmpCtx.save(); // T1
 
     switch (effect.effect) {
       case 'outer-shadow':
-        imagelib.drawing.clear(tmpCtx, size);
-        imagelib.drawing.copy(tmpCtx, src.canvas || src, size);
+        // The below method (faster) fails in Safari and other browsers, for some reason. Likely
+        // something to do with the source-atop blending mode.
+        // TODO: investigate why it fails in Safari
+
+        // imagelib.drawing.clear(tmpCtx, size);
+        // imagelib.drawing.copy(tmpCtx, src.canvas || src, size);
+        // if (effect.blur)
+        //   imagelib.drawing.blur(effect.blur, tmpCtx, size);
+        // tmpCtx.globalCompositeOperation = 'source-atop';
+        // tmpCtx.fillStyle = effect.color || '#000';
+        // tmpCtx.fillRect(0, 0, size.w, size.h);
+        // if (effect.translate)
+        //   dstCtx.translate(effect.translate.x || 0, effect.translate.y || 0);
+        // 
+        // dstCtx.globalAlpha = Math.max(0, Math.min(1, effect.opacity || 1));
+        // imagelib.drawing.copy(dstCtx, tmpCtx, size);
+
+        imagelib.drawing.clear(tmpCtx, paddedSize);
+
+        tmpCtx.save(); // T2
+        tmpCtx.translate(padLeft, padTop);
+        imagelib.drawing.copyAsAlpha(tmpCtx, src.canvas || src, size);
+        tmpCtx.restore(); // T2
+
         if (effect.blur)
-          imagelib.drawing.blur(effect.blur, tmpCtx, size);
-        tmpCtx.globalCompositeOperation = 'source-atop';
-        tmpCtx.fillStyle = effect.color || '#000';
-        tmpCtx.fillRect(0, 0, size.w, size.h);
+          imagelib.drawing.blur(effect.blur, tmpCtx, paddedSize);
+
+        imagelib.drawing.makeAlphaMask(tmpCtx, paddedSize, effect.color || '#000');
         if (effect.translate)
           dstCtx.translate(effect.translate.x || 0, effect.translate.y || 0);
 
         dstCtx.globalAlpha = Math.max(0, Math.min(1, effect.opacity || 1));
-        imagelib.drawing.copy(dstCtx, tmpCtx, size);
+        dstCtx.translate(-padLeft, -padTop);
+        imagelib.drawing.copy(dstCtx, tmpCtx, paddedSize);
         break;
     }
 
-    dstCtx.restore();
-    tmpCtx.restore();
+    dstCtx.restore(); // D1
+    tmpCtx.restore(); // T1
   }
 
-  dstCtx.save();
+  dstCtx.save(); // D1
 
   // Render object with optional fill effects (only take first fill effect)
+  tmpCtx = imagelib.drawing.context(size);
+
   imagelib.drawing.clear(tmpCtx, size);
   imagelib.drawing.copy(tmpCtx, src.canvas || src, size);
 
   if (fillEffects.length) {
     var effect = fillEffects[0];
 
-    tmpCtx.save();
+    tmpCtx.save(); // T1
     tmpCtx.globalCompositeOperation = 'source-atop';
 
     switch (effect.effect) {
@@ -601,43 +703,72 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
     }
 
     tmpCtx.fillRect(0, 0, size.w, size.h);
-    tmpCtx.restore();
+    tmpCtx.restore(); // T1
   }
 
   dstCtx.globalAlpha = 1.0;
   imagelib.drawing.copy(dstCtx, tmpCtx, size);
 
   // Render inner effects
+  var translate;
+  padLeft = padTop = padRight = padBottom = 0;
+  for (var i = 0; i < innerEffects.length; i++) {
+    translate = effect.translate || {};
+    padLeft   = Math.max(padLeft,   (innerEffects[i].blur || 0) + Math.max(0,  translate.x || 0));
+    padTop    = Math.max(padTop,    (innerEffects[i].blur || 0) + Math.max(0,  translate.y || 0));
+    padRight  = Math.max(padRight,  (innerEffects[i].blur || 0) + Math.max(0, -translate.x || 0));
+    padBottom = Math.max(padBottom, (innerEffects[i].blur || 0) + Math.max(0, -translate.y || 0));
+  }
+
+  paddedSize = {
+    w: size.w + padLeft + padRight,
+    h: size.h + padTop + padBottom
+  };
+
+  tmpCtx = imagelib.drawing.context(paddedSize);
+  tmpCtx2 = imagelib.drawing.context(paddedSize);
+
   for (var i = 0; i < innerEffects.length; i++) {
     var effect = innerEffects[i];
 
-    tmpCtx.save();
+    dstCtx.save(); // D2
+    tmpCtx.save(); // T1
 
     switch (effect.effect) {
       case 'inner-shadow':
-        imagelib.drawing.clear(tmpCtx, size);
-        imagelib.drawing.copyAsAlpha(tmpCtx, src.canvas || src, size, '#fff', '#000');
+        imagelib.drawing.clear(tmpCtx, paddedSize);
 
+        tmpCtx.save(); // T2
+        tmpCtx.translate(padLeft, padTop);
+        imagelib.drawing.copyAsAlpha(tmpCtx, src.canvas || src, size, '#fff', '#000');
+        tmpCtx.restore(); // T2
+
+        tmpCtx2.save(); // T2
+        tmpCtx2.translate(padLeft, padTop);
         imagelib.drawing.copyAsAlpha(tmpCtx2, src.canvas || src, size);
+        tmpCtx2.restore(); // T2
+
         if (effect.blur)
-          imagelib.drawing.blur(effect.blur, tmpCtx2, size);
-        imagelib.drawing.makeAlphaMask(tmpCtx2, size, '#000');
+          imagelib.drawing.blur(effect.blur, tmpCtx2, paddedSize);
+        imagelib.drawing.makeAlphaMask(tmpCtx2, paddedSize, '#000');
         if (effect.translate)
           tmpCtx.translate(effect.translate.x || 0, effect.translate.y || 0);
 
         tmpCtx.globalCompositeOperation = 'source-over';
-        imagelib.drawing.copy(tmpCtx, tmpCtx2, size);
+        imagelib.drawing.copy(tmpCtx, tmpCtx2, paddedSize);
 
-        imagelib.drawing.makeAlphaMask(tmpCtx, size, effect.color);
+        imagelib.drawing.makeAlphaMask(tmpCtx, paddedSize, effect.color);
         dstCtx.globalAlpha = Math.max(0, Math.min(1, effect.opacity || 1));
-        imagelib.drawing.copy(dstCtx, tmpCtx, size);
+        dstCtx.translate(-padLeft, -padTop);
+        imagelib.drawing.copy(dstCtx, tmpCtx, paddedSize);
         break;
     }
 
-    tmpCtx.restore();
+    tmpCtx.restore(); // T1
+    dstCtx.restore(); // D2
   }
 
-  dstCtx.restore();
+  dstCtx.restore(); // D1
 };
 
 imagelib.loadImageResources = function(images, callback) {
