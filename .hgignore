@@ -1,11 +1,13 @@
-\.DS_Store
-Thumbs\.db
-.*\.pyc
-.*\.iws
-(.+/)?_sandbox$
-local\.properties
+syntax: glob
+
+.DS_Store
+Thumbs.db
+*.pyc
+*.iws
+_sandbox
+local.properties
 gen
 bin
 out
-design-preview/.*/proofer\.keystore
 design-preview/desktop/assets/Proofer.apk
+design-preview/android/proofer.keystore
