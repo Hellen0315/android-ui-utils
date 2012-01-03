@@ -372,9 +372,9 @@ imagelib.drawing.drawImageScaled = function(dstCtx, src, sx, sy, sw, sh, dx, dy,
               continue;
             }
             ++numOpaquePixels;
-            tr += srcData[(j * sw + i) * 4 + 0];
-            tg += srcData[(j * sw + i) * 4 + 1];
-            tb += srcData[(j * sw + i) * 4 + 2];
+            tr += srcData.data[(j * sw + i) * 4 + 0];
+            tg += srcData.data[(j * sw + i) * 4 + 1];
+            tb += srcData.data[(j * sw + i) * 4 + 2];
           }
         }
 
