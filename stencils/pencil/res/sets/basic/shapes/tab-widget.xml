@@ -57,6 +57,8 @@
                     .set("width", "100%")
                     .set("z-index", selected ? "1000" : "999"),
                 _children: [{
+                  _name: "div",
+                  _uri: "http://www.w3.org/1999/xhtml",
                   _text: label,
                   style: new CSS()
                       .set("position", "absolute")

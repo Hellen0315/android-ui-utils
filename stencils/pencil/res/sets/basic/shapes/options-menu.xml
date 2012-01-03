@@ -52,6 +52,8 @@ Item 3 | Item 4]]></Property>
                     .set("-moz-box-sizing", "border-box"),
                 
                 _children: [{
+                  _name: "div",
+                  _uri: "http://www.w3.org/1999/xhtml",
                   _text: label,
                   style: new CSS()
                       .set("position", "absolute")
