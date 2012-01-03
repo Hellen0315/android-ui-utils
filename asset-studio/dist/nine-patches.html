@@ -154,7 +154,7 @@
     $(studio.checkBrowser);
 
     var GRID_SIZE_PIXELS = 4;
-    var SLOP = 10; // 10 pixels
+    var SLOP_PIXELS = 10;
 
     var stage = {
       zoom: 1,
@@ -258,19 +258,19 @@
             if (!stage.dragging) {
               stage.editLeft = stage.editRight = stage.editTop = stage.editBottom = false;
 
-              if (offsetX >= editRect.x * stage.zoom - SLOP &&
-                  offsetX <= editRect.x * stage.zoom + SLOP) {
+              if (offsetX >= editRect.x * stage.zoom - SLOP_PIXELS &&
+                  offsetX <= editRect.x * stage.zoom + SLOP_PIXELS) {
                 stage.editLeft = true;
-              } else if (offsetX >= (editRect.x + editRect.w) * stage.zoom - SLOP &&
-                         offsetX <= (editRect.x + editRect.w) * stage.zoom + SLOP) {
+              } else if (offsetX >= (editRect.x + editRect.w) * stage.zoom - SLOP_PIXELS &&
+                         offsetX <= (editRect.x + editRect.w) * stage.zoom + SLOP_PIXELS) {
                 stage.editRight = true;
               }
 
-              if (offsetY >= editRect.y * stage.zoom - SLOP &&
-                  offsetY <= editRect.y * stage.zoom + SLOP) {
+              if (offsetY >= editRect.y * stage.zoom - SLOP_PIXELS &&
+                  offsetY <= editRect.y * stage.zoom + SLOP_PIXELS) {
                 stage.editTop = true;
-              } else if (offsetY >= (editRect.y + editRect.h) * stage.zoom - SLOP &&
-                         offsetY <= (editRect.y + editRect.h) * stage.zoom + SLOP) {
+              } else if (offsetY >= (editRect.y + editRect.h) * stage.zoom - SLOP_PIXELS &&
+                         offsetY <= (editRect.y + editRect.h) * stage.zoom + SLOP_PIXELS) {
                 stage.editBottom = true;
               }
 

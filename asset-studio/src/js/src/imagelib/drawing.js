@@ -417,6 +417,7 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
 
   imagelib.drawing.clear(tmpCtx, size);
   imagelib.drawing.copy(tmpCtx, src.canvas || src, size);
+  var fillOpacity = 1.0;
 
   if (fillEffects.length) {
     var effect = fillEffects[0];
@@ -439,12 +440,15 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
         break;
     }
 
+    fillOpacity = Math.max(0, Math.min(1, effect.opacity || 1));
+
     tmpCtx.fillRect(0, 0, size.w, size.h);
     tmpCtx.restore(); // T1
   }
 
-  dstCtx.globalAlpha = 1.0;
+  dstCtx.globalAlpha = fillOpacity;
   imagelib.drawing.copy(dstCtx, tmpCtx, size);
+  dstCtx.globalAlpha = 1.0;
 
   // Render inner effects
   var translate;
