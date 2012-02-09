@@ -16,11 +16,8 @@
 
 package com.google.android.desktop.proofer;
 
-import java.awt.AWTException;
-import java.awt.Dimension;
-import java.awt.Rectangle;
-import java.awt.Robot;
-import java.awt.Toolkit;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -182,7 +179,7 @@ public class Proofer {
     public class ProoferClient {
         private Rectangle requestedRegion = new Rectangle(0, 0, 0, 0);
         private Robot robot;
-        private Dimension screenSize;
+        private Rectangle screenBounds;
 
         private int curWidth = 0;
         private int curHeight = 0;
@@ -196,7 +193,15 @@ public class Proofer {
                 System.exit(1);
             }
 
-            this.screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+            GraphicsEnvironment environment = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            GraphicsDevice[] screenDevices = environment.getScreenDevices();
+
+            Rectangle2D tempBounds = new Rectangle();
+            for (GraphicsDevice screenDevice : screenDevices) {
+                tempBounds = tempBounds.createUnion(
+                        screenDevice.getDefaultConfiguration().getBounds());
+            }
+            screenBounds = tempBounds.getBounds();
         }
 
         public void setRequestedRegion(Rectangle region) {
@@ -288,12 +293,15 @@ public class Proofer {
         }
 
         private BufferedImage capture(int x, int y, int width, int height) {
-            if (x + width > screenSize.width) {
-                x = screenSize.width - width;
+            x = Math.max(screenBounds.x, x);
+            y = Math.max(screenBounds.y, y);
+
+            if (x + width > screenBounds.x + screenBounds.width) {
+                x = screenBounds.x + screenBounds.width - width;
             }
 
-            if (y + height > screenSize.height) {
-                y = screenSize.height - height;
+            if (y + height > screenBounds.y + screenBounds.height) {
+                y = screenBounds.y + screenBounds.height - height;
             }
 
             Rectangle rect = new Rectangle(x, y, width, height);

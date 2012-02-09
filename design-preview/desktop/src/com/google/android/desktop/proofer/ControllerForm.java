@@ -118,7 +118,12 @@ public class ControllerForm
                     proofer.runAndroidApp();
                 } catch (ProoferException e) {
                     JOptionPane.showMessageDialog(frame,
-                            "Couldn't install the app: " + e.getMessage(),
+                            "Couldn't install the app: " + e.getMessage()
+                                    + "\n"
+                                    + "\nPlease make sure your device is connected over USB and "
+                                    + "\nthat USB debugging is enabled on your device under "
+                                    + "\nSettings > Applications > Development or"
+                                    + "\nSettings > Developer options.",
                             "Android Design Preview",
                             JOptionPane.ERROR_MESSAGE);
                     e.printStackTrace();
