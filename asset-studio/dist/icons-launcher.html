@@ -84,6 +84,7 @@
         <h3>
           Output images
           <div id="zip-button"></div>
+          <div id="generate-web-button" style="vertical-align:top">Generate Web Icon</div>
         </h3>
       </div>
       <div id="footer">
@@ -98,6 +99,10 @@
       $('#output-better-scaling').button().click(function() {
         imagelib.ALLOW_MANUAL_RESCALE = $(this).is(':checked');
         regenerate();
+      });
+
+      $('#generate-web-button').button().click(function() {
+        regenerate(true, true);
       });
 
       var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
@@ -146,7 +151,7 @@
       /**
        * Main image generation routine.
        */
-      function regenerate(force) {
+      function regenerate(force, generateWebIcon) {
         if (!force) {
           if (regenerate.timeout_) {
             clearTimeout(regenerate.timeout_);
@@ -173,6 +178,9 @@
             var mult = studio.util.getMultBaseMdpi(density);
             if (density == 'web') {
               mult = 1;
+              if (!generateWebIcon) {
+                continue;
+              }
             }
 
             var iconSize = PARAM_RESOURCES[density + '-iconSize'];
