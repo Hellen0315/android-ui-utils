@@ -21,8 +21,8 @@
     <property name="desktop.dir" location="desktop" />
     <property name="out.dir" location="out" />
     <property name="mac.dir" location="mac" />
-    <property name="android.release.type" location="release" />
-    <!-- property name="android.release.type" location="debug" /-->
+    <property name="android.release.type" value="release" />
+    <!-- property name="android.release.type" value="debug" /-->
 
     <target name="projecthelp">
         <java classname="org.apache.tools.ant.Main">
