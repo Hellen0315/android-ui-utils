@@ -19,6 +19,7 @@
 
     <property name="src.dir" location="src" />
     <property name="out.dir" location="out" />
+    <property name="lib.dir" location="lib" />
     <property name="assets.dir" location="assets" />
     <property name="classes.dir" location="${out.dir}/classes" />
     <property name="out.jar" location="${out.dir}/${ant.project.name}.jar" />
@@ -30,6 +31,10 @@
     <target name="compile" description="Compile Java source files.">
         <mkdir dir="${classes.dir}" />
         <javac sourcepath="" srcdir="${src.dir}" destdir="${classes.dir}" includeAntRuntime="true">
+            <classpath>
+                 <fileset dir="${lib.dir}" includes="*.jar" />
+            </classpath>
+
             <include name="**/*.java" />
         </javac>
     </target>
