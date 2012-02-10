@@ -21,6 +21,8 @@
     <property name="desktop.dir" location="desktop" />
     <property name="out.dir" location="out" />
     <property name="mac.dir" location="mac" />
+    <property name="android.release.type" location="release" />
+    <!-- property name="android.release.type" location="debug" /-->
 
     <target name="projecthelp">
         <java classname="org.apache.tools.ant.Main">
@@ -31,13 +33,13 @@
     </target>
 
     <target name="android" description="Generates the Android release APK">
-        <ant antfile="${android.dir}/build.xml" target="release" inheritAll="false" />
+        <ant antfile="${android.dir}/build.xml" target="${android.release.type}" inheritAll="false" />
     </target>
 
     <target name="desktop" depends="android" description="Generates the Desktop JAR">
         <copy overwrite="true"
             tofile="${desktop.dir}/assets/Proofer.apk"
-            file="${android.dir}/bin/ProoferAndroid-release.apk" />
+            file="${android.dir}/bin/ProoferAndroid-${android.release.type}.apk" />
         <ant antfile="${desktop.dir}/build.xml" target="jar" inheritAll="false" />
     </target>
 
