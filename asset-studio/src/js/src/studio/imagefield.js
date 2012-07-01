@@ -52,6 +52,8 @@ studio.forms.ImageField = studio.forms.Field.extend({
       fieldUI);
     fieldUI.get(0).ondrop = studio.forms.ImageField.makeDropHandler_(fieldUI,
       function(evt) {
+        evt.stopPropagation();
+        evt.preventDefault();
         studio.forms.ImageField.loadImageFromFileList(evt.dataTransfer.files, function(ret) {
           if (!ret)
             return;
@@ -146,6 +148,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
         $('<img>')
           .addClass('form-image-clipart-item')
           .attr('src', clipartSrc)
+          .attr('title', studio.forms.ImageField.clipartList_[i])
           .click(function(clipartSrc) {
             return function() {
               me.loadClipart_(clipartSrc);
@@ -157,15 +160,16 @@ studio.forms.ImageField = studio.forms.Field.extend({
       var clipartAttributionEl = $('<div>')
         .addClass('form-image-clipart-attribution')
         .html([
-            'Clipart courtesy of ',
-            '<a href="http://www.yay.se/2011/02/',
-                'native-android-icons-in-vector-format/"',
-            ' target="_blank">Olof Brickarp</a>.'
+            'For clipart sources, visit ',
+            '<a href="http://developer.android.com/design/downloads/">',
+                'Android Design: Downloads',
+            '</a>.'
           ].join(''))
         .appendTo(clipartParamsEl);
 
       typeEls.clipart.click(function(evt) {
         me.setValueType_('clipart');
+        me.spaceFormTrimField_.setValue(false);
         me.renderValueAndNotifyChanged_();
       });
 
@@ -184,7 +188,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
             var values = me.textForm_.getValues();
             me.textParams_.text = values['text'];
             me.textParams_.fontStack = values['font']
-                ? values['font'] : 'sans-serif';
+                ? values['font'] : 'Roboto, sans-serif';
             me.valueFilename_ = values['text'];
             me.tryLoadWebFont_();
             me.renderValueAndNotifyChanged_();
@@ -203,6 +207,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
       typeEls.text.click(function(evt) {
         me.setValueType_('text');
+        me.spaceFormTrimField_.setValue(true);
         me.renderValueAndNotifyChanged_();
       });
     }
@@ -217,12 +222,12 @@ studio.forms.ImageField = studio.forms.Field.extend({
             me.renderValueAndNotifyChanged_();
           },
           fields: [
-            new studio.forms.BooleanField('trim', {
+            (this.spaceFormTrimField_ = new studio.forms.BooleanField('trim', {
               title: 'Trim',
               defaultValue: this.params_.defaultValueTrim || false,
               offText: 'Don\'t Trim',
               onText: 'Trim'
-            }),
+            })),
             new studio.forms.RangeField('pad', {
               title: 'Padding',
               defaultValue: 0,
@@ -321,6 +326,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
   getValue: function() {
     return {
       ctx: this.valueCtx_,
+      type: this.valueType_,
       name: this.valueFilename_
     };
   },
@@ -382,8 +388,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
         text = ' ' + text + ' ';
 
         ctx.fillStyle = '#000';
-        ctx.font = 'bold ' + textHeight + 'px/' + size.h + 'px ' +
-                    (this.textParams_.fontStack || 'sans-serif');
+        ctx.font = 'bold ' + textHeight + 'px/' + size.h + 'px ' + this.textParams_.fontStack;
         ctx.textBaseline = 'alphabetic';
         ctx.fillText(text, 0, textHeight);
         size.w = Math.ceil(Math.min(ctx.measureText(text).width, size.w) || size.w);
@@ -478,68 +483,152 @@ studio.forms.ImageField = studio.forms.Field.extend({
 });
 
 studio.forms.ImageField.clipartList_ = [
-  'icons/accounts.svg',
-  'icons/add.svg',
-  'icons/agenda.svg',
-  'icons/all_friends.svg',
-  'icons/attachment.svg',
-  'icons/back.svg',
-  'icons/backspace.svg',
-  'icons/barcode.svg',
-  'icons/battery_charging.svg',
-  'icons/bell.svg',
-  'icons/block.svg',
-  'icons/block_user.svg',
-  'icons/bookmarks.svg',
-  'icons/camera.svg',
-  'icons/circle_arrow.svg',
-  'icons/clock.svg',
-  'icons/compass.svg',
-  'icons/cross.svg',
-  'icons/cross2.svg',
-  'icons/directions.svg',
-  'icons/down_arrow.svg',
-  'icons/edit.svg',
-  'icons/expand_arrows.svg',
-  'icons/export.svg',
-  'icons/eye.svg',
-  'icons/gallery.svg',
-  'icons/group.svg',
-  'icons/happy_droid.svg',
-  'icons/help.svg',
-  'icons/home.svg',
-  'icons/info.svg',
-  'icons/key.svg',
-  'icons/list.svg',
-  'icons/lock.svg',
-  'icons/mail.svg',
-  'icons/map.svg',
-  'icons/map_pin.svg',
-  'icons/mic.svg',
-  'icons/notification.svg',
-  'icons/phone.svg',
-  'icons/play_clip.svg',
-  'icons/plus.svg',
-  'icons/position.svg',
-  'icons/power.svg',
-  'icons/refresh.svg',
-  'icons/search.svg',
-  'icons/settings.svg',
-  'icons/share.svg',
-  'icons/slideshow.svg',
-  'icons/sort_by_size.svg',
-  'icons/sound_full.svg',
-  'icons/sound_off.svg',
-  'icons/star.svg',
-  'icons/stars_grade.svg',
-  'icons/stop.svg',
-  'icons/trashcan.svg',
-  'icons/usb.svg',
-  'icons/user.svg',
-  'icons/warning.svg'
+  'icons/action_about.svg',
+  'icons/action_help.svg',
+  'icons/action_search.svg',
+  'icons/action_settings.svg',
+  'icons/alerts_and_states_add_alarm.svg',
+  'icons/alerts_and_states_airplane_mode_off.svg',
+  'icons/alerts_and_states_airplane_mode_on.svg',
+  'icons/alerts_and_states_error.svg',
+  'icons/alerts_and_states_warning.svg',
+  'icons/av_add_to_queue.svg',
+  'icons/av_download.svg',
+  'icons/av_fast_forward.svg',
+  'icons/av_full_screen.svg',
+  'icons/av_make_available_offline.svg',
+  'icons/av_next.svg',
+  'icons/av_pause.svg',
+  'icons/av_pause_over_video.svg',
+  'icons/av_play.svg',
+  'icons/av_play_over_video.svg',
+  'icons/av_previous.svg',
+  'icons/av_repeat.svg',
+  'icons/av_replay.svg',
+  'icons/av_return_from_full_screen.svg',
+  'icons/av_rewind.svg',
+  'icons/av_shuffle.svg',
+  'icons/av_stop.svg',
+  'icons/av_upload.svg',
+  'icons/collections_cloud.svg',
+  'icons/collections_collection.svg',
+  'icons/collections_go_to_today.svg',
+  'icons/collections_labels.svg',
+  'icons/collections_new_label.svg',
+  'icons/collections_sort_by_size.svg',
+  'icons/collections_view_as_grid.svg',
+  'icons/collections_view_as_list.svg',
+  'icons/content_attachment.svg',
+  'icons/content_backspace.svg',
+  'icons/content_copy.svg',
+  'icons/content_cut.svg',
+  'icons/content_discard.svg',
+  'icons/content_edit.svg',
+  'icons/content_email.svg',
+  'icons/content_event.svg',
+  'icons/content_import_export.svg',
+  'icons/content_merge.svg',
+  'icons/content_new.svg',
+  'icons/content_new_attachment.svg',
+  'icons/content_new_email.svg',
+  'icons/content_new_event.svg',
+  'icons/content_new_picture.svg',
+  'icons/content_paste.svg',
+  'icons/content_picture.svg',
+  'icons/content_read.svg',
+  'icons/content_remove.svg',
+  'icons/content_save.svg',
+  'icons/content_select_all.svg',
+  'icons/content_split.svg',
+  'icons/content_undo.svg',
+  'icons/content_unread.svg',
+  'icons/device_access_accounts.svg',
+  'icons/device_access_alarms.svg',
+  'icons/device_access_battery.svg',
+  'icons/device_access_bluetooth.svg',
+  'icons/device_access_bluetooth_connected.svg',
+  'icons/device_access_bluetooth_searching.svg',
+  'icons/device_access_brightness_auto.svg',
+  'icons/device_access_brightness_high.svg',
+  'icons/device_access_brightness_low.svg',
+  'icons/device_access_brightness_medium.svg',
+  'icons/device_access_call.svg',
+  'icons/device_access_camera.svg',
+  'icons/device_access_data_usage.svg',
+  'icons/device_access_dial_pad.svg',
+  'icons/device_access_end_call.svg',
+  'icons/device_access_flash_automatic.svg',
+  'icons/device_access_flash_off.svg',
+  'icons/device_access_flash_on.svg',
+  'icons/device_access_location_found.svg',
+  'icons/device_access_location_off.svg',
+  'icons/device_access_location_searching.svg',
+  'icons/device_access_mic.svg',
+  'icons/device_access_mic_muted.svg',
+  'icons/device_access_network_cell.svg',
+  'icons/device_access_network_wifi.svg',
+  'icons/device_access_new_account.svg',
+  'icons/device_access_not_secure.svg',
+  'icons/device_access_ring_volume.svg',
+  'icons/device_access_screen_locked_to_landscape.svg',
+  'icons/device_access_screen_locked_to_portrait.svg',
+  'icons/device_access_screen_rotation.svg',
+  'icons/device_access_sd_storage.svg',
+  'icons/device_access_secure.svg',
+  'icons/device_access_storage_1.svg',
+  'icons/device_access_switch_camera.svg',
+  'icons/device_access_switch_video.svg',
+  'icons/device_access_time.svg',
+  'icons/device_access_usb.svg',
+  'icons/device_access_video.svg',
+  'icons/device_access_volume_muted.svg',
+  'icons/device_access_volume_on.svg',
+  'icons/hardware_computer.svg',
+  'icons/hardware_dock.svg',
+  'icons/hardware_gamepad.svg',
+  'icons/hardware_headphones.svg',
+  'icons/hardware_headset.svg',
+  'icons/hardware_keyboard.svg',
+  'icons/hardware_mouse.svg',
+  'icons/hardware_phone.svg',
+  'icons/images_crop.svg',
+  'icons/images_rotate_left.svg',
+  'icons/images_rotate_right.svg',
+  'icons/images_slideshow.svg',
+  'icons/location_directions.svg',
+  'icons/location_map.svg',
+  'icons/location_place.svg',
+  'icons/location_web_site.svg',
+  'icons/navigation_accept.svg',
+  'icons/navigation_back.svg',
+  'icons/navigation_cancel.svg',
+  'icons/navigation_collapse.svg',
+  'icons/navigation_expand.svg',
+  'icons/navigation_forward.svg',
+  'icons/navigation_next_item.svg',
+  'icons/navigation_previous_item.svg',
+  'icons/navigation_refresh.svg',
+  'icons/rating_bad.svg',
+  'icons/rating_favorite.svg',
+  'icons/rating_good.svg',
+  'icons/rating_half_important.svg',
+  'icons/rating_important.svg',
+  'icons/rating_not_important.svg',
+  'icons/social_add_group.svg',
+  'icons/social_add_person.svg',
+  'icons/social_cc_bcc.svg',
+  'icons/social_chat.svg',
+  'icons/social_forward.svg',
+  'icons/social_group.svg',
+  'icons/social_person.svg',
+  'icons/social_reply.svg',
+  'icons/social_reply_all.svg',
+  'icons/social_send_now.svg',
+  'icons/social_share.svg'
 ];
 
 studio.forms.ImageField.fontList_ = [
+  'Roboto',
   'Helvetica',
   'Arial',
   'Georgia',

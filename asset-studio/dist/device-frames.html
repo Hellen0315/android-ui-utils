@@ -36,6 +36,7 @@
 
       #inout-container {
         width: 100%;
+
         display: box;
         box-orient: horizontal;
         box-pack: justify;
@@ -58,18 +59,40 @@
            -moz-box-flex: 1;
       }
 
+      #device-list {
+        text-align: center;
+      }
+
       #device-list li {
         display: inline-block;
-        vertical-align: top;
+        vertical-align: bottom;
         background: #eee;
         padding: 8px;
         margin: 0 16px 16px 0;
         text-align: center;
-        border: 1px dashed rgba(0,0,0,0.4);
+        /*border: 1px dashed rgba(0,0,0,0.4)*/;
       }
 
-      #device-list li img {
+      #device-list li .thumb-container {
         opacity: 0.5;
+        /*width: 200px;
+        height: 150px;*/
+        margin-bottom: 8px;
+
+        display: box;
+        box-orient: vertical;
+        box-pack: end;
+        box-align: center;
+
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-box-pack: end;
+        -webkit-box-align: center;
+
+        display: -moz-box;
+        -moz-box-orient: vertical;
+        -moz-box-pack: end;
+        -moz-box-align: center;
       }
 
       #device-list li.drag-hover {
@@ -77,7 +100,7 @@
         box-shadow: 0 0 40px #a4c639;
       }
 
-      #device-list li.drag-hover img {
+      #device-list li.drag-hover .thumb-container {
         opacity: 1;
       }
 
@@ -87,6 +110,10 @@
 
       #outputs img {
         width: 400px;
+      }
+
+      #output {
+        margin-top: 16px;
       }
     </style>
 
@@ -104,13 +131,9 @@
   </head>
   <body>
     <div id="main-container">
-      <div id="header">
-        <h1><a href="index.html">Android Asset Studio</a></h1>
-      </div>
       <div id="page-header">
         <div id="breadcrumb">
           <a href="index.html">Android Asset Studio</a> &raquo;
-          <a href="index.html#group-device-frames">Device frame generators</a> &raquo;
           <em>Device frame generator</em>
         </div>
         <p id="page-intro">
@@ -129,6 +152,10 @@
         </div>
         <div id="outputs">
           <h3>2. Save your output <small style="font-weight:normal">(Drag out to your desktop to save.)</small></h3>
+          <input type="checkbox" id="output-shadow" checked="checked">
+          <label for="output-shadow">With Shadow</label>
+          <input type="checkbox" id="output-glare" checked="checked">
+          <label for="output-glare">With Glare</label>
           <div id="output">No input image.</div>
         </div>
       </div>
@@ -140,49 +167,102 @@
 
     <script>
       $(studio.checkBrowser);
+      $('#output-shadow, #output-glare').button().click(function() {
+        createFrame(g_currentDevice, g_currentImage);
+      });
       $.event.props.push("dataTransfer");
+
+      var g_currentImage;
+      var g_currentDevice;
 
       var DEVICES = [
         {
-          id: 'nexus_one',
-          title: 'Nexus One',
-          url: 'http://www.google.com/phone/detail/nexus-one',
-          landRes: ['back'],
-          landOffset: [200,130],
-          portRes: ['back'],
-          portOffset: [141,191],
-          portSize: [480,800],
+          id: 'nexus_7',
+          title: 'Nexus 7',
+          url: 'http://www.android.com/devices/detail/nexus-7',
+          physicalSize: 7,
+          density: 213,
+          landRes: ['shadow', 'back', 'fore'],
+          landOffset: [363,260],
+          portRes: ['shadow', 'back', 'fore'],
+          portOffset: [265,341],
+          portSize: [800,1280],
+        },
+        {
+          id: 'xoom',
+          title: 'Motorola XOOM / 10-inch tablet',
+          url: 'http://www.google.com/phone/detail/motorola-xoom',
+          physicalSize: 10,
+          density: 160,
+          landRes: ['shadow', 'back', 'fore'],
+          landOffset: [218,191],
+          portRes: ['shadow', 'back', 'fore'],
+          portOffset: [199,200],
+          portSize: [800,1280],
+        },
+        {
+          id: 'galaxy_nexus',
+          title: 'Galaxy Nexus',
+          url: 'http://www.android.com/devices/detail/galaxy-nexus',
+          physicalSize: 4.65,
+          density: 320,
+          landRes: ['shadow', 'back', 'fore'],
+          landOffset: [371,199],
+          portRes: ['shadow', 'back', 'fore'],
+          portOffset: [216,353],
+          portSize: [720,1280],
         },
         {
           id: 'nexus_s',
           title: 'Nexus S',
           url: 'http://www.google.com/phone/detail/nexus-s',
-          landRes: ['back', 'fore'],
+          physicalSize: 4.0,
+          density: 240,
+          landRes: ['shadow', 'back', 'fore'],
           landOffset: [247,135],
-          portRes: ['back', 'fore'],
+          portRes: ['shadow', 'back', 'fore'],
           portOffset: [134,247],
           portSize: [480,800],
         },
         {
-          id: 'galaxy_nexus',
-          title: 'Galaxy Nexus',
-          landRes: ['back', 'fore'],
-          landOffset: [371,199],
-          portRes: ['back', 'fore'],
-          portOffset: [216,353],
-          portSize: [720,1280],
+          id: 'samsung_galaxy_note',
+          title: 'Samsung Galaxy Note',
+          url: 'http://www.samsung.com/global/microsite/galaxynote/note/index.html?type=find',
+          physicalSize: 5.3,
+          density: 320,
+          landRes: ['shadow', 'back', 'fore'],
+          landOffset: [353,209],
+          portRes: ['shadow', 'back', 'fore'],
+          portOffset: [289,312],
+          portSize: [800,1280],
         },
         {
-          id: 'xoom',
-          title: 'Motorola XOOM',
-          url: 'http://www.google.com/phone/detail/motorola-xoom',
-          landRes: ['back'],
-          landOffset: [218,191],
-          portRes: ['back'],
-          portOffset: [199,200],
-          portSize: [800,1280],
+          id: 'samsung_galaxy_tab_2_7inch',
+          title: 'Samsung Galaxy Tab 2 7-inch',
+          url: 'http://www.samsung.com/global/microsite/galaxytab2/7.0/index.html?type=find',
+          physicalSize: 7,
+          density: 160,
+          landRes: ['shadow', 'back', 'fore'],
+          landOffset: [230,203],
+          portRes: ['shadow', 'back', 'fore'],
+          portOffset: [274,222],
+          portSize: [600,1024],
+        },
+        {
+          id: 'samsung_galaxy_s3',
+          title: 'Samsung Galaxy S III',
+          url: 'http://www.samsung.com/global/galaxys3/',
+          physicalSize: 4.8,
+          density: 320,
+          landRes: ['shadow', 'back', 'fore'],
+          landOffset: [346,211],
+          portRes: ['shadow', 'back', 'fore'],
+          portOffset: [302,307],
+          portSize: [720,1280],
         }
       ];
+
+      DEVICES = DEVICES.sort(function(x, y) { return x.physicalSize - y.physicalSize; });
 
       function getDeviceById(id) {
         for (var i = 0; i < DEVICES.length; i++) {
@@ -192,16 +272,23 @@
         return;
       }
 
+      var MAX_SIZE_INCHES = 10; // XOOM
+      var MAX_HEIGHT = 126; // XOOM, to fit into 200px wide
+
       $.each(DEVICES, function() {
         $('<li>')
-            .append($('<img>')
-                .attr('src', 'res/device-frames/' + this.id + '/thumb.png'))
+            .append($('<div>')
+                .addClass('thumb-container')
+                .append($('<img>')
+                    .attr('src', 'res/device-frames/' + this.id + '/thumb.png')
+                    .attr('height', Math.floor(MAX_HEIGHT * this.physicalSize / MAX_SIZE_INCHES))))
             .append($('<div>')
                 .html('<strong>' +
                   (this.url ? 
                       ('<a href="' + this.url + '">' + this.title + '</a>') :
                       this.title) +
-                  '</strong><br>' + this.portSize[0] + 'x' + this.portSize[1]))
+                  '</strong><br>' +  this.physicalSize + '" @ ' + this.density + 'dpi' +
+                  '<br>' + this.portSize[0] + 'x' + this.portSize[1]))
             .data('deviceId', this.id)
             .appendTo('#device-list');
       });
@@ -218,7 +305,7 @@
           .live('drop', function(evt) {
             $('#output').empty().text('Loading...');
             $(this).removeClass('drag-hover');
-            var device = getDeviceById($(this).closest('li').data('deviceId'));
+            g_currentDevice = getDeviceById($(this).closest('li').data('deviceId'));
             evt.preventDefault();
             studio.forms.ImageField.loadImageFromFileList(evt.dataTransfer.files, function(data) {
               if (data == null) {
@@ -226,7 +313,8 @@
                 return;
               }
               imagelib.loadFromUri(data.uri, function(img) {
-                createFrame(device, img);
+                g_currentImage = img;
+                createFrame(g_currentDevice, g_currentImage);
               });
             });
           });
@@ -282,9 +370,12 @@
           canvas.height = height;
 
           var ctx = canvas.getContext('2d');
+          if (resourceImages['shadow'] && $('#output-shadow').is(':checked')) {
+            ctx.drawImage(resourceImages['shadow'], 0, 0);
+          }
           ctx.drawImage(resourceImages['back'], 0, 0);
           ctx.drawImage(screenshot, offset[0], offset[1]);
-          if (resourceImages['fore']) {
+          if (resourceImages['fore'] && $('#output-glare').is(':checked')) {
             ctx.drawImage(resourceImages['fore'], 0, 0);
           }
 

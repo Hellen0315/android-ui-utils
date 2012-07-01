@@ -21,6 +21,7 @@
     <title>Android Asset Studio - Icon Generator - Notification icons</title>
 
     <link rel="stylesheet" href="lib/cssreset-3.4.1.min.css">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:regular,medium,thin,italic,mediumitalic,bold" title="roboto">
     <link rel="stylesheet" href="lib/jquery-ui/css/android/jquery-ui-1.8.16.custom.css">
     <link rel="stylesheet" href="css/studio.css">
 
@@ -57,28 +58,14 @@
   </head>
   <body>
     <div id="main-container">
-      <div id="header">
-        <h1><a href="index.html">Android Asset Studio</a></h1>
-      </div>
       <div id="page-header">
         <div id="breadcrumb">
           <a href="index.html">Android Asset Studio</a> &raquo;
-          <a href="index.html#group-icon-generators">Icon generators</a> &raquo;
-          <em>Notification icons</em>
+          <em>Notification icon generator</em>
         </div>
-        <p id="page-intro">
-          The <strong>notification icon generator</strong> will create icons that you
-          can use in your Android application, from a variety of source images.
-          To begin, simply enter the input details below. Output will be shown
-          below.
-        </p>
       </div>
       <div id="inputs">
         <div id="inputs-form"></div>
-        <input type="checkbox" id="output-show-guides">
-        <label for="output-show-guides">Show Guides</label>
-        <input type="checkbox" id="output-better-scaling">
-        <label for="output-better-scaling">Better Image Smoothing (slow)</label>
       </div>
       <div id="outputs">
         <h3>
@@ -94,11 +81,7 @@
 
     <script>
       $(studio.checkBrowser);
-      $('#output-show-guides').button().click(regenerate);
-      $('#output-better-scaling').button().click(function() {
-        imagelib.ALLOW_MANUAL_RESCALE = $(this).is(':checked');
-        regenerate();
-      });
+      imagelib.ALLOW_MANUAL_RESCALE = true;
 
       var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
 
@@ -157,7 +140,6 @@
           return;
 
         var values = form.getValues();
-        var showGuides = $('#output-show-guides').is(':checked');
 
         var iconName = 'ic_stat_' + values['name'];
         zipper.clear();
@@ -231,11 +213,6 @@
               name: 'res/drawable-' + density + versionStr + '/' + iconName + '.png',
               base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
             });
-
-            if (showGuides)
-              studio.ui.drawImageGuideRects(outCtx, iconSize, [
-                targetRect
-              ]);
 
             imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(version, density) {
               return function(img) {

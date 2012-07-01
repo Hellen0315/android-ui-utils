@@ -18,9 +18,10 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Android Asset Studio - Icon Generator - Action bar icons (Android 3.0+)</title>
+    <title>Android Asset Studio - Icon Generator - Action bar and tab icons (Android 3.0+)</title>
 
     <link rel="stylesheet" href="lib/cssreset-3.4.1.min.css">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:regular,medium,thin,italic,mediumitalic,bold" title="roboto">
     <link rel="stylesheet" href="lib/jquery-ui/css/android/jquery-ui-1.8.16.custom.css">
     <link rel="stylesheet" href="css/studio.css">
 
@@ -57,32 +58,14 @@
   </head>
   <body>
     <div id="main-container">
-      <div id="header">
-        <h1><a href="index.html">Android Asset Studio</a></h1>
-      </div>
       <div id="page-header">
         <div id="breadcrumb">
           <a href="index.html">Android Asset Studio</a> &raquo;
-          <a href="index.html#group-icon-generators">Icon generators</a> &raquo;
-          <em>Action bar icons (Android 3.0+)</em>
+          <em>Action bar and tab icon generator (Android 3.0+)</em>
         </div>
-        <p id="page-intro">
-          The <strong>action bar icon generator</strong> will create icons that you
-          can use in your Android application, from a variety of source images.
-          To begin, simply enter the input details below. Output will be shown
-          below.
-        </p>
       </div>
       <div id="inputs">
         <div id="inputs-form"></div>
-<!--
-        <input type="checkbox" id="output-try-system" checked="checked">
-        <label for="output-try-system">Use framework asset where possible</label>
--->
-        <input type="checkbox" id="output-show-guides">
-        <label for="output-show-guides">Show Guides</label>
-        <input type="checkbox" id="output-better-scaling">
-        <label for="output-better-scaling">Better Smoothing (slow)</label>
       </div>
       <div id="outputs">
         <h3>
@@ -98,17 +81,9 @@
 
     <script>
       $(studio.checkBrowser);
-      $('#output-show-guides').button().click(regenerate);
-      $('#output-better-scaling').button().click(function() {
-        imagelib.ALLOW_MANUAL_RESCALE = $(this).is(':checked');
-        regenerate();
-      });
+      imagelib.ALLOW_MANUAL_RESCALE = true;
 
       var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
-
-      // $('#output-try-system')
-      //     .button()
-      //     .change(regenerate);
 
       // Create image output slots
       var group = studio.ui.createImageOutputGroup({
@@ -122,9 +97,9 @@
         });
 
       var PARAM_RESOURCES = {
-        'mdpi-iconSize': { w: 24, h: 24 },
-        'mdpi-guideRect': { x: 0, y: 0, w: 24, h: 24 },
-        'mdpi-targetRect': { x: 0, y: 0, w: 24, h: 24 }
+        'mdpi-iconSize': { w: 32, h: 32 },
+        'mdpi-targetRect-noclipart': { x: 4, y: 4, w: 24, h: 24 },
+        'mdpi-targetRect-clipart': { x: 0, y: 0, w: 32, h: 32 }
       };
 
       /**
@@ -133,33 +108,10 @@
       function regenerate() {
         var values = form.getValues();
         var sourceName = values['source'].name;
-        var showGuides = $('#output-show-guides').is(':checked');
 
         var iconName = 'ic_action_' + values['name'];
         zipper.clear();
         zipper.setZipFilename(iconName + '.zip');
-
-        if (
-
-            false && // short circuit framework asset replacement while
-                     // android.git.kernel.org gitweb image serving is broken
-
-            $('#output-try-system').is(':checked') &&
-            sourceName &&
-            sysReplacements.hasOwnProperty(sourceName)) {
-
-          var replacement = sysReplacements[sourceName];
-          $('#out-icon-hdpi').attr('src',
-              'http://android.git.kernel.org/?p=platform/frameworks/base.git;' +
-              'a=blob_plain;f=core/res/res/drawable-hdpi/ic_menu_' + replacement
-              + '.png;hb=master');
-          $('#out-icon-mdpi').attr('src',
-              'http://android.git.kernel.org/?p=platform/frameworks/base.git;' +
-              'a=blob_plain;f=core/res/res/drawable-mdpi/ic_menu_' + replacement
-              + '.png;hb=master');
-          $('#out-icon-ldpi').attr('src', '');
-          return;
-        }
 
         if (!values['source'].ctx) {
           return;
@@ -173,10 +125,12 @@
           var mult = studio.util.getMultBaseMdpi(density);
           var iconSize = studio.util.multRound(
               PARAM_RESOURCES['mdpi-iconSize'], mult);
-          var guideRect = studio.util.multRound(
-              PARAM_RESOURCES['mdpi-guideRect'], mult);
-          var targetRect = studio.util.multRound(
-              PARAM_RESOURCES['mdpi-targetRect'], mult);
+          var targetRect;
+          if (values['source'].type == 'clipart') {
+            targetRect = studio.util.multRound(PARAM_RESOURCES['mdpi-targetRect-clipart'], mult);
+          } else {
+            targetRect = studio.util.multRound(PARAM_RESOURCES['mdpi-targetRect-noclipart'], mult);
+          }
 
           var outCtx = imagelib.drawing.context(iconSize);
           var tmpCtx = imagelib.drawing.context(iconSize);
@@ -205,11 +159,6 @@
             name: 'res/drawable-' + density + '/' + iconName + '.png',
             base64data: outCtx.canvas.toDataURL().match(/;base64,(.+)/)[1]
           });
-
-          if (showGuides)
-            studio.ui.drawImageGuideRects(outCtx, iconSize, [
-              guideRect
-            ]);
 
           imagelib.loadFromUri(outCtx.canvas.toDataURL(), function(density) {
             return function(img) {
