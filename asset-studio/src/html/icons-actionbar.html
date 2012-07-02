@@ -18,7 +18,7 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Android Asset Studio - Icon Generator - Action bar and tab icons (Android 3.0+)</title>
+    <title>Android Asset Studio - Icon Generator - Action bar and tab icons</title>
 
     <link rel="stylesheet" href="lib/cssreset-3.4.1.min.css">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:regular,medium,thin,italic,mediumitalic,bold" title="roboto">
@@ -59,18 +59,15 @@
   <body>
     <div id="main-container">
       <div id="page-header">
-        <div id="breadcrumb">
-          <a href="index.html">Android Asset Studio</a> &raquo;
-          <em>Action bar and tab icon generator (Android 3.0+)</em>
-        </div>
+        <a href="index.html">Android Asset Studio</a>
+        <h1>Action Bar and Tab Icon Generator</h1>
       </div>
       <div id="inputs">
         <div id="inputs-form"></div>
       </div>
       <div id="outputs">
         <h3>
-          Output images
-          <div id="zip-button"></div>
+          <div id="zip-button-stub"></div>
         </h3>
       </div>
       <div id="footer">
@@ -83,7 +80,7 @@
       $(studio.checkBrowser);
       imagelib.ALLOW_MANUAL_RESCALE = true;
 
-      var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
+      var zipper = studio.zip.createDownloadifyZipButton($('#zip-button-stub'));
 
       // Create image output slots
       var group = studio.ui.createImageOutputGroup({
@@ -177,7 +174,7 @@
             defaultValueTrim: 1
           }),
           new studio.forms.TextField('name', {
-            title: 'Icon name',
+            title: 'Name',
             helpText: 'Used when generating ZIP files. Becomes <code>ic_action_&lt;name&gt;</code>.',
             defaultValue: 'example'
           }),

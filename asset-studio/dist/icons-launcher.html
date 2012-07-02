@@ -59,19 +59,16 @@
   <body>
     <div id="main-container">
       <div id="page-header">
-        <div id="breadcrumb">
-          <a href="index.html">Android Asset Studio</a> &raquo;
-          <em>Launcher icon generator</em>
-        </div>
+        <a href="index.html">Android Asset Studio</a>
+        <h1>Launcher Icon Generator</h1>
       </div>
       <div id="inputs">
         <div id="inputs-form"></div>
       </div>
       <div id="outputs">
         <h3>
-          Output images
-          <div id="zip-button"></div>
-          <div id="generate-web-button" style="vertical-align:top">Generate Web Icon</div>
+          <div id="zip-button-stub"></div>
+          <button id="generate-web-button">Generate Web Icon</button>
         </h3>
       </div>
       <div id="footer">
@@ -84,11 +81,11 @@
       $(studio.checkBrowser);
       imagelib.ALLOW_MANUAL_RESCALE = true;
 
-      $('#generate-web-button').button().click(function() {
+      $('#generate-web-button').click(function() {
         regenerate(true, true);
       });
 
-      var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
+      var zipper = studio.zip.createDownloadifyZipButton($('#zip-button-stub'));
 
       // Create image output slots
       var group = studio.ui.createImageOutputGroup({
@@ -321,14 +318,21 @@
             title: 'Foreground',
             defaultValueTrim: 1
           }),
+          new studio.forms.ColorField('foreColor', {
+            title: 'Color',
+            helpText: 'For transparent foregrounds',
+            defaultValue: '#000000',
+            alpha: true,
+            defaultAlpha: 0
+          }),
           new studio.forms.BooleanField('crop', {
-            title: 'Foreground scaling',
+            title: 'Scaling',
             defaultValue: false,
             offText: 'Center',
             onText: 'Crop'
           }),
           new studio.forms.EnumField('backgroundShape', {
-            title: 'Background shape',
+            title: 'Shape',
             buttons: true,
             options: [
               { id: 'none', title: 'None' },
@@ -338,15 +342,8 @@
             defaultValue: 'none'
           }),
           new studio.forms.ColorField('backColor', {
-            title: 'Background color',
+            title: 'Background',
             defaultValue: '#ff0000'
-          }),
-          new studio.forms.ColorField('foreColor', {
-            title: 'Foreground color',
-            helpText: 'Only for alpha-transparent foregrounds',
-            defaultValue: '#000000',
-            alpha: true,
-            defaultAlpha: 0
           })
           // new studio.forms.EnumField('recenter', {
           //   title: 'Recentering',

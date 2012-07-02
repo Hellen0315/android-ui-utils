@@ -21,6 +21,7 @@
     <title>Android Asset Studio - Device Frame Generator</title>
 
     <link rel="stylesheet" href="lib/cssreset-3.4.1.min.css">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:regular,medium,thin,italic,mediumitalic,bold" title="roboto">
     <link rel="stylesheet" href="lib/jquery-ui/css/android/jquery-ui-1.8.16.custom.css">
     <link rel="stylesheet" href="css/studio.css">
 
@@ -132,18 +133,16 @@
   <body>
     <div id="main-container">
       <div id="page-header">
-        <div id="breadcrumb">
-          <a href="index.html">Android Asset Studio</a> &raquo;
-          <em>Device frame generator</em>
-        </div>
+        <a href="index.html">Android Asset Studio</a>
+        <h1>Device Frame Generator</h1>
         <p id="page-intro">
-          The <strong>Device frame generator</strong> allows you to quickly wrap your app
+          The device frame generator allows you to quickly wrap your app
           screenshots in real device artwork, providing better context for your screenshots.
         </p>
       </div>
       <div id="inout-container">
         <div id="inputs">
-          <h3>1. Choose a device:  <small style="font-weight:normal">(Drag a screenshot from your desktop onto a device.)</small></h3>
+          <h3>1. Choose a device:  <span style="font-weight:normal">(Drag a screenshot from your desktop onto a device.)</span></h3>
           <p></p>
           <ul id="device-list"></ul>
           <p><strong>Attention, Device Manufacturers! </strong> To get your device(s) listed here,
@@ -151,7 +150,7 @@
             file a feature request</a>, and include hi-res, transparent or on-white photos of your device.</p>
         </div>
         <div id="outputs">
-          <h3>2. Save your output <small style="font-weight:normal">(Drag out to your desktop to save.)</small></h3>
+          <h3>2. Save your output <span style="font-weight:normal">(Drag out to your desktop to save.)</span></h3>
           <input type="checkbox" id="output-shadow" checked="checked">
           <label for="output-shadow">With Shadow</label>
           <input type="checkbox" id="output-glare" checked="checked">

@@ -18,9 +18,10 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Android Asset Studio - Nine-patch Generator</title>
+    <title>Android Asset Studio - Simple Nine-patch Generator</title>
 
     <link rel="stylesheet" href="lib/cssreset-3.4.1.min.css">
+    <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:regular,medium,thin,italic,mediumitalic,bold" title="roboto">
     <link rel="stylesheet" href="lib/jquery-ui/css/android/jquery-ui-1.8.16.custom.css">
     <link rel="stylesheet" href="css/studio.css">
 
@@ -101,13 +102,11 @@
   <body>
     <div id="main-container">
       <div id="page-header">
-        <div id="breadcrumb">
-          <a href="index.html">Android Asset Studio</a> &raquo;
-          <em>Nine-patch generator</em>
-        </div>
+        <a href="index.html">Android Asset Studio</a>
+        <h1>Simple Nine-patch Generator</h1>
         <p id="page-intro">
-          The <strong>nine-patch generator</strong> allows you to quickly generate nine-patches
-          at different screen densities, based on some source artwork.
+          The nine-patch generator allows you to quickly generate simple nine-patches
+          at different screen densities, based on the specified source artwork.
         </p>
       </div>
       <div id="instage-container">
@@ -138,7 +137,7 @@
         </div>
       </div>
       <div id="outputs">
-        <h3>Output images <div id="zip-button"></div></h3>
+        <h3>Output images <div id="zip-button-stub"></div></h3>
       </div>
       <div id="footer">
         <p>See the source at the <a href="http://code.google.com/p/android-ui-utils">android-ui-utils</a> Google Code project.</p>
@@ -366,7 +365,7 @@
     }
 
     // Generator
-    var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
+    var zipper = studio.zip.createDownloadifyZipButton($('#zip-button-stub'));
     var group = studio.ui.createImageOutputGroup({ container: $('#outputs') });
     for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1})
       studio.ui.createImageOutputSlot({

@@ -68,7 +68,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
     // Create radio buttons
     this.el_ = $('<div>')
       .attr('id', this.getHtmlId())
-      .addClass('.form-field-buttonset')
+      .addClass('form-field-buttonset')
       .appendTo(fieldContainer);
 
     var types;
@@ -100,8 +100,6 @@ studio.forms.ImageField = studio.forms.Field.extend({
         .text(types[i * 2 + 1])
         .appendTo(this.el_);
     }
-
-    this.el_.buttonset();
 
     // Prepare UI for the 'image' type
     this.fileEl_ = $('<input>')
@@ -137,7 +135,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
       var clipartParamsEl = $('<div>')
         .addClass('form-image-type-params form-image-type-params-clipart')
         .hide()
-        .appendTo(this.el_);
+        .appendTo(fieldContainer);
 
       var clipartListEl = $('<div>')
         .addClass('form-image-clipart-list')
@@ -180,7 +178,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
           'form-image-type-params ' +
           'form-image-type-params-text')
         .hide()
-        .appendTo(this.el_);
+        .appendTo(fieldContainer);
 
       this.textForm_ = new studio.forms.Form(
         this.form_.id_ + '-' + this.id_ + '-textform', {
@@ -235,7 +233,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
               max: 0.5, // 1/2 of min(width, height)
               step: 0.05,
               textFn: function(v) {
-                return (v * 100) + '%';
+                return (v * 100).toFixed(0) + '%';
               }
             }),
           ]
@@ -290,18 +288,18 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
   setValueType_: function(type) {
     this.valueType_ = type;
-    $('label', this.el_).removeClass('ui-state-active');
-    $('.form-image-type-params', this.el_).hide();
+    $('input', this.el_).removeAttr('checked');
+    $('.form-image-type-params', this.el_.parent()).hide();
     if (type) {
-      $('label[for=' + this.getHtmlId() + '-' + type + ']').addClass('ui-state-active');
-      $('.form-image-type-params-' + type, this.el_).show();
+      $('#' + this.getHtmlId() + '-' + type).attr('checked', true);
+      $('.form-image-type-params-' + type, this.el_.parent()).show();
     }
   },
 
   loadClipart_: function(clipartSrc) {
     var useCanvg = USE_CANVG && clipartSrc.match(/\.svg$/);
 
-    $('img.form-image-clipart-item', this.el_).removeClass('selected');
+    $('img.form-image-clipart-item', this.el_.parent()).removeClass('selected');
     $('img[src="' + clipartSrc + '"]').addClass('selected');
     
     this.imageParams_ = {

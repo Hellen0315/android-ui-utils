@@ -59,18 +59,15 @@
   <body>
     <div id="main-container">
       <div id="page-header">
-        <div id="breadcrumb">
-          <a href="index.html">Android Asset Studio</a> &raquo;
-          <em>Notification icon generator</em>
-        </div>
+        <a href="index.html">Android Asset Studio</a>
+        <h1>Notification Icon Generator</h1>
       </div>
       <div id="inputs">
         <div id="inputs-form"></div>
       </div>
       <div id="outputs">
         <h3>
-          Output images
-          <div id="zip-button"></div>
+          <div id="zip-button-stub"></div>
         </h3>
       </div>
       <div id="footer">
@@ -83,7 +80,7 @@
       $(studio.checkBrowser);
       imagelib.ALLOW_MANUAL_RESCALE = true;
 
-      var zipper = studio.zip.createDownloadifyZipButton($('#zip-button'));
+      var zipper = studio.zip.createDownloadifyZipButton($('#zip-button-stub'));
 
       // Create image output slots
       for (var version in {'X':1, '11':1, '9':1}) {
@@ -241,7 +238,7 @@
             defaultValue: 'square'
           }),
           new studio.forms.TextField('name', {
-            title: 'Icon name',
+            title: 'Name',
             helpText: 'Used when generating ZIP files. Becomes <code>ic_stat_&lt;name&gt;</code>.',
             defaultValue: 'example'
           })

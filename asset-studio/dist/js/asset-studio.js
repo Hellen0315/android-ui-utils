@@ -1236,9 +1236,8 @@ studio.forms.TextField = studio.forms.Field.extend({
     var me = this;
 
     this.el_ = $('<input>')
-      .addClass('form-text ui-widget ui-widget-content ' +
-                'ui-autocomplete-input ui-corner-all')
       .attr('type', 'text')
+      .addClass('form-text')
       .val(this.getValue())
       .bind('change', function() {
         me.setValue($(this).val(), true);
@@ -1286,8 +1285,12 @@ studio.forms.AutocompleteTextField = studio.forms.Field.extend({
     var fieldContainer = $('.form-field-container', this.base(container));
     var me = this;
 
+    var datalistId = this.getHtmlId() + '-datalist';
+
     this.el_ = $('<input>')
       .attr('type', 'text')
+      .addClass('form-text')
+      .attr('list', datalistId)
       .val(this.getValue())
       .bind('keydown change', function() {
         var inputEl = this;
@@ -1297,14 +1300,14 @@ studio.forms.AutocompleteTextField = studio.forms.Field.extend({
       })
       .appendTo(fieldContainer);
 
-    this.el_.autocompletewithbutton({
-      source: this.params_.items || [],
-      delay: 0,
-      minLength: 0,
-      selected: function(evt, val) {
-        me.setValue(val, true);
-      }
-    });
+    this.datalistEl_ = $('<datalist>')
+      .attr('id', datalistId)
+      .appendTo(fieldContainer);
+
+    this.params_.items = this.params_.items || [];
+    for (var i = 0; i < this.params_.items.length; i++) {
+      this.datalistEl_.append($('<option>').attr('value', this.params_.items[i]));
+    }
   },
 
   getValue: function() {
@@ -1339,11 +1342,7 @@ studio.forms.ColorField = studio.forms.Field.extend({
     this.el_ = $('<div>')
       .addClass('form-color')
       .attr('id', this.getHtmlId())
-      .append($('<div>')
-        .addClass('form-color-preview')
-        .css('background-color', this.getValue().color)
-      )
-      .button({ label: null, icons: { secondary: 'ui-icon-carat-1-s' }})
+      .css('background-color', this.getValue().color)
       .appendTo(fieldContainer);
 
     this.el_.ColorPicker({
@@ -1354,16 +1353,14 @@ studio.forms.ColorField = studio.forms.Field.extend({
     });
 
     if (this.params_.alpha) {
-      this.alphaEl_ = $('<div>')
-        .addClass('form-color-alpha')
-        .slider({
-          min: 0,
-          max: 100,
-          range: 'min',
-          value: this.getValue().alpha,
-    			slide: function(evt, ui) {
-    				me.setValue({ alpha: ui.value }, true);
-    			}
+      this.alphaEl_ = $('<input>')
+        .attr('type', 'range')
+        .attr('min', 0)
+        .attr('max', 100)
+        .val(this.getValue().alpha)
+        .addClass('form-range')
+        .change(function() {
+    			me.setValue({ alpha: Number(me.alphaEl_.val()) }, true);
         })
         .appendTo(fieldContainer);
     }
@@ -1395,12 +1392,11 @@ studio.forms.ColorField = studio.forms.Field.extend({
     }
 
     var computedValue = this.getValue();
-    $('.form-color-preview', this.el_)
-        .css('background-color', computedValue.color);
+    this.el_.css('background-color', computedValue.color);
     if (!pauseUi) {
       $(this.el_).ColorPickerSetColor(computedValue.color);
       if (this.alphaEl_) {
-        $(this.alphaEl_).slider('value', computedValue.alpha);
+        this.alphaEl_.val(computedValue.alpha);
       }
     }
     this.form_.notifyChanged_(this);
@@ -1432,7 +1428,7 @@ studio.forms.EnumField = studio.forms.Field.extend({
     if (this.params_.buttons) {
       this.el_ = $('<div>')
         .attr('id', this.getHtmlId())
-        .addClass('.form-field-buttonset')
+        .addClass('form-field-buttonset')
         .appendTo(fieldContainer);
       for (var i = 0; i < this.params_.options.length; i++) {
         var option = this.params_.options[i];
@@ -1453,7 +1449,7 @@ studio.forms.EnumField = studio.forms.Field.extend({
           .appendTo(this.el_);
       }
       this.setValueInternal_(this.getValue());
-      this.el_.buttonset();
+
     } else {
       this.el_ = $('<select>')
         .attr('id', this.getHtmlId())
@@ -1501,7 +1497,6 @@ studio.forms.EnumField = studio.forms.Field.extend({
         $('input', this.el_).each(function(i, el) {
           $(el).attr('checked', $(el).val() == val);
         });
-        $(this.el_).buttonset('refresh');
       } else {
         this.el_.val(val);
       }
@@ -1551,18 +1546,16 @@ studio.forms.RangeField = studio.forms.Field.extend({
     var fieldContainer = $('.form-field-container', this.base(container));
     var me = this;
 
-    this.el_ = $('<div>')
+    this.el_ = $('<input>')
+      .attr('type', 'range')
+      .attr('min', this.params_.min || 0)
+      .attr('max', this.params_.max || 100)
+      .attr('step', this.params_.step || 1)
       .addClass('form-range')
-      .slider({
-        min: this.params_.min || 0,
-        max: this.params_.max || 100,
-        step: this.params_.step || 1,
-        range: 'min',
-        value: this.getValue(),
-  			slide: function(evt, ui) {
-  				me.setValue(ui.value, true);
-  			}
+      .change(function() {
+        me.setValue(Number(me.el_.val()) || 0, true);
       })
+      .val(this.getValue())
       .appendTo(fieldContainer);
 
     if (this.params_.textFn || this.params_.showText) {
@@ -1587,7 +1580,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
   setValue: function(val, pauseUi) {
     this.value_ = val;
     if (!pauseUi) {
-      $(this.el_).slider('value', val);
+      this.el_.val(val);
     }
 		if (this.textEl_) {
 		  this.textEl_.text(this.params_.textFn(val));
@@ -1596,7 +1589,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
   },
 
   serializeValue: function() {
-    return this.getValue().toString();
+    return this.getValue();
   },
 
   deserializeValue: function(s) {
@@ -1797,7 +1790,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
     // Create radio buttons
     this.el_ = $('<div>')
       .attr('id', this.getHtmlId())
-      .addClass('.form-field-buttonset')
+      .addClass('form-field-buttonset')
       .appendTo(fieldContainer);
 
     var types;
@@ -1829,8 +1822,6 @@ studio.forms.ImageField = studio.forms.Field.extend({
         .text(types[i * 2 + 1])
         .appendTo(this.el_);
     }
-
-    this.el_.buttonset();
 
     // Prepare UI for the 'image' type
     this.fileEl_ = $('<input>')
@@ -1866,7 +1857,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
       var clipartParamsEl = $('<div>')
         .addClass('form-image-type-params form-image-type-params-clipart')
         .hide()
-        .appendTo(this.el_);
+        .appendTo(fieldContainer);
 
       var clipartListEl = $('<div>')
         .addClass('form-image-clipart-list')
@@ -1909,7 +1900,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
           'form-image-type-params ' +
           'form-image-type-params-text')
         .hide()
-        .appendTo(this.el_);
+        .appendTo(fieldContainer);
 
       this.textForm_ = new studio.forms.Form(
         this.form_.id_ + '-' + this.id_ + '-textform', {
@@ -1964,7 +1955,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
               max: 0.5, // 1/2 of min(width, height)
               step: 0.05,
               textFn: function(v) {
-                return (v * 100) + '%';
+                return (v * 100).toFixed(0) + '%';
               }
             }),
           ]
@@ -2019,18 +2010,18 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
   setValueType_: function(type) {
     this.valueType_ = type;
-    $('label', this.el_).removeClass('ui-state-active');
-    $('.form-image-type-params', this.el_).hide();
+    $('input', this.el_).removeAttr('checked');
+    $('.form-image-type-params', this.el_.parent()).hide();
     if (type) {
-      $('label[for=' + this.getHtmlId() + '-' + type + ']').addClass('ui-state-active');
-      $('.form-image-type-params-' + type, this.el_).show();
+      $('#' + this.getHtmlId() + '-' + type).attr('checked', true);
+      $('.form-image-type-params-' + type, this.el_.parent()).show();
     }
   },
 
   loadClipart_: function(clipartSrc) {
     var useCanvg = USE_CANVG && clipartSrc.match(/\.svg$/);
 
-    $('img.form-image-clipart-item', this.el_).removeClass('selected');
+    $('img.form-image-clipart-item', this.el_.parent()).removeClass('selected');
     $('img[src="' + clipartSrc + '"]').addClass('selected');
     
     this.imageParams_ = {
@@ -2616,52 +2607,6 @@ studio.zip = {};
     return zip.generate();
   }
 
-  studio.zip.createDownloadifyZipButton2 = function(element, options) {
-    // TODO: badly needs to be documented :-)
-
-    var zipperHandle = {
-      fileSpecs_: []
-    };
-
-    options = options || {};
-    options.swf = options.swf || 'lib/downloadify/media/downloadify.swf';
-    options.downloadImage = options.downloadImage ||
-        'images/download-zip-button.png';
-    options.width = options.width || 133;
-    options.height = options.height || 30;
-    options.dataType = 'base64';
-    options.onError = options.onError || function() {
-      if (zipperHandle.fileSpecs_.length)
-        alert('There was an error downloading the .zip');
-    };
-
-    // Zip file data and filename generator functions.
-    options.filename = function() {
-      return zipperHandle.zipFilename_ || 'output.zip';
-    };
-    options.data = function() {
-      return getZipperBase64Contents(zipperHandle);
-    };
-
-    var downloadifyHandle;
-    if (window.Downloadify) {
-      downloadifyHandle = Downloadify.create($(element).get(0), options);
-    }
-
-    // Set up zipper control functions
-    zipperHandle.setZipFilename = function(zipFilename) {
-      zipperHandle.zipFilename_ = zipFilename;
-    };
-    zipperHandle.clear = function() {
-      zipperHandle.fileSpecs_ = [];
-    };
-    zipperHandle.add = function(spec) {
-      zipperHandle.fileSpecs_.push(spec);
-    };
-
-    return zipperHandle;
-  };
-
   window.URL = window.webkitURL || window.URL;
   window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder ||
                        window.MozBlobBuilder;
@@ -2674,11 +2619,13 @@ studio.zip = {};
     };
 
     var link = $('<a>')
-        .appendTo(element)
         .addClass('dragout')
+        .addClass('form-button')
+        .attr('disabled', 'disabled')
         .text('Download .ZIP')
-        .button({disabled:true})
         .get(0);
+
+    $(element).replaceWith(link);
 
     var updateZipTimeout_ = null;
 
@@ -2691,7 +2638,7 @@ studio.zip = {};
       }
 
       if (!now) {
-        $(link).button('disable');
+        $(link).attr('disabled', 'disabled');
 
         if (updateZipTimeout_) {
           window.clearTimeout(updateZipTimeout_);
@@ -2719,7 +2666,7 @@ studio.zip = {};
       link.draggable = true;
       link.dataset.downloadurl = ['application/zip', link.download, link.href].join(':');
 
-      $(link).button('enable');
+      $(link).removeAttr('disabled');
     }
 
     // Set up zipper control functions

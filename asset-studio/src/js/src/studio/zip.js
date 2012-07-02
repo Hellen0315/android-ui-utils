@@ -52,52 +52,6 @@ studio.zip = {};
     return zip.generate();
   }
 
-  studio.zip.createDownloadifyZipButton2 = function(element, options) {
-    // TODO: badly needs to be documented :-)
-
-    var zipperHandle = {
-      fileSpecs_: []
-    };
-
-    options = options || {};
-    options.swf = options.swf || 'lib/downloadify/media/downloadify.swf';
-    options.downloadImage = options.downloadImage ||
-        'images/download-zip-button.png';
-    options.width = options.width || 133;
-    options.height = options.height || 30;
-    options.dataType = 'base64';
-    options.onError = options.onError || function() {
-      if (zipperHandle.fileSpecs_.length)
-        alert('There was an error downloading the .zip');
-    };
-
-    // Zip file data and filename generator functions.
-    options.filename = function() {
-      return zipperHandle.zipFilename_ || 'output.zip';
-    };
-    options.data = function() {
-      return getZipperBase64Contents(zipperHandle);
-    };
-
-    var downloadifyHandle;
-    if (window.Downloadify) {
-      downloadifyHandle = Downloadify.create($(element).get(0), options);
-    }
-
-    // Set up zipper control functions
-    zipperHandle.setZipFilename = function(zipFilename) {
-      zipperHandle.zipFilename_ = zipFilename;
-    };
-    zipperHandle.clear = function() {
-      zipperHandle.fileSpecs_ = [];
-    };
-    zipperHandle.add = function(spec) {
-      zipperHandle.fileSpecs_.push(spec);
-    };
-
-    return zipperHandle;
-  };
-
   window.URL = window.webkitURL || window.URL;
   window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder ||
                        window.MozBlobBuilder;
@@ -110,11 +64,13 @@ studio.zip = {};
     };
 
     var link = $('<a>')
-        .appendTo(element)
         .addClass('dragout')
+        .addClass('form-button')
+        .attr('disabled', 'disabled')
         .text('Download .ZIP')
-        .button({disabled:true})
         .get(0);
+
+    $(element).replaceWith(link);
 
     var updateZipTimeout_ = null;
 
@@ -127,7 +83,7 @@ studio.zip = {};
       }
 
       if (!now) {
-        $(link).button('disable');
+        $(link).attr('disabled', 'disabled');
 
         if (updateZipTimeout_) {
           window.clearTimeout(updateZipTimeout_);
@@ -155,7 +111,7 @@ studio.zip = {};
       link.draggable = true;
       link.dataset.downloadurl = ['application/zip', link.download, link.href].join(':');
 
-      $(link).button('enable');
+      $(link).removeAttr('disabled');
     }
 
     // Set up zipper control functions

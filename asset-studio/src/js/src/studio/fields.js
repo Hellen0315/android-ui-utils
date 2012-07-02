@@ -91,9 +91,8 @@ studio.forms.TextField = studio.forms.Field.extend({
     var me = this;
 
     this.el_ = $('<input>')
-      .addClass('form-text ui-widget ui-widget-content ' +
-                'ui-autocomplete-input ui-corner-all')
       .attr('type', 'text')
+      .addClass('form-text')
       .val(this.getValue())
       .bind('change', function() {
         me.setValue($(this).val(), true);
@@ -141,8 +140,12 @@ studio.forms.AutocompleteTextField = studio.forms.Field.extend({
     var fieldContainer = $('.form-field-container', this.base(container));
     var me = this;
 
+    var datalistId = this.getHtmlId() + '-datalist';
+
     this.el_ = $('<input>')
       .attr('type', 'text')
+      .addClass('form-text')
+      .attr('list', datalistId)
       .val(this.getValue())
       .bind('keydown change', function() {
         var inputEl = this;
@@ -152,14 +155,14 @@ studio.forms.AutocompleteTextField = studio.forms.Field.extend({
       })
       .appendTo(fieldContainer);
 
-    this.el_.autocompletewithbutton({
-      source: this.params_.items || [],
-      delay: 0,
-      minLength: 0,
-      selected: function(evt, val) {
-        me.setValue(val, true);
-      }
-    });
+    this.datalistEl_ = $('<datalist>')
+      .attr('id', datalistId)
+      .appendTo(fieldContainer);
+
+    this.params_.items = this.params_.items || [];
+    for (var i = 0; i < this.params_.items.length; i++) {
+      this.datalistEl_.append($('<option>').attr('value', this.params_.items[i]));
+    }
   },
 
   getValue: function() {
@@ -194,11 +197,7 @@ studio.forms.ColorField = studio.forms.Field.extend({
     this.el_ = $('<div>')
       .addClass('form-color')
       .attr('id', this.getHtmlId())
-      .append($('<div>')
-        .addClass('form-color-preview')
-        .css('background-color', this.getValue().color)
-      )
-      .button({ label: null, icons: { secondary: 'ui-icon-carat-1-s' }})
+      .css('background-color', this.getValue().color)
       .appendTo(fieldContainer);
 
     this.el_.ColorPicker({
@@ -209,16 +208,14 @@ studio.forms.ColorField = studio.forms.Field.extend({
     });
 
     if (this.params_.alpha) {
-      this.alphaEl_ = $('<div>')
-        .addClass('form-color-alpha')
-        .slider({
-          min: 0,
-          max: 100,
-          range: 'min',
-          value: this.getValue().alpha,
-    			slide: function(evt, ui) {
-    				me.setValue({ alpha: ui.value }, true);
-    			}
+      this.alphaEl_ = $('<input>')
+        .attr('type', 'range')
+        .attr('min', 0)
+        .attr('max', 100)
+        .val(this.getValue().alpha)
+        .addClass('form-range')
+        .change(function() {
+    			me.setValue({ alpha: Number(me.alphaEl_.val()) }, true);
         })
         .appendTo(fieldContainer);
     }
@@ -250,12 +247,11 @@ studio.forms.ColorField = studio.forms.Field.extend({
     }
 
     var computedValue = this.getValue();
-    $('.form-color-preview', this.el_)
-        .css('background-color', computedValue.color);
+    this.el_.css('background-color', computedValue.color);
     if (!pauseUi) {
       $(this.el_).ColorPickerSetColor(computedValue.color);
       if (this.alphaEl_) {
-        $(this.alphaEl_).slider('value', computedValue.alpha);
+        this.alphaEl_.val(computedValue.alpha);
       }
     }
     this.form_.notifyChanged_(this);
@@ -287,7 +283,7 @@ studio.forms.EnumField = studio.forms.Field.extend({
     if (this.params_.buttons) {
       this.el_ = $('<div>')
         .attr('id', this.getHtmlId())
-        .addClass('.form-field-buttonset')
+        .addClass('form-field-buttonset')
         .appendTo(fieldContainer);
       for (var i = 0; i < this.params_.options.length; i++) {
         var option = this.params_.options[i];
@@ -308,7 +304,7 @@ studio.forms.EnumField = studio.forms.Field.extend({
           .appendTo(this.el_);
       }
       this.setValueInternal_(this.getValue());
-      this.el_.buttonset();
+
     } else {
       this.el_ = $('<select>')
         .attr('id', this.getHtmlId())
@@ -356,7 +352,6 @@ studio.forms.EnumField = studio.forms.Field.extend({
         $('input', this.el_).each(function(i, el) {
           $(el).attr('checked', $(el).val() == val);
         });
-        $(this.el_).buttonset('refresh');
       } else {
         this.el_.val(val);
       }
@@ -406,18 +401,16 @@ studio.forms.RangeField = studio.forms.Field.extend({
     var fieldContainer = $('.form-field-container', this.base(container));
     var me = this;
 
-    this.el_ = $('<div>')
+    this.el_ = $('<input>')
+      .attr('type', 'range')
+      .attr('min', this.params_.min || 0)
+      .attr('max', this.params_.max || 100)
+      .attr('step', this.params_.step || 1)
       .addClass('form-range')
-      .slider({
-        min: this.params_.min || 0,
-        max: this.params_.max || 100,
-        step: this.params_.step || 1,
-        range: 'min',
-        value: this.getValue(),
-  			slide: function(evt, ui) {
-  				me.setValue(ui.value, true);
-  			}
+      .change(function() {
+        me.setValue(Number(me.el_.val()) || 0, true);
       })
+      .val(this.getValue())
       .appendTo(fieldContainer);
 
     if (this.params_.textFn || this.params_.showText) {
@@ -442,7 +435,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
   setValue: function(val, pauseUi) {
     this.value_ = val;
     if (!pauseUi) {
-      $(this.el_).slider('value', val);
+      this.el_.val(val);
     }
 		if (this.textEl_) {
 		  this.textEl_.text(this.params_.textFn(val));
@@ -451,7 +444,7 @@ studio.forms.RangeField = studio.forms.Field.extend({
   },
 
   serializeValue: function() {
-    return this.getValue().toString();
+    return this.getValue();
   },
 
   deserializeValue: function(s) {
