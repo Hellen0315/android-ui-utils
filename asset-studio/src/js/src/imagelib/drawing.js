@@ -84,7 +84,7 @@ imagelib.drawing.drawImageScaled = function(dstCtx, src, sx, sy, sw, sh, dx, dy,
     // scaling down, use an averaging algorithm since canvas.drawImage doesn't do a good
     // job in all browsers.
     var tmpCtx = imagelib.drawing.context({ w: sw, h: sh });
-    tmpCtx.drawImage(src.canvas || src, 0, 0);
+    tmpCtx.drawImage(src.canvas || src, -sx, -sy);
     var srcData = tmpCtx.getImageData(0, 0, sw, sh);
 
     var outCtx = imagelib.drawing.context({ w: dw, h: dh });

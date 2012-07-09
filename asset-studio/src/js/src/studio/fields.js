@@ -1,5 +1,5 @@
 /*
-Copyright 2010 Google Inc.
+Copyright 2012 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -194,16 +194,30 @@ studio.forms.ColorField = studio.forms.Field.extend({
   createUI: function(container) {
     var fieldContainer = $('.form-field-container', this.base(container));
     var me = this;
-    this.el_ = $('<div>')
+    this.el_ = $('<input>')
       .addClass('form-color')
+      .attr('type', 'text')
       .attr('id', this.getHtmlId())
       .css('background-color', this.getValue().color)
       .appendTo(fieldContainer);
 
-    this.el_.ColorPicker({
+    this.el_.spectrum({
       color: this.getValue().color,
-      onChange: function(hsb, hex, rgb) {
-        me.setValue({ color:'#' + hex }, true);
+      showInput: true,
+      showPalette: true,
+      palette: [
+        ['#fff', '#000'],
+        ['#33b5e5', '#09c'],
+        ['#a6c', '#93c'],
+        ['#9c0', '#690'],
+        ['#fb3', '#f80'],
+        ['#f44', '#c00']
+      ],
+      localStorageKey: 'recentcolors',
+      showInitial: true,
+      showButtons: false,
+      change: function(color) {
+        me.setValue({ color: color.toHexString() }, true);
       }
     });
 
@@ -249,7 +263,7 @@ studio.forms.ColorField = studio.forms.Field.extend({
     var computedValue = this.getValue();
     this.el_.css('background-color', computedValue.color);
     if (!pauseUi) {
-      $(this.el_).ColorPickerSetColor(computedValue.color);
+      $(this.el_).spectrum('set', computedValue.color);
       if (this.alphaEl_) {
         this.alphaEl_.val(computedValue.alpha);
       }

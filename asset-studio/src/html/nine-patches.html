@@ -22,15 +22,11 @@
 
     <link rel="stylesheet" href="lib/cssreset-3.4.1.min.css">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:regular,medium,thin,italic,mediumitalic,bold" title="roboto">
-    <link rel="stylesheet" href="lib/jquery-ui/css/android/jquery-ui-1.8.16.custom.css">
     <link rel="stylesheet" href="css/studio.css">
 
-    <script src="lib/jquery-ui/js/jquery-1.6.2.min.js"></script>
-    <script src="lib/jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script src="lib/jquery.min.js"></script>
 
-    <!-- for .ZIP downloads -->
-    <script src="lib/swfobject-2.2.js"></script>
-    <script src="lib/downloadify/js/downloadify.min.js"></script>
+    <!-- prereq. for asset studio lib -->
     <script src="lib/jszip/jszip.js"></script>
 
     <script src="js/asset-studio.pack.js"></script>
@@ -66,9 +62,8 @@
 
       #stage {
         padding: 24px;
-        border-left: 2px solid #ccc;
+        border-left: 4px solid #eee;
         width: 500px;
-        background-color: #eee;
       }
 
       #stage-which,
@@ -114,21 +109,21 @@
           <div id="inputs-form"></div>
         </div>
         <div id="stage">
-          <strong>Edit Mode &nbsp;</strong>
-          <div id="stage-which">
-            <input id="stage-stretch" name="stage-which" type="radio" value="stretch" checked><label for="stage-stretch">Stretch Regions</label>
-            <input id="stage-padding" name="stage-which" type="radio" value="padding"><label for="stage-padding">Content Padding</label>
+          Edit Mode &nbsp;
+          <div id="stage-which" class="form-field-buttonset">
+            <input id="stage-stretch" name="stage-which" type="radio" value="stretch" checked><label for="stage-stretch">Stretch Regions</label><!--
+            --><input id="stage-padding" name="stage-which" type="radio" value="padding"><label for="stage-padding">Content Padding</label>
           </div>
           <div id="stage-canvas-container">
-            <div class="ui-state-highlight" style="margin: 24px 0; padding: 12px">
+            <div style="margin: 24px 0; color: #888">
               Select a <strong>Source Graphic</strong> to the left to get started. You can also drag
               a source image in from your desktop into the Source Graphic box.
             </div>
           </div>
-          <strong>Grid Color &nbsp;</strong>
-          <div id="stage-grid-color">
-            <input id="grid-light" name="stage-grid-color" type="radio" value="light" checked><label for="grid-light">Light</label>
-            <input id="grid-dark" name="stage-grid-color" type="radio" value="dark"><label for="grid-dark">Dark</label>
+          Grid Color &nbsp;
+          <div id="stage-grid-color" class="form-field-buttonset">
+            <input id="grid-light" name="stage-grid-color" type="radio" value="light" checked><label for="grid-light">Light</label><!--
+            --><input id="grid-dark" name="stage-grid-color" type="radio" value="dark"><label for="grid-dark">Dark</label>
           </div>
 
           <div id="stage-examples-container">
@@ -137,7 +132,7 @@
         </div>
       </div>
       <div id="outputs">
-        <h3>Output images <div id="zip-button-stub"></div></h3>
+        <h3><div id="zip-button-stub"></div></h3>
       </div>
       <div id="footer">
         <p>See the source at the <a href="http://code.google.com/p/android-ui-utils">android-ui-utils</a> Google Code project.</p>
@@ -170,14 +165,13 @@
     };
 
     // Stage code
-    $('#stage-which').buttonset();
     $('#stage-which input').change(function() {
       stage.editMode = $(this).val();
       redrawStage();
     });
-    $('#stage-grid-color').buttonset();
     $('#stage-grid-color input').change(function() {
       stage.gridColor = $(this).val();
+      $('.out-image-group').toggleClass('dark half', stage.gridColor == 'dark');
       redrawStage();
     });
     function resetStage(srcCtx) {
@@ -389,13 +383,12 @@
       zipper.clear();
       zipper.setZipFilename(resourceName + '.9.zip');
 
-      for (var densityStr in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+      for (var densityStr in {'xhdpi':1, 'hdpi':1, 'mdpi':1}) {
         var density;
         switch (densityStr) {
           case 'xhdpi': density = 320; break;
           case  'hdpi': density = 240; break;
           case  'mdpi': density = 160; break;
-          case  'ldpi': density = 120; break;
         }
 
         // scale source graphic
@@ -470,7 +463,6 @@
           title: 'Source density',
           buttons: true,
           options: [
-            { id: '120', title:  'ldpi<br><small>(120)</small>' },
             { id: '160', title:  'mdpi<br><small>(160)</small>' },
             { id: '240', title:  'hdpi<br><small>(240)</small>' },
             { id: '320', title: 'xhdpi<br><small>(320)</small>' }

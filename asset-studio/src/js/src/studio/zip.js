@@ -1,5 +1,5 @@
 /*
-Copyright 2010 Google Inc.
+Copyright 2012 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -131,12 +131,6 @@ studio.zip = {};
     return zipperHandle;
   };
 
-  $(document).ready(function() {
-    document.body.addEventListener('dragstart', function(e) {
-      var a = e.target;
-      if (a.classList.contains('dragout')) {
-        e.dataTransfer.setData('DownloadURL', a.dataset.downloadurl);
-      }
-    }, false);
-  });
+  // Requires the body listener to be set up
+  studio.ui.setupDragout();
 })();

@@ -1,5 +1,5 @@
 /*
-Copyright 2010 Google Inc.
+Copyright 2012 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -167,7 +167,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
       typeEls.clipart.click(function(evt) {
         me.setValueType_('clipart');
-        me.spaceFormTrimField_.setValue(false);
+        if (studio.AUTO_TRIM) {
+          me.spaceFormTrimField_.setValue(false);
+        }
         me.renderValueAndNotifyChanged_();
       });
 
@@ -205,7 +207,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
       typeEls.text.click(function(evt) {
         me.setValueType_('text');
-        me.spaceFormTrimField_.setValue(true);
+        if (studio.AUTO_TRIM) {
+          me.spaceFormTrimField_.setValue(true);
+        }
         me.renderValueAndNotifyChanged_();
       });
     }
@@ -257,7 +261,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
   tryLoadWebFont_: function(force) {
     var desiredFont = this.textForm_.getValues()['font'];
-    if (this.loadedWebFont_ == desiredFont) {
+    if (this.loadedWebFont_ == desiredFont || !desiredFont) {
       return;
     }
 

@@ -347,7 +347,7 @@ imagelib.drawing.drawImageScaled = function(dstCtx, src, sx, sy, sw, sh, dx, dy,
     // scaling down, use an averaging algorithm since canvas.drawImage doesn't do a good
     // job in all browsers.
     var tmpCtx = imagelib.drawing.context({ w: sw, h: sh });
-    tmpCtx.drawImage(src.canvas || src, 0, 0);
+    tmpCtx.drawImage(src.canvas || src, -sx, -sy);
     var srcData = tmpCtx.getImageData(0, 0, sw, sh);
 
     var outCtx = imagelib.drawing.context({ w: dw, h: dh });
@@ -918,148 +918,7 @@ studio.checkBrowser = function() {
   }
 };
 
-// From sample code at http://jqueryui.com/demos/autocomplete/#combobox
-
-(function( $ ) {
-  $.widget( "ui.combobox", {
-    _create: function() {
-      var self = this,
-        select = this.element.hide(),
-        selected = select.children( ":selected" ),
-        value = selected.val() ? selected.text() : "";
-      var input = $( "<input>" )
-        .insertAfter( select )
-        .val( value )
-        .autocomplete({
-          delay: 0,
-          minLength: 0,
-          source: function( request, response ) {
-            var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
-            response( select.children( "option" ).map(function() {
-              var text = $( this ).text();
-              if ( this.value && ( !request.term || matcher.test(text) ) )
-                return {
-                  label: text.replace(
-                    new RegExp(
-                      "(?![^&;]+;)(?!<[^<>]*)(" +
-                      $.ui.autocomplete.escapeRegex(request.term) +
-                      ")(?![^<>]*>)(?![^&;]+;)", "gi"
-                    ), "<strong>$1</strong>" ),
-                  value: text,
-                  option: this
-                };
-            }) );
-          },
-          select: function( event, ui ) {
-            ui.item.option.selected = true;
-            self._trigger( "selected", event, {
-              item: ui.item.option
-            });
-          },
-          change: function( event, ui ) {
-            if ( !ui.item ) {
-              var matcher = new RegExp( "^" + $.ui.autocomplete.escapeRegex( $(this).val() ) + "$", "i" ),
-                valid = false;
-              select.children( "option" ).each(function() {
-                if ( this.value.match( matcher ) ) {
-                  this.selected = valid = true;
-                  return false;
-                }
-              });
-              if ( !valid ) {
-                // remove invalid value, as it didn't match anything
-                $( this ).val( "" );
-                select.val( "" );
-                return false;
-              }
-            }
-          }
-        })
-        .addClass( "ui-widget ui-widget-content ui-corner-left" );
-
-      input.data( "autocomplete" )._renderItem = function( ul, item ) {
-        return $( "<li></li>" )
-          .data( "item.autocomplete", item )
-          .append( "<a>" + item.label + "</a>" )
-          .appendTo( ul );
-      };
-
-      $( "<button>&nbsp;</button>" )
-        .attr( "tabIndex", -1 )
-        .attr( "title", "Show All Items" )
-        .insertAfter( input )
-        .button({
-          icons: {
-            primary: "ui-icon-triangle-1-s"
-          },
-          text: false
-        })
-        .removeClass( "ui-corner-all" )
-        .addClass( "ui-corner-right ui-button-icon" )
-        .click(function() {
-          // close if already visible
-          if ( input.autocomplete( "widget" ).is( ":visible" ) ) {
-            input.autocomplete( "close" );
-            return;
-          }
-
-          // pass empty string as value to search for, displaying all results
-          input.autocomplete( "search", "" );
-          input.focus();
-        });
-    }
-  });
-})( jQuery );// Based on sample code at http://jqueryui.com/demos/autocomplete/#combobox
-
-(function( $ ) {
-  $.widget( "ui.autocompletewithbutton", {
-    _create: function() {
-      var self = this,
-        input = this.element,
-        value = input.text();
-
-      input
-        .autocomplete($.extend(this.options, {
-          select: function( event, ui ) {
-            self._trigger( "selected", event, ui.item.value);
-          }
-        }))
-        .addClass( "form-text ui-widget ui-widget-content ui-corner-left " +
-                   "ui-autocomplete-input" );
-
-      input.data( "autocomplete" )._renderItem = function( ul, item ) {
-        return $( "<li></li>" )
-          .data( "item.autocomplete", item )
-          .append( "<a>" + item.label + "</a>" )
-          .appendTo( ul );
-      };
-
-      $( "<button>&nbsp;</button>" )
-        .attr( "tabIndex", -1 )
-        .attr( "title", "Show All Items" )
-        .insertAfter( input )
-        .button({
-          icons: {
-            primary: "ui-icon-triangle-1-s"
-          },
-          text: false
-        })
-        .removeClass( "ui-corner-all" )
-        .addClass( "ui-corner-right ui-button-icon" )
-        .click(function() {
-          // close if already visible
-          if ( input.autocomplete( "widget" ).is( ":visible" ) ) {
-            input.autocomplete( "close" );
-            return;
-          }
-
-          // pass empty string as value to search for, displaying all results
-          input.autocomplete( "search", "" );
-          input.focus();
-        });
-    }
-  });
-})( jQuery );
+// format: #INSERTFILE "../../lib/thefile.js"
 
 studio.forms = {};
 
@@ -1339,16 +1198,30 @@ studio.forms.ColorField = studio.forms.Field.extend({
   createUI: function(container) {
     var fieldContainer = $('.form-field-container', this.base(container));
     var me = this;
-    this.el_ = $('<div>')
+    this.el_ = $('<input>')
       .addClass('form-color')
+      .attr('type', 'text')
       .attr('id', this.getHtmlId())
       .css('background-color', this.getValue().color)
       .appendTo(fieldContainer);
 
-    this.el_.ColorPicker({
+    this.el_.spectrum({
       color: this.getValue().color,
-      onChange: function(hsb, hex, rgb) {
-        me.setValue({ color:'#' + hex }, true);
+      showInput: true,
+      showPalette: true,
+      palette: [
+        ['#fff', '#000'],
+        ['#33b5e5', '#09c'],
+        ['#a6c', '#93c'],
+        ['#9c0', '#690'],
+        ['#fb3', '#f80'],
+        ['#f44', '#c00']
+      ],
+      localStorageKey: 'recentcolors',
+      showInitial: true,
+      showButtons: false,
+      change: function(color) {
+        me.setValue({ color: color.toHexString() }, true);
       }
     });
 
@@ -1394,7 +1267,7 @@ studio.forms.ColorField = studio.forms.Field.extend({
     var computedValue = this.getValue();
     this.el_.css('background-color', computedValue.color);
     if (!pauseUi) {
-      $(this.el_).ColorPickerSetColor(computedValue.color);
+      $(this.el_).spectrum('set', computedValue.color);
       if (this.alphaEl_) {
         this.alphaEl_.val(computedValue.alpha);
       }
@@ -1889,7 +1762,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
       typeEls.clipart.click(function(evt) {
         me.setValueType_('clipart');
-        me.spaceFormTrimField_.setValue(false);
+        if (studio.AUTO_TRIM) {
+          me.spaceFormTrimField_.setValue(false);
+        }
         me.renderValueAndNotifyChanged_();
       });
 
@@ -1927,7 +1802,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
       typeEls.text.click(function(evt) {
         me.setValueType_('text');
-        me.spaceFormTrimField_.setValue(true);
+        if (studio.AUTO_TRIM) {
+          me.spaceFormTrimField_.setValue(true);
+        }
         me.renderValueAndNotifyChanged_();
       });
     }
@@ -1979,7 +1856,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
 
   tryLoadWebFont_: function(force) {
     var desiredFont = this.textForm_.getValues()['font'];
-    if (this.loadedWebFont_ == desiredFont) {
+    if (this.loadedWebFont_ == desiredFont || !desiredFont) {
       return;
     }
 
@@ -2499,6 +2376,7 @@ studio.ui = {};
 studio.ui.createImageOutputGroup = function(params) {
   return $('<div>')
     .addClass('out-image-group')
+    .addClass(params.dark ? 'dark' : 'light')
     .append($('<div>')
       .addClass('label')
       .text(params.label))
@@ -2540,6 +2418,22 @@ studio.ui.drawImageGuideRects = function(ctx, size, guides) {
 studio.ui.drawImageGuideRects.guideColors_ = [
   '#f00'
 ];
+
+studio.ui.setupDragout = function() {
+  if (studio.ui.setupDragout.completed_) {
+    return;
+  }
+  studio.ui.setupDragout.completed_ = true;
+
+  $(document).ready(function() {
+    document.body.addEventListener('dragstart', function(e) {
+      var a = e.target;
+      if (a.classList.contains('dragout')) {
+        e.dataTransfer.setData('DownloadURL', a.dataset.downloadurl);
+      }
+    }, false);
+  });
+};
 
 studio.util = {};
 
@@ -2686,14 +2580,8 @@ studio.zip = {};
     return zipperHandle;
   };
 
-  $(document).ready(function() {
-    document.body.addEventListener('dragstart', function(e) {
-      var a = e.target;
-      if (a.classList.contains('dragout')) {
-        e.dataTransfer.setData('DownloadURL', a.dataset.downloadurl);
-      }
-    }, false);
-  });
+  // Requires the body listener to be set up
+  studio.ui.setupDragout();
 })();
 
 window.studio = studio;

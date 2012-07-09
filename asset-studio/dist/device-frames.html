@@ -22,15 +22,17 @@
 
     <link rel="stylesheet" href="lib/cssreset-3.4.1.min.css">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:regular,medium,thin,italic,mediumitalic,bold" title="roboto">
-    <link rel="stylesheet" href="lib/jquery-ui/css/android/jquery-ui-1.8.16.custom.css">
     <link rel="stylesheet" href="css/studio.css">
 
-    <script src="lib/jquery-ui/js/jquery-1.6.2.min.js"></script>
-    <script src="lib/jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script src="lib/jquery.min.js"></script>
 
     <script src="js/asset-studio.pack.js"></script>
 
     <style>
+      #outputs {
+        border-top: 0;
+      }
+
       #main-container {
         width: 1000px;
       }
@@ -67,7 +69,6 @@
       #device-list li {
         display: inline-block;
         vertical-align: bottom;
-        background: #eee;
         padding: 8px;
         margin: 0 16px 16px 0;
         text-align: center;
@@ -98,7 +99,7 @@
 
       #device-list li.drag-hover {
         background: #fff;
-        box-shadow: 0 0 40px #a4c639;
+        box-shadow: 0 0 40px #33b5e5;
       }
 
       #device-list li.drag-hover .thumb-container {
@@ -142,23 +143,23 @@
       </div>
       <div id="inout-container">
         <div id="inputs">
-          <h3>1. Choose a device:  <span style="font-weight:normal">(Drag a screenshot from your desktop onto a device.)</span></h3>
-          <p></p>
+          <h2>Step 1. <span>Drag a screenshot from your desktop onto a device</span></h2>
           <ul id="device-list"></ul>
-          <p><strong>Attention, Device Manufacturers! </strong> To get your device(s) listed here,
-            please <a href="http://code.google.com/p/android-ui-utils/issues/entry?template=Feature%20request">
-            file a feature request</a>, and include hi-res, transparent or on-white photos of your device.</p>
         </div>
         <div id="outputs">
-          <h3>2. Save your output <span style="font-weight:normal">(Drag out to your desktop to save.)</span></h3>
-          <input type="checkbox" id="output-shadow" checked="checked">
+          <h2>Step 2. <span>Drag or click to download</span></h2>
+          <input type="checkbox" id="output-shadow" checked="checked" class="form-field-checkbutton">
           <label for="output-shadow">With Shadow</label>
-          <input type="checkbox" id="output-glare" checked="checked">
-          <label for="output-glare">With Glare</label>
+          <input type="checkbox" id="output-glare" checked="checked" class="form-field-checkbutton">
+          <label for="output-glare">With Screen Glare</label>
+          <button id="rotate-button" disabled="disabled">Rotate</button>
           <div id="output">No input image.</div>
         </div>
       </div>
       <div id="footer">
+        <p><strong>Device Manufacturers: </strong> To get a device listed here,
+            <a href="http://code.google.com/p/android-ui-utils/issues/entry?template=Feature%20request">
+            file a feature request</a>.</p>
         <p>See the source at the <a href="http://code.google.com/p/android-ui-utils">android-ui-utils</a> Google Code project.</p>
         <p>All generated art is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>. <a href="attribution.html">Attribution info</a></p>
       </div>
@@ -166,7 +167,9 @@
 
     <script>
       $(studio.checkBrowser);
-      $('#output-shadow, #output-glare').button().click(function() {
+      $(studio.ui.setupDragout);
+
+      $('#output-shadow, #output-glare').click(function() {
         createFrame(g_currentDevice, g_currentImage);
       });
       $.event.props.push("dataTransfer");
@@ -378,11 +381,43 @@
             ctx.drawImage(resourceImages['fore'], 0, 0);
           }
 
-          $('<img>')
-              .attr('src', canvas.toDataURL())
+          var dataUrl = canvas.toDataURL();
+          var filename = 'framed_screenshot.png';
+
+          var $link = $('<a>')
+              .attr('download', filename)
+              .attr('href', dataUrl)
+              .attr('draggable', true)
+              .attr('data-downloadurl', ['image/png', filename, dataUrl].join(':'))
+              .append($('<img>').attr('src', dataUrl))
               .appendTo($('#output').empty());
+
+          $('#rotate-button').removeAttr('disabled');
         }
       }
+
+      $('#rotate-button').click(function() {
+        if (!g_currentImage) {
+          return;
+        }
+
+        var w = g_currentImage.naturalHeight;
+        var h = g_currentImage.naturalWidth;
+        var canvas = $('<canvas>')
+            .attr('width', w)
+            .attr('height', h)
+            .get(0);
+
+        var ctx = canvas.getContext('2d');
+        ctx.rotate(-Math.PI / 2);
+        ctx.translate(-h, 0);
+        ctx.drawImage(g_currentImage, 0, 0);
+
+        imagelib.loadFromUri(canvas.toDataURL(), function(img) {
+          g_currentImage = img;
+          createFrame(g_currentDevice, g_currentImage);
+        });
+      });
     </script>
   </body>
 </html>

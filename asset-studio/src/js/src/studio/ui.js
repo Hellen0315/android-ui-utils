@@ -1,5 +1,5 @@
 /*
-Copyright 2010 Google Inc.
+Copyright 2012 Google Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ studio.ui = {};
 studio.ui.createImageOutputGroup = function(params) {
   return $('<div>')
     .addClass('out-image-group')
+    .addClass(params.dark ? 'dark' : 'light')
     .append($('<div>')
       .addClass('label')
       .text(params.label))
@@ -60,3 +61,19 @@ studio.ui.drawImageGuideRects = function(ctx, size, guides) {
 studio.ui.drawImageGuideRects.guideColors_ = [
   '#f00'
 ];
+
+studio.ui.setupDragout = function() {
+  if (studio.ui.setupDragout.completed_) {
+    return;
+  }
+  studio.ui.setupDragout.completed_ = true;
+
+  $(document).ready(function() {
+    document.body.addEventListener('dragstart', function(e) {
+      var a = e.target;
+      if (a.classList.contains('dragout')) {
+        e.dataTransfer.setData('DownloadURL', a.dataset.downloadurl);
+      }
+    }, false);
+  });
+};

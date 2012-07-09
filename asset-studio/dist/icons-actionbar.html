@@ -18,28 +18,22 @@
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Android Asset Studio - Icon Generator - Action bar and tab icons (Android 3.0+)</title>
+    <title>Android Asset Studio - Icon Generator - Action bar and tab icons</title>
 
     <link rel="stylesheet" href="lib/cssreset-3.4.1.min.css">
     <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Roboto:regular,medium,thin,italic,mediumitalic,bold" title="roboto">
-    <link rel="stylesheet" href="lib/jquery-ui/css/android/jquery-ui-1.8.16.custom.css">
     <link rel="stylesheet" href="css/studio.css">
 
-    <script src="lib/jquery-ui/js/jquery-1.6.2.min.js"></script>
-    <script src="lib/jquery-ui/js/jquery-ui-1.8.16.custom.min.js"></script>
+    <script src="lib/jquery.min.js"></script>
 
-    <!-- canvg used to overcome <img src=SVG> toDataURL security issues -->
+    <!-- canvg used to work around <img src=SVG> toDataURL security issues -->
     <!-- see code.google.com/p/chromium/issues/detail?id=54204 -->
     <script src="lib/canvg/rgbcolor.js"></script> 
     <script src="lib/canvg/canvg.js"></script>
 
     <!-- prereq. for asset studio lib -->
-    <link rel="stylesheet" href="lib/colorpicker/css/colorpicker.css">
-    <script src="lib/colorpicker/js/colorpicker.js"></script>
-
-    <!-- for .ZIP downloads -->
-    <script src="lib/swfobject-2.2.js"></script>
-    <script src="lib/downloadify/js/downloadify.min.js"></script>
+    <link rel="stylesheet" href="lib/spectrum/spectrum-assetstudio.css">
+    <script src="lib/spectrum/spectrum.js"></script>
     <script src="lib/jszip/jszip.js"></script>
 
     <script src="js/asset-studio.pack.js"></script>
@@ -78,6 +72,7 @@
 
     <script>
       $(studio.checkBrowser);
+      studio.AUTO_TRIM = true;
       imagelib.ALLOW_MANUAL_RESCALE = true;
 
       var zipper = studio.zip.createDownloadifyZipButton($('#zip-button-stub'));
@@ -105,6 +100,9 @@
       function regenerate() {
         var values = form.getValues();
         var sourceName = values['source'].name;
+
+        // TODO: poor abstraction here
+        $('.out-image-group').toggleClass('dark', values['theme'] == 'dark');
 
         var iconName = 'ic_action_' + values['name'];
         zipper.clear();
@@ -170,7 +168,7 @@
         fields: [
           new studio.forms.ImageField('source', {
             title: 'Source',
-            helpText: 'Must be alpha-transparent',
+            helpText: 'Must be transparent',
             defaultValueTrim: 1
           }),
           new studio.forms.TextField('name', {
