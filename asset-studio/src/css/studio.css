@@ -27,14 +27,15 @@
 html, body {
   font-family: roboto, sans-serif;
   font-size: 16px;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 20px;
   background-color: #f0f0f0;
   color: #333;
+  -webkit-font-smoothing: antialiased;
 }
 
 strong {
-  font-weight: 500;
+  font-weight: 600;
 }
 
 a {
@@ -60,7 +61,7 @@ a {
 
   #page-header a[href="index.html"] {
     text-transform: uppercase;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 13px;
     line-height: 13px;
     color: #fff;
@@ -113,7 +114,7 @@ a {
 
   h2 {
     color: #000;
-    font-weight: 500;
+    font-weight: 600;
     font-size: 16px;
     line-height: 24px;
     margin-bottom: 8px;
@@ -122,12 +123,12 @@ a {
 
     h2 span {
       color: #888;
-      font-weight: 300;
+      font-weight: 400;
     }
 
   #breadcrumb {
     color: #888;
-    font-weight: 300;
+    font-weight: 400;
     font-size: 16px;
     line-height: 20px;
     margin-bottom: 8px;
@@ -140,7 +141,7 @@ a {
 
     #breadcrumb em {
       color: #09c;
-      font-weight: 500;
+      font-weight: 600;
     }
 
   #page-links ul {
@@ -151,7 +152,7 @@ a {
     font-size: 16px;
     line-height: 24px;
     margin-bottom: 4px;
-    font-weight: 500;
+    font-weight: 600;
   }
 
 #outputs, #footer {
@@ -159,7 +160,7 @@ a {
 }
 
 #inputs h3, #outputs h3 {
-  font-weight: 500;
+  font-weight: 600;
   font-size: 16px;
   line-height: 24px;
   margin-bottom: 8px;
@@ -172,7 +173,7 @@ a {
 }
 
   .form-field-outer > label {
-    font-weight: 300;
+    font-weight: 400;
     display: inline-block;
     vertical-align: top;
     margin-top: 6px;
@@ -182,7 +183,7 @@ a {
   }
 
   .form-field-outer > label .form-field-help-text {
-    font-weight: 300;
+    font-weight: 400;
     font-size: 13px;
     line-height: 13px;
     color: #aaa;
@@ -213,7 +214,7 @@ a {
 }
 
 .form-image-clipart-attribution {
-  font-weight: 300;
+  font-weight: 400;
   font-size: 13px;
   line-height: 13px;
   color: #888;
@@ -317,7 +318,7 @@ button {
   font-family: Roboto;
   font-size: 13px;
   line-height: 13px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 8px 16px;
   background-color: #33b5e5;
   border: 1px solid #33b5e5;
@@ -351,7 +352,7 @@ button:not([disabled]):active {
   text-transform: uppercase;
   font-size: 13px;
   line-height: 13px;
-  font-weight: 500;
+  font-weight: 600;
   padding: 8px 16px;
   border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
@@ -392,7 +393,7 @@ button:not([disabled]):active {
     display: inline-block;
     padding-right: 12px;
     width: auto;
-    font-weight: 300;
+    font-weight: 400;
     font-size: 13px;
     color: #888;
     text-transform: uppercase;
@@ -410,7 +411,7 @@ button:not([disabled]):active {
 }
 
 .out-image-group > .label {
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 6px;
 }
 

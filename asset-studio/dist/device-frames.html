@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <!--
-    Copyright 2011 Google Inc.
+    Copyright 2012 Google Inc.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -315,25 +315,26 @@
                 return;
               }
               imagelib.loadFromUri(data.uri, function(img) {
+                g_currentFilename = data.name;
                 g_currentImage = img;
-                createFrame(g_currentDevice, g_currentImage);
+                createFrame();
               });
             });
           });
 
-      function createFrame(device, screenshot) {
+      function createFrame() {
         var port;
-        if (screenshot.naturalWidth  == device.portSize[0] &&
-            screenshot.naturalHeight == device.portSize[1]) {
-          if (!device.portRes) {
+        if (g_currentImage.naturalWidth  == g_currentDevice.portSize[0] &&
+            g_currentImage.naturalHeight == g_currentDevice.portSize[1]) {
+          if (!g_currentDevice.portRes) {
             alert('We don\'t have a portrait frame for this device yet.');
             $('#output').text('No input image.');
             return;
           }
           port = true;
-        } else if (screenshot.naturalWidth  == device.portSize[1] &&
-                   screenshot.naturalHeight == device.portSize[0]) {
-          if (!device.landRes) {
+        } else if (g_currentImage.naturalWidth  == g_currentDevice.portSize[1] &&
+                   g_currentImage.naturalHeight == g_currentDevice.portSize[0]) {
+          if (!g_currentDevice.landRes) {
             alert('We don\'t have a landscape frame for this device yet.');
             $('#output').text('No input image.');
             return;
@@ -341,18 +342,18 @@
           port = false;
         } else {
           alert('The screenshot must be ' +
-              device.portSize[0] + 'x' + device.portSize[1] +
+              g_currentDevice.portSize[0] + 'x' + g_currentDevice.portSize[1] +
               ' or ' +
-              device.portSize[1] + 'x' + device.portSize[0]);
+              g_currentDevice.portSize[1] + 'x' + g_currentDevice.portSize[0]);
           $('#output').text('Invalid input image.');
           return;
         }
 
         // Load image resources
-        var res = port ? device.portRes : device.landRes;
+        var res = port ? g_currentDevice.portRes : g_currentDevice.landRes;
         var resList = {};
         for (var i = 0; i < res.length; i++) {
-          resList[res[i]] = 'res/device-frames/' + device.id + '/' +
+          resList[res[i]] = 'res/device-frames/' + g_currentDevice.id + '/' +
               (port ? 'port_' : 'land_') + res[i] + '.png'
         }
 
@@ -365,7 +366,7 @@
         function continuation_() {
           var width = resourceImages['back'].naturalWidth;
           var height = resourceImages['back'].naturalHeight;
-          var offset = port ? device.portOffset : device.landOffset;
+          var offset = port ? g_currentDevice.portOffset : g_currentDevice.landOffset;
 
           var canvas = document.createElement('canvas');
           canvas.width = width;
@@ -376,13 +377,15 @@
             ctx.drawImage(resourceImages['shadow'], 0, 0);
           }
           ctx.drawImage(resourceImages['back'], 0, 0);
-          ctx.drawImage(screenshot, offset[0], offset[1]);
+          ctx.drawImage(g_currentImage, offset[0], offset[1]);
           if (resourceImages['fore'] && $('#output-glare').is(':checked')) {
             ctx.drawImage(resourceImages['fore'], 0, 0);
           }
 
           var dataUrl = canvas.toDataURL();
-          var filename = 'framed_screenshot.png';
+          var filename = g_currentFilename
+              ? ('framed_' + g_currentFilename)
+              : 'framed_screenshot.png';
 
           var $link = $('<a>')
               .attr('download', filename)
@@ -415,7 +418,7 @@
 
         imagelib.loadFromUri(canvas.toDataURL(), function(img) {
           g_currentImage = img;
-          createFrame(g_currentDevice, g_currentImage);
+          createFrame();
         });
       });
     </script>
