@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Google Inc.
+ * Copyright 2012 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,11 +29,16 @@ import java.net.Socket;
 import javax.imageio.ImageIO;
 
 public class Proofer {
+    public static final String SOURCE_TYPE_FILE = "file";
+    public static final String SOURCE_TYPE_SCREEN = "screen";
+
     private boolean debug = Util.isDebug();
 
     private AdbRunner adbRunner;
     private ProoferClient client;
 
+    private String sourceType = SOURCE_TYPE_SCREEN;
+    private File file;
     private State state = State.Unknown;
     private ProoferCallbacks prooferCallbacks;
 
@@ -139,8 +144,25 @@ public class Proofer {
         return out.contains(Config.ANDROID_APP_PACKAGE_NAME);
     }
 
+    public void setSourceType(String sourceType) {
+        this.sourceType = sourceType;
+    }
+
+    public String getSourceType() {
+        return sourceType;
+    }
+
+    public File getFile() {
+        return file;
+    }
+
     public void setRequestedSourceRegion(Rectangle region) {
         client.setRequestedSourceRegion(region);
+    }
+
+    public void setImage(File file, BufferedImage image) {
+        this.file = file;
+        client.setImage(image);
     }
 
     private void updateState(State newState) {
@@ -173,6 +195,7 @@ public class Proofer {
 
     private class ProoferClient {
         private Rectangle requestedSourceRegion = new Rectangle(0, 0, 0, 0);
+        private BufferedImage forcedImage;
         private Robot robot;
         private Rectangle screenBounds;
         private Dimension currentDeviceSize = new Dimension();
@@ -199,6 +222,10 @@ public class Proofer {
 
         public void setRequestedSourceRegion(Rectangle region) {
             requestedSourceRegion = region;
+        }
+
+        public void setImage(BufferedImage image) {
+            this.forcedImage = image;
         }
 
         public void connectAndWaitForRequests() throws CannotConnectException {
@@ -245,9 +272,41 @@ public class Proofer {
                     updateState(State.ConnectedActive);
 
                     if (deviceSize.width > 1 && deviceSize.height > 1) {
-                        BufferedImage bi = capture();
+                        BufferedImage bi;
+                        if (SOURCE_TYPE_FILE.equals(sourceType)) {
+                            bi = forcedImage;
+                        } else {
+                            bi = capture();
+                        }
+
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        ImageIO.write(bi, "PNG", baos);
+
+                        if (bi != null) {
+                            if (bi.getWidth() != currentDeviceSize.width ||
+                                    bi.getHeight() != currentDeviceSize.height) {
+                                // Scale the bitmap
+                                BufferedImage resized = new BufferedImage(
+                                        currentDeviceSize.width,
+                                        currentDeviceSize.height,
+                                        bi.getType());
+                                Graphics2D g2d = resized.createGraphics();
+                                g2d.setRenderingHint(
+                                        RenderingHints.KEY_INTERPOLATION,
+                                        RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                                g2d.drawImage(
+                                        bi,
+                                        0, 0, currentDeviceSize.width, currentDeviceSize.height,
+                                        0, 0, bi.getWidth(), bi.getHeight(),
+                                        null);
+                                g2d.dispose();
+                                bi = resized;
+                            }
+
+                            ImageIO.write(bi, "PNG", baos);
+                        } else {
+                            baos.write(new byte[]{0});
+                        }
+
                         byte[] out = baos.toByteArray();
                         int len = out.length;
                         byte[] outlen = new byte[4];
@@ -301,23 +360,6 @@ public class Proofer {
 
             if (debug) {
                 System.out.println("Capture time: " + (after - before) + " msec");
-            }
-
-            if (!requestedSourceRegion.getSize().equals(currentDeviceSize)) {
-                // Scale the bitmap
-                BufferedImage resized = new BufferedImage(currentDeviceSize.width,
-                        currentDeviceSize.height, bi.getType());
-                Graphics2D g2d = resized.createGraphics();
-                g2d.setRenderingHint(
-                        RenderingHints.KEY_INTERPOLATION,
-                        RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                g2d.drawImage(
-                        bi,
-                        0, 0, currentDeviceSize.width, currentDeviceSize.height,
-                        0, 0, bi.getWidth(), bi.getHeight(),
-                        null);
-                g2d.dispose();
-                bi = resized;
             }
 
             return bi;

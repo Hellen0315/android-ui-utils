@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Google Inc.
+ * Copyright 2012 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,41 +18,45 @@ package com.google.android.desktop.proofer;
 
 import com.google.android.desktop.proofer.os.OSBinder;
 
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.Rectangle;
+import java.awt.*;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetAdapter;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
+import javax.imageio.ImageIO;
+import javax.swing.*;
 
 public class ControllerForm
         implements WindowListener, OSBinder.Callbacks, Proofer.ProoferCallbacks,
         RegionSelector.RegionChangeCallback {
-    private JFrame frame;
+    private boolean debug = Util.isDebug();
 
+    private JFrame frame;
     private JPanel contentPanel;
     private JButton reinstallButton;
     private JLabel statusLabel;
-    private JButton regionButton;
+    private JButton sourceButton;
+    private JRadioButton localFileSourceButton;
+    private JRadioButton screenCaptureSourceButton;
 
     private RegionSelector regionSelector;
     private Proofer proofer;
@@ -65,8 +69,8 @@ public class ControllerForm
 
     public static void main(String[] args) {
         // OSX only
-        //System.setProperty("com.apple.mrj.application.apple.menu.about.name",
-        //        "Android Design Preview");
+//        System.setProperty("com.apple.mrj.application.apple.menu.about.name",
+//                "Android Design Preview");
         new ControllerForm();
     }
 
@@ -76,10 +80,6 @@ public class ControllerForm
         try {
             proofer.setupPortForwarding();
         } catch (ProoferException e) {
-//            JOptionPane.showMessageDialog(frame,
-//                    e.getMessage(),
-//                    "Android Design Preview",
-//                    JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
         }
 
@@ -99,7 +99,7 @@ public class ControllerForm
         frame.setTitle("Android Design Preview");
         frame.setIconImages(Arrays.asList(Util.getAppIconMipmap()));
         frame.setAlwaysOnTop(true);
-        frame.setMinimumSize(new Dimension(250, 150));
+        frame.setMinimumSize(new Dimension(250, 200));
 
         frame.setLocationByPlatform(true);
         tryLoadFrameConfig();
@@ -132,14 +132,109 @@ public class ControllerForm
 
         regionSelector = new RegionSelector(this);
 
-        regionButton.addActionListener(new ActionListener() {
+        ActionListener sourceTypeChangeListener = new ActionListener() {
+            @Override
             public void actionPerformed(ActionEvent actionEvent) {
-                regionSelector.showWindow(!regionSelector.isVisible());
+                switchSourceType(actionEvent.getActionCommand());
+            }
+        };
+
+        localFileSourceButton.setActionCommand(Proofer.SOURCE_TYPE_FILE);
+        localFileSourceButton.addActionListener(sourceTypeChangeListener);
+        screenCaptureSourceButton.setActionCommand(Proofer.SOURCE_TYPE_SCREEN);
+        screenCaptureSourceButton.addActionListener(sourceTypeChangeListener);
+
+        sourceButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent actionEvent) {
+                if (Proofer.SOURCE_TYPE_FILE.equals(proofer.getSourceType())) {
+                    // use the native file dialog on the mac
+                    FileDialog dialog = new FileDialog(frame,
+                            "Select Mockup File", FileDialog.LOAD);
+                    dialog.setFilenameFilter(new FilenameFilter() {
+                        @Override
+                        public boolean accept(File file, String s) {
+                            s = s.toLowerCase();
+                            return s.endsWith(".png")
+                                    || s.endsWith(".jpg")
+                                    || s.endsWith(".gif")
+                                    || s.endsWith(".jpeg");
+                        }
+                    });
+                    dialog.setAlwaysOnTop(true);
+                    dialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+                    dialog.setVisible(true);
+                    loadFile(new File(dialog.getDirectory(), dialog.getFile()));
+
+                } else {
+                    regionSelector.showWindow(!regionSelector.isVisible());
+                }
             }
         });
+
+        new DropTarget(frame, fileDropListener);
     }
 
-    void trySaveFrameConfig() {
+    private DropTargetListener fileDropListener = new DropTargetAdapter() {
+        @Override
+        public void drop(DropTargetDropEvent event) {
+            // http://blog.christoffer.me/2011/01/drag-and-dropping-files-to-java-desktop.html
+            event.acceptDrop(DnDConstants.ACTION_COPY | DnDConstants.ACTION_LINK);
+            Transferable transferable = event.getTransferable();
+            DataFlavor[] flavors = transferable.getTransferDataFlavors();
+            for (DataFlavor flavor : flavors) {
+                try {
+                    if (flavor.isFlavorJavaFileListType()) {
+                        List<File> files = (List<File>) transferable.getTransferData(flavor);
+                        if (files.size() > 0) {
+                            File file = files.get(0);
+                            localFileSourceButton.setSelected(true);
+                            switchSourceType(Proofer.SOURCE_TYPE_FILE);
+                            loadFile(file);
+                            event.dropComplete(true);
+                        }
+                    }
+                } catch (IOException e) {
+                    if (debug) {
+                        e.printStackTrace();
+                    }
+                } catch (UnsupportedFlavorException e) {
+                    if (debug) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            event.rejectDrop();
+        }
+    };
+
+    private void loadFile(File file) {
+        BufferedImage bi;
+        try {
+            bi = ImageIO.read(file);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(frame,
+                    "Error loading image.", "Android Design Preview", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        proofer.setImage(file, bi);
+        updateSourceButtonUI();
+    }
+
+    private void switchSourceType(String sourceType) {
+        if (sourceType.equals(proofer.getSourceType())) {
+            return;
+        }
+
+        proofer.setSourceType(sourceType);
+
+        if (!Proofer.SOURCE_TYPE_SCREEN.equals(sourceType)) {
+            regionSelector.showWindow(false);
+        }
+
+        updateSourceButtonUI();
+    }
+
+    private void trySaveFrameConfig() {
         try {
             Properties props = new Properties();
             props.setProperty("x", String.valueOf(frame.getX()));
@@ -151,7 +246,7 @@ public class ControllerForm
         }
     }
 
-    void tryLoadFrameConfig() {
+    private void tryLoadFrameConfig() {
         try {
             Properties props = new Properties();
             props.loadFromXML(
@@ -228,12 +323,28 @@ public class ControllerForm
 
     @Override
     public void onRegionWindowVisibilityChanged(boolean visible) {
-        if (visible) {
-            regionButton.setText("Close Mirror Region Window");
-        } else {
-            regionButton.setText("Select Mirror Region");
+        updateSourceButtonUI();
+    }
+
+    private void updateSourceButtonUI() {
+        String sourceType = proofer.getSourceType();
+        if (Proofer.SOURCE_TYPE_FILE.equals(sourceType)) {
+            File currentFile = proofer.getFile();
+            if (currentFile != null) {
+                sourceButton.setText(currentFile.getName());
+            } else {
+                sourceButton.setText("Choose File");
+                sourceButton.setMnemonic('C');
+            }
+
+        } else if (Proofer.SOURCE_TYPE_SCREEN.equals(sourceType)) {
+            if (regionSelector.isVisible()) {
+                sourceButton.setText("Close Mirror Region Window");
+            } else {
+                sourceButton.setText("Select Mirror Region");
+            }
+            sourceButton.setMnemonic('M');
         }
-        regionButton.setMnemonic('M');
     }
 
     {
@@ -259,38 +370,98 @@ public class ControllerForm
         GridBagConstraints gbc;
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.weightx = 1.0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 3;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.insets = new Insets(0, 8, 8, 8);
         contentPanel.add(reinstallButton, gbc);
-        final JPanel panel1 = new JPanel();
-        panel1.setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+        sourceButton = new JButton();
+        sourceButton.setText("Select Mirror Region");
+        sourceButton.setMnemonic('M');
+        sourceButton.setDisplayedMnemonicIndex(7);
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 3;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 8, 0, 8);
+        contentPanel.add(sourceButton, gbc);
+        final JSeparator separator1 = new JSeparator();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 3;
         gbc.fill = GridBagConstraints.BOTH;
-        gbc.insets = new Insets(8, 8, 8, 8);
-        contentPanel.add(panel1, gbc);
-        final JLabel label1 = new JLabel();
-        label1.setText("Status:");
-        panel1.add(label1);
-        statusLabel = new JLabel();
-        statusLabel.setFont(new Font(statusLabel.getFont().getName(), Font.BOLD,
-                statusLabel.getFont().getSize()));
-        statusLabel.setText("N/A");
-        panel1.add(statusLabel);
-        regionButton = new JButton();
-        regionButton.setText("Select Mirror Region");
-        regionButton.setMnemonic('M');
-        regionButton.setDisplayedMnemonicIndex(7);
+        gbc.insets = new Insets(4, 0, 4, 0);
+        contentPanel.add(separator1, gbc);
+        final JSeparator separator2 = new JSeparator();
         gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 1;
+        gbc.gridwidth = 3;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(4, 0, 4, 0);
+        contentPanel.add(separator2, gbc);
+        screenCaptureSourceButton = new JRadioButton();
+        screenCaptureSourceButton.setSelected(true);
+        screenCaptureSourceButton.setText("Screen");
+        screenCaptureSourceButton.setMnemonic('S');
+        screenCaptureSourceButton.setDisplayedMnemonicIndex(0);
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(8, 8, 8, 8);
-        contentPanel.add(regionButton, gbc);
+        gbc.insets = new Insets(0, 0, 4, 0);
+        contentPanel.add(screenCaptureSourceButton, gbc);
+        localFileSourceButton = new JRadioButton();
+        localFileSourceButton.setText("File");
+        localFileSourceButton.setMnemonic('F');
+        localFileSourceButton.setDisplayedMnemonicIndex(0);
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 2;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(0, 0, 4, 8);
+        contentPanel.add(localFileSourceButton, gbc);
+        final JLabel label1 = new JLabel();
+        label1.setForeground(new Color(-10066330));
+        label1.setText("Source:");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.insets = new Insets(0, 8, 4, 4);
+        contentPanel.add(label1, gbc);
+        final JLabel label2 = new JLabel();
+        label2.setForeground(new Color(-10066330));
+        label2.setText("Status:");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(8, 8, 0, 4);
+        contentPanel.add(label2, gbc);
+        statusLabel = new JLabel();
+        statusLabel.setFont(new Font(statusLabel.getFont().getName(), Font.BOLD,
+                statusLabel.getFont().getSize()));
+        statusLabel.setHorizontalAlignment(0);
+        statusLabel.setHorizontalTextPosition(11);
+        statusLabel.setText("N/A");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(8, 0, 0, 0);
+        contentPanel.add(statusLabel, gbc);
+        ButtonGroup buttonGroup;
+        buttonGroup = new ButtonGroup();
+        buttonGroup.add(localFileSourceButton);
+        buttonGroup.add(screenCaptureSourceButton);
+        buttonGroup.add(localFileSourceButton);
     }
 
     /**

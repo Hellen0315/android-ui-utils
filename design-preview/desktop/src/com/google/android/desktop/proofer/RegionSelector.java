@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Google Inc.
+ * Copyright 2012 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -222,6 +222,7 @@ public class RegionSelector {
         public void paint(Graphics graphics) {
             if (graphics instanceof Graphics2D) {
                 Graphics2D g2d = (Graphics2D) graphics;
+                g2d.clearRect(0, 0, getWidth(), getHeight());
                 g2d.setPaint(fillPaint);
                 g2d.fillRect(0, 0, getWidth(), getHeight());
 
@@ -232,7 +233,9 @@ public class RegionSelector {
                 int y = getHeight() / 2;
                 // Line 1
                 g2d.setFont(fontTitle);
-                String s = deviceSize.width + "×" + deviceSize.height;
+                String s = deviceSize.width
+                        + "\u00d7"
+                        + deviceSize.height;
                 Rectangle2D r = fontTitle.getStringBounds(s, g2d.getFontRenderContext());
                 g2d.drawString(s, (int) (getWidth() - r.getWidth()) / 2, y);
 
