@@ -29,7 +29,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewTreeObserver;
+import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedInputStream;
 import java.io.DataOutputStream;
@@ -47,6 +49,9 @@ public class DesktopViewerActivity extends Activity implements
 
     private boolean mKillServer;
 
+    private boolean mWasAtSomePointConnected = false;
+    private boolean mConnected = false;
+
     private int mOffsetX;
     private int mOffsetY;
 
@@ -62,6 +67,11 @@ public class DesktopViewerActivity extends Activity implements
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB) {
+            // Pre-Honeycomb this is the best we can do.
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+
         setContentView(R.layout.main);
 
         mStatusTextView = (TextView) findViewById(R.id.status_text);
@@ -72,7 +82,9 @@ public class DesktopViewerActivity extends Activity implements
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
             mSystemUiHider = new SystemUiHider(mTargetView);
-            mSystemUiHider.setup();
+            mSystemUiHider.setup(getWindow());
+        } else {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         }
     }
 
@@ -127,12 +139,31 @@ public class DesktopViewerActivity extends Activity implements
     private Handler mHandler = new Handler() {
         public void handleMessage(Message msg) {
             Bitmap bm = (Bitmap) msg.obj;
-            mTargetView.setBackgroundDrawable(new BitmapDrawable(bm));
-            if (bm != null) {
-                mStatusTextView.setVisibility(View.GONE);
+
+            if (bm == null) {
+                // Not connected
+                if (mConnected) {
+                    // Disconnected (was previously connected)
+                    Toast.makeText(DesktopViewerActivity.this,
+                            R.string.toast_disconnected, Toast.LENGTH_SHORT).show();
+                }
             } else {
-                mStatusTextView.setVisibility(View.VISIBLE);
+                // Connected
+                //noinspection deprecation
+                mTargetView.setBackgroundDrawable(new BitmapDrawable(getResources(), bm));
+                mStatusTextView.setVisibility(View.GONE);
+
+                if (!mConnected && mWasAtSomePointConnected) {
+                    // Reconnected (was at some point connected, then connection list, now it's
+                    // back)
+                    Toast.makeText(DesktopViewerActivity.this,
+                            R.string.toast_reconnected, Toast.LENGTH_SHORT).show();
+                }
+
+                mWasAtSomePointConnected = true;
             }
+
+            mConnected = (bm != null);
         }
     };
 

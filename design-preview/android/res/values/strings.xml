@@ -15,7 +15,9 @@
   -->
 
 <resources>
-    <string name="not_connected">Not connected.</string>
     <string name="app_name">Android Design Preview</string>
     <string name="app_name_short">Design Preview</string>
+    <string name="not_connected">Not connected.</string>
+    <string name="toast_disconnected">Disconnected</string>
+    <string name="toast_reconnected">Reconnected</string>
 </resources>

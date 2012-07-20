@@ -18,25 +18,12 @@ package com.google.android.desktop.proofer;
 
 import com.sun.awt.AWTUtilities;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Frame;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.Paint;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Stroke;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.font.LineMetrics;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,17 +36,18 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.JFrame;
+import javax.swing.*;
 
 public class RegionSelector {
-    private JFrame parentFrame;
-    private JRegionSelectorFrame frame;
+    private RegionSelectorFrame frame;
 
     private Rectangle region = new Rectangle(100, 100, 480, 800);
+    private Dimension deviceSize = new Dimension(480, 800);
     private RegionChangeCallback regionChangeCallback;
 
     public static interface RegionChangeCallback {
         public void onRegionChanged(Rectangle region);
+        public void onRegionWindowVisibilityChanged(boolean visible);
     }
 
     public RegionSelector(RegionChangeCallback regionChangeCallback) {
@@ -86,28 +74,31 @@ public class RegionSelector {
                 }
             }
 
-            frame = new JRegionSelectorFrame(translucencyCapableGC);
+            frame = new RegionSelectorFrame(translucencyCapableGC);
             frame.setUndecorated(true);
             AWTUtilities.setWindowOpaque(frame, false);
+            frame.getRootPane().putClientProperty("apple.awt.draggableWindowBackground",
+                    Boolean.FALSE);
         } else {
-            frame = new JRegionSelectorFrame(null);
+            frame = new RegionSelectorFrame(null);
             frame.setUndecorated(true);
         }
 
         frame.setAlwaysOnTop(true);
+        frame.setResizable(true);
+
         frame.setBounds(region);
         tryLoadFrameConfig();
+        region = frame.getBounds();
+    }
 
-        frame.setResizable(true);
-        setRegion(frame.getBounds());
+    public boolean isVisible() {
+        return frame.isVisible();
     }
 
     public void showWindow(boolean show) {
         frame.setVisible(show);
-    }
-
-    public void toggleWindow() {
-        frame.setVisible(!frame.isVisible());
+        regionChangeCallback.onRegionWindowVisibilityChanged(show);
     }
 
     public Rectangle getRegion() {
@@ -116,15 +107,22 @@ public class RegionSelector {
 
     private void setRegion(Rectangle region) {
         this.region = region;
+        this.frame.setLocation(region.getLocation());
+        this.frame.setSize(region.getSize());
         if (regionChangeCallback != null) {
-            regionChangeCallback.onRegionChanged(this.region);
+            regionChangeCallback.onRegionChanged(region);
         }
     }
 
-    public void requestSize(int width, int height) {
-        this.region.width = width;
-        this.region.height = height;
-        frame.setSize(width, height);
+    public void requestDeviceSize(Dimension size) {
+        double currentScale = region.getWidth() / deviceSize.getWidth();
+        Dimension scaledSize = new Dimension(
+                (int) (size.width * currentScale),
+                (int) (size.height * currentScale));
+
+        deviceSize = new Dimension(size);
+        region.setSize(scaledSize);
+        frame.setSize(scaledSize);
     }
 
     void trySaveFrameConfig() {
@@ -132,6 +130,8 @@ public class RegionSelector {
             Properties props = new Properties();
             props.setProperty("x", String.valueOf(frame.getX()));
             props.setProperty("y", String.valueOf(frame.getY()));
+            props.setProperty("scale",
+                    String.valueOf(frame.getWidth() * 1f / deviceSize.getWidth()));
             props.storeToXML(new FileOutputStream(
                     new File(Util.getCacheDirectory(), "region.xml")), null);
         } catch (IOException e) {
@@ -167,28 +167,51 @@ public class RegionSelector {
             frame.setLocation(
                     Integer.parseInt(props.getProperty("x", String.valueOf(frame.getX()))),
                     Integer.parseInt(props.getProperty("y", String.valueOf(frame.getY()))));
-        } catch (FileNotFoundException e) {
+            double scale = Double.parseDouble(props.getProperty("scale", "1"));
+            frame.setSize(
+                    (int) (scale * deviceSize.width),
+                    (int) (scale * deviceSize.height));
+        } catch (FileNotFoundException ignored) {
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private class JRegionSelectorFrame extends Frame implements MouseListener, MouseMotionListener,
+    private class RegionSelectorFrame extends JFrame implements MouseListener, MouseMotionListener,
             KeyListener {
+        private static final int LINE_SPACING_PIXELS = 8;
+
+        private static final int RESIZE_GRIP_SIZE_PIXELS = 20;
+
+        private static final int HIT_TEST_HAS_N = 0x1;
+        private static final int HIT_TEST_HAS_S = 0x2;
+        private static final int HIT_TEST_HAS_E = 0x10;
+        private static final int HIT_TEST_HAS_W = 0x20;
+
+        private static final int HIT_TEST_NONE = 0;
+        private static final int HIT_TEST_NE = HIT_TEST_HAS_N | HIT_TEST_HAS_E;
+        private static final int HIT_TEST_SE = HIT_TEST_HAS_S | HIT_TEST_HAS_E;
+        private static final int HIT_TEST_NW = HIT_TEST_HAS_N | HIT_TEST_HAS_W;
+        private static final int HIT_TEST_SW = HIT_TEST_HAS_S | HIT_TEST_HAS_W;
+
         private Paint strokePaint;
         private Paint fillPaint;
         private Stroke stroke;
-        private Font font;
+        private Font fontTitle;
+        private Font fontSubtitle;
 
         private Point startDragPoint;
         private Point startLocation;
+        private Dimension startSize;
+        private int startHitTest;
 
-        private JRegionSelectorFrame(GraphicsConfiguration graphicsConfiguration) {
+        private RegionSelectorFrame(GraphicsConfiguration graphicsConfiguration) {
             super(graphicsConfiguration);
             fillPaint = new Color(0, 0, 0, 32);
             strokePaint = new Color(255, 0, 0, 128);
             stroke = new BasicStroke(5, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER);
-            font = new Font(Font.DIALOG, Font.BOLD, 30);
+            fontTitle = new Font(Font.DIALOG, Font.BOLD, 30);
+            fontSubtitle = new Font(Font.DIALOG, Font.BOLD, 16);
 
             addMouseListener(this);
             addMouseMotionListener(this);
@@ -206,15 +229,30 @@ public class RegionSelector {
                 g2d.setStroke(stroke);
                 g2d.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
 
-                g2d.setFont(font);
-                String s = getWidth() + " x " + getHeight();
-                Rectangle2D r = font.getStringBounds(s, g2d.getFontRenderContext());
-                g2d.drawString(s, (int) (getWidth() - r.getWidth()) / 2, getHeight() / 2);
+                int y = getHeight() / 2;
+                // Line 1
+                g2d.setFont(fontTitle);
+                String s = deviceSize.width + "×" + deviceSize.height;
+                Rectangle2D r = fontTitle.getStringBounds(s, g2d.getFontRenderContext());
+                g2d.drawString(s, (int) (getWidth() - r.getWidth()) / 2, y);
 
-                int offsY = (int) r.getHeight();
+                // Line 2
+                g2d.setFont(fontSubtitle);
+                if (getWidth() != deviceSize.width) {
+                    s = "(" + (100 * getWidth() / deviceSize.width) + "%)";
+                } else {
+                    s = "(Drag corners to resize)";
+                }
+                r = fontSubtitle.getStringBounds(s, g2d.getFontRenderContext());
+                y += r.getHeight() + LINE_SPACING_PIXELS;
+                g2d.drawString(s, (int) (getWidth() - r.getWidth()) / 2, y);
+
+                // Line 3
                 s = "(Double-click or ESC to hide)";
-                r = font.getStringBounds(s, g2d.getFontRenderContext());
-                g2d.drawString(s, (int) (getWidth() - r.getWidth()) / 2, getHeight() / 2 + offsY);
+                r = fontSubtitle.getStringBounds(s, g2d.getFontRenderContext());
+                y += r.getHeight() + LINE_SPACING_PIXELS;
+                g2d.drawString(s, (int) (getWidth() - r.getWidth()) / 2, y);
+
             } else {
                 super.paint(graphics);
             }
@@ -223,8 +261,10 @@ public class RegionSelector {
         // http://www.java2s.com/Tutorial/Java/0240__Swing/Dragandmoveaframefromitscontentarea.htm
 
         public void mousePressed(MouseEvent mouseEvent) {
+            startHitTest = hitTest(mouseEvent.getX(), mouseEvent.getY());
             startDragPoint = getScreenLocation(mouseEvent);
             startLocation = getLocation();
+            startSize = getSize();
 
             if (mouseEvent.getClickCount() == 2) {
                 showWindow(false);
@@ -233,14 +273,47 @@ public class RegionSelector {
 
         public void mouseDragged(MouseEvent mouseEvent) {
             Point current = getScreenLocation(mouseEvent);
-            Point offset = new Point(
-                    (int) current.getX() - (int) startDragPoint.getX(),
-                    (int) current.getY() - (int) startDragPoint.getY());
-            Point newLocation = new Point(
-                    (int) (startLocation.getX() + offset.getX()),
-                    (int) (startLocation.getY() + offset.getY()));
-            setLocation(newLocation);
-            setRegion(getBounds());
+
+            if (startHitTest == HIT_TEST_NONE) {
+                // Moving
+                Point newLocation = new Point(
+                        startLocation.x + current.x - startDragPoint.x,
+                        startLocation.y + current.y - startDragPoint.y);
+                region.setLocation(newLocation);
+                setRegion(region);
+
+            } else {
+                // Resizing. Maintain aspect ratio
+                boolean n = (startHitTest & HIT_TEST_HAS_N) != 0;
+                boolean w = (startHitTest & HIT_TEST_HAS_W) != 0;
+
+                Dimension newSize = new Dimension(
+                        startSize.width + (w ? -1 : 1) * (current.x - startDragPoint.x),
+                        startSize.height + (n ? -1 : 1) * (current.y - startDragPoint.y));
+                int keepAspectWidth = (int) (deviceSize.width * newSize.getHeight()
+                        / deviceSize.height);
+                int keepAspectHeight = (int) (deviceSize.height * newSize.getWidth()
+                        / deviceSize.width);
+
+                if (keepAspectHeight <= newSize.height) {
+                    newSize.height = keepAspectHeight;
+                } else {
+                    newSize.width = keepAspectWidth;
+                }
+
+                // Lock to 25% increments
+                float frac = Math.round(newSize.height / deviceSize.getHeight() * 4) / 4f;
+                frac = Math.max(0.25f, frac);
+                newSize.width = (int) (deviceSize.getWidth() * frac);
+                newSize.height = (int) (deviceSize.getHeight() * frac);
+
+
+                Point newLocation = new Point(
+                        w ? (startLocation.x - newSize.width + startSize.width) : startLocation.x,
+                        n ? (startLocation.y - newSize.height + startSize.height) : startLocation.y);
+
+                setRegion(new Rectangle(newLocation, newSize));
+            }
 
             delayedTrySaveFrameConfig();
         }
@@ -253,7 +326,40 @@ public class RegionSelector {
                     (int) (targetLocation.getY() + cursor.getY()));
         }
 
+        private int hitTest(int x, int y) {
+            if (x <= RESIZE_GRIP_SIZE_PIXELS) {
+                if (y <= RESIZE_GRIP_SIZE_PIXELS) {
+                    return HIT_TEST_NW;
+                } else if (y >= getHeight() - RESIZE_GRIP_SIZE_PIXELS) {
+                    return HIT_TEST_SW;
+                }
+            } else if (x >= getWidth() - RESIZE_GRIP_SIZE_PIXELS) {
+                if (y <= RESIZE_GRIP_SIZE_PIXELS) {
+                    return HIT_TEST_NE;
+                } else if (y >= getHeight() - RESIZE_GRIP_SIZE_PIXELS) {
+                    return HIT_TEST_SE;
+                }
+            }
+            return HIT_TEST_NONE;
+        }
+
         public void mouseMoved(MouseEvent mouseEvent) {
+            switch (hitTest(mouseEvent.getX(), mouseEvent.getY())) {
+                case HIT_TEST_NE:
+                    setCursor(Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR));
+                    break;
+                case HIT_TEST_NW:
+                    setCursor(Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR));
+                    break;
+                case HIT_TEST_SE:
+                    setCursor(Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR));
+                    break;
+                case HIT_TEST_SW:
+                    setCursor(Cursor.getPredefinedCursor(Cursor.SW_RESIZE_CURSOR));
+                    break;
+                default:
+                    setCursor(Cursor.getDefaultCursor());
+            }
         }
 
         public void mouseClicked(MouseEvent mouseEvent) {
@@ -298,9 +404,8 @@ public class RegionSelector {
                     return;
             }
 
-            setLocation(newLocation);
-            setRegion(getBounds());
-
+            region.setLocation(newLocation);
+            setRegion(region);
             delayedTrySaveFrameConfig();
         }
 

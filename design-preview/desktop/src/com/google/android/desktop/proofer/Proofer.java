@@ -39,8 +39,7 @@ public class Proofer {
 
     public static interface ProoferCallbacks {
         public void onStateChange(State newState);
-
-        public void onRequestedSizeChanged(int width, int height);
+        public void onDeviceSizeChanged(Dimension size);
     }
 
     public static enum State {
@@ -140,12 +139,8 @@ public class Proofer {
         return out.contains(Config.ANDROID_APP_PACKAGE_NAME);
     }
 
-    public void setRequestedRegion(Rectangle region) {
-        client.setRequestedRegion(region);
-    }
-
-    public State getState() {
-        return state;
+    public void setRequestedSourceRegion(Rectangle region) {
+        client.setRequestedSourceRegion(region);
     }
 
     private void updateState(State newState) {
@@ -176,13 +171,11 @@ public class Proofer {
         }
     }
 
-    public class ProoferClient {
-        private Rectangle requestedRegion = new Rectangle(0, 0, 0, 0);
+    private class ProoferClient {
+        private Rectangle requestedSourceRegion = new Rectangle(0, 0, 0, 0);
         private Robot robot;
         private Rectangle screenBounds;
-
-        private int curWidth = 0;
-        private int curHeight = 0;
+        private Dimension currentDeviceSize = new Dimension();
 
         public ProoferClient() {
             try {
@@ -204,8 +197,8 @@ public class Proofer {
             screenBounds = tempBounds.getBounds();
         }
 
-        public void setRequestedRegion(Rectangle region) {
-            requestedRegion = region;
+        public void setRequestedSourceRegion(Rectangle region) {
+            requestedSourceRegion = region;
         }
 
         public void connectAndWaitForRequests() throws CannotConnectException {
@@ -227,37 +220,32 @@ public class Proofer {
             try {
                 DataInputStream dis = new DataInputStream(socket.getInputStream());
                 BufferedOutputStream bos = new BufferedOutputStream(socket.getOutputStream());
+                Dimension deviceSize = new Dimension();
 
                 while (true) {
                     // Try processing a request.
-                    int x = dis.readInt();
-                    int y = dis.readInt();
-                    int width = dis.readInt();
-                    int height = dis.readInt();
+                    dis.readInt(); // unused x
+                    dis.readInt(); // unused y
+
+                    deviceSize.width = dis.readInt();
+                    deviceSize.height = dis.readInt();
 
                     // If we reach this point, we didn't hit an IOException and we've received
                     // a request from the device.
 
-                    x = requestedRegion.x;
-                    y = requestedRegion.y;
-
-                    if ((width != curWidth || height != curHeight) && prooferCallbacks != null) {
-                        prooferCallbacks.onRequestedSizeChanged(width, height);
+                    if (!deviceSize.equals(currentDeviceSize) && prooferCallbacks != null) {
+                        prooferCallbacks.onDeviceSizeChanged(deviceSize);
+                        if (debug) {
+                            System.out.println("Got device size: " + currentDeviceSize.width
+                                    + "x" + currentDeviceSize.height);
+                        }
+                        currentDeviceSize = new Dimension(deviceSize);
                     }
-
-                    curWidth = width;
-                    curHeight = height;
 
                     updateState(State.ConnectedActive);
 
-                    if (debug) {
-                        System.out.println(
-                                "Got request: [" + x + ", " + y + ", " + width + ", " + height
-                                        + "]");
-                    }
-
-                    if (width > 1 && height > 1) {
-                        BufferedImage bi = capture(x, y, width, height);
+                    if (deviceSize.width > 1 && deviceSize.height > 1) {
+                        BufferedImage bi = capture();
                         ByteArrayOutputStream baos = new ByteArrayOutputStream();
                         ImageIO.write(bi, "PNG", baos);
                         byte[] out = baos.toByteArray();
@@ -292,25 +280,44 @@ public class Proofer {
             updateState(State.ConnectedIdle);
         }
 
-        private BufferedImage capture(int x, int y, int width, int height) {
-            x = Math.max(screenBounds.x, x);
-            y = Math.max(screenBounds.y, y);
+        private BufferedImage capture() {
+            Rectangle captureRect = new Rectangle(
+                    Math.max(screenBounds.x, requestedSourceRegion.x),
+                    Math.max(screenBounds.y, requestedSourceRegion.y),
+                    requestedSourceRegion.width,
+                    requestedSourceRegion.height);
 
-            if (x + width > screenBounds.x + screenBounds.width) {
-                x = screenBounds.x + screenBounds.width - width;
+            if (captureRect.x + captureRect.width > screenBounds.x + screenBounds.width) {
+                captureRect.x = screenBounds.x + screenBounds.width - captureRect.width;
             }
 
-            if (y + height > screenBounds.y + screenBounds.height) {
-                y = screenBounds.y + screenBounds.height - height;
+            if (captureRect.y + captureRect.height > screenBounds.y + screenBounds.height) {
+                captureRect.y = screenBounds.y + screenBounds.height - captureRect.height;
             }
 
-            Rectangle rect = new Rectangle(x, y, width, height);
             long before = System.currentTimeMillis();
-            BufferedImage bi = robot.createScreenCapture(rect);
+            BufferedImage bi = robot.createScreenCapture(captureRect);
             long after = System.currentTimeMillis();
 
             if (debug) {
                 System.out.println("Capture time: " + (after - before) + " msec");
+            }
+
+            if (!requestedSourceRegion.getSize().equals(currentDeviceSize)) {
+                // Scale the bitmap
+                BufferedImage resized = new BufferedImage(currentDeviceSize.width,
+                        currentDeviceSize.height, bi.getType());
+                Graphics2D g2d = resized.createGraphics();
+                g2d.setRenderingHint(
+                        RenderingHints.KEY_INTERPOLATION,
+                        RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                g2d.drawImage(
+                        bi,
+                        0, 0, currentDeviceSize.width, currentDeviceSize.height,
+                        0, 0, bi.getWidth(), bi.getHeight(),
+                        null);
+                g2d.dispose();
+                bi = resized;
             }
 
             return bi;

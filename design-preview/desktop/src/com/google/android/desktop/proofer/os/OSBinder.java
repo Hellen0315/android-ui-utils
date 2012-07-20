@@ -31,7 +31,7 @@ public abstract class OSBinder {
         try {
             switch (Util.getCurrentOS()) {
                 case Mac:
-                    return (OSBinder) MacBinder.class.getConstructor(Callbacks.class)
+                    return MacBinder.class.getConstructor(Callbacks.class)
                             .newInstance(callbacks);
             }
         } catch (InvocationTargetException e) {
@@ -49,11 +49,5 @@ public abstract class OSBinder {
 
     protected OSBinder(Callbacks callbacks) {
         this.callbacks = callbacks;
-    }
-
-    private static class DummyBinder extends OSBinder {
-        private DummyBinder(Callbacks callbacks) {
-            super(callbacks);
-        }
     }
 }

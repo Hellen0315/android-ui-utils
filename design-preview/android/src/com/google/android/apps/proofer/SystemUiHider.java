@@ -16,11 +16,14 @@
 
 package com.google.android.apps.proofer;
 
+import android.os.Build;
 import android.os.Handler;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 
 public class SystemUiHider {
-    private int HIDE_DELAY_MILLIS = 2000;
+    private static final int HIDE_DELAY_MILLIS = 2000;
 
     private Handler mHandler;
     private View mView;
@@ -29,14 +32,19 @@ public class SystemUiHider {
         mView = view;
     }
 
-    public void setup() {
+    public void setup(Window window) {
         hideSystemUi();
+
+        // Pre-Jellybean just hide the status bar
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
 
         mHandler = new Handler();
         mView.setOnSystemUiVisibilityChangeListener(new View.OnSystemUiVisibilityChangeListener() {
             @Override
             public void onSystemUiVisibilityChange(int visibility) {
-                if (visibility != View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) {
+                if ((visibility & View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) == 0) {
                     delay();
                 }
             }
@@ -44,7 +52,17 @@ public class SystemUiHider {
     }
 
     private void hideSystemUi() {
-        mView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            // On Jellybean we can use new System UI flags to allow showing titlebar/systembar
+            // only upon touching the screen, while still having the content laid out in
+            // the entire screen.
+            mView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
+        } else {
+            mView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+        }
     }
 
     private Runnable mHideRunnable = new Runnable() {

@@ -54,12 +54,11 @@ public class ControllerForm
     private JLabel statusLabel;
     private JButton regionButton;
 
-    private OSBinder osBinder = OSBinder.getBinder(this);
-
     private RegionSelector regionSelector;
     private Proofer proofer;
 
     public ControllerForm() {
+        OSBinder.getBinder(this);
         setupUI();
         setupProofer();
     }
@@ -92,7 +91,7 @@ public class ControllerForm
         }
 
         proofer.startConnectionLoop();
-        proofer.setRequestedRegion(regionSelector.getRegion());
+        proofer.setRequestedSourceRegion(regionSelector.getRegion());
     }
 
     private void setupUI() {
@@ -135,7 +134,7 @@ public class ControllerForm
 
         regionButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent actionEvent) {
-                regionSelector.toggleWindow();
+                regionSelector.showWindow(!regionSelector.isVisible());
             }
         });
     }
@@ -160,7 +159,7 @@ public class ControllerForm
             frame.setLocation(
                     Integer.parseInt(props.getProperty("x", String.valueOf(frame.getX()))),
                     Integer.parseInt(props.getProperty("y", String.valueOf(frame.getY()))));
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException ignored) {
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -217,14 +216,24 @@ public class ControllerForm
         }
     }
 
-    public void onRequestedSizeChanged(int width, int height) {
-        regionSelector.requestSize(width, height);
+    public void onDeviceSizeChanged(Dimension size) {
+        regionSelector.requestDeviceSize(size);
     }
 
     public void onRegionChanged(Rectangle region) {
         if (proofer != null) {
-            proofer.setRequestedRegion(region);
+            proofer.setRequestedSourceRegion(region);
         }
+    }
+
+    @Override
+    public void onRegionWindowVisibilityChanged(boolean visible) {
+        if (visible) {
+            regionButton.setText("Close Mirror Region Window");
+        } else {
+            regionButton.setText("Select Mirror Region");
+        }
+        regionButton.setMnemonic('M');
     }
 
     {

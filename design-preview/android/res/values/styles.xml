@@ -15,5 +15,5 @@
   -->
 
 <resources>
-    <style name="AppTheme" parent="android:Theme.Black.NoTitleBar.Fullscreen" />
+    <style name="AppTheme" parent="android:Theme.Black.NoTitleBar" />
 </resources>
