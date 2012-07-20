@@ -58,9 +58,12 @@ public class RegionSelector {
     private void setupUI() {
         // http://java.sun.com/developer/technicalArticles/GUI/translucent_shaped_windows/
 
-        if (AWTUtilities.isTranslucencySupported(AWTUtilities.Translucency.TRANSLUCENT)) {
-            //perform translucency operations here
+        try {
+            if (!AWTUtilities.isTranslucencySupported(AWTUtilities.Translucency.TRANSLUCENT)) {
+                throw new UnsupportedOperationException();
+            }
 
+            //perform translucency operations here
             GraphicsEnvironment env =
                     GraphicsEnvironment.getLocalGraphicsEnvironment();
             GraphicsDevice[] devices = env.getScreenDevices();
@@ -79,7 +82,10 @@ public class RegionSelector {
             AWTUtilities.setWindowOpaque(frame, false);
             frame.getRootPane().putClientProperty("apple.awt.draggableWindowBackground",
                     Boolean.FALSE);
-        } else {
+        } catch (NoClassDefFoundError e) {
+            frame = new RegionSelectorFrame(null);
+            frame.setUndecorated(true);
+        } catch (UnsupportedOperationException e) {
             frame = new RegionSelectorFrame(null);
             frame.setUndecorated(true);
         }
