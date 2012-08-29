@@ -183,6 +183,7 @@
           title: 'Nexus 7',
           url: 'http://www.android.com/devices/detail/nexus-7',
           physicalSize: 7,
+          physicalHeight: 7.81,
           density: 213,
           landRes: ['shadow', 'back', 'fore'],
           landOffset: [363,260],
@@ -195,6 +196,7 @@
           title: 'Motorola XOOM / 10-inch tablet',
           url: 'http://www.google.com/phone/detail/motorola-xoom',
           physicalSize: 10,
+          physicalHeight: 6.61,
           density: 160,
           landRes: ['shadow', 'back', 'fore'],
           landOffset: [218,191],
@@ -207,6 +209,7 @@
           title: 'Galaxy Nexus',
           url: 'http://www.android.com/devices/detail/galaxy-nexus',
           physicalSize: 4.65,
+          physicalHeight: 5.33,
           density: 320,
           landRes: ['shadow', 'back', 'fore'],
           landOffset: [371,199],
@@ -219,6 +222,7 @@
           title: 'Nexus S',
           url: 'http://www.google.com/phone/detail/nexus-s',
           physicalSize: 4.0,
+          physicalHeight: 4.88,
           density: 240,
           landRes: ['shadow', 'back', 'fore'],
           landOffset: [247,135],
@@ -231,6 +235,7 @@
           title: 'Samsung Galaxy Note',
           url: 'http://www.samsung.com/global/microsite/galaxynote/note/index.html?type=find',
           physicalSize: 5.3,
+          physicalHeight: 5.781,
           density: 320,
           landRes: ['shadow', 'back', 'fore'],
           landOffset: [353,209],
@@ -243,6 +248,7 @@
           title: 'Samsung Galaxy Tab 2 7-inch',
           url: 'http://www.samsung.com/global/microsite/galaxytab2/7.0/index.html?type=find',
           physicalSize: 7,
+          physicalHeight: 7.5,
           density: 160,
           landRes: ['shadow', 'back', 'fore'],
           landOffset: [230,203],
@@ -255,11 +261,25 @@
           title: 'Samsung Galaxy S III',
           url: 'http://www.samsung.com/global/galaxys3/',
           physicalSize: 4.8,
+          physicalHeight: 5.38,
           density: 320,
           landRes: ['shadow', 'back', 'fore'],
           landOffset: [346,211],
           portRes: ['shadow', 'back', 'fore'],
           portOffset: [302,307],
+          portSize: [720,1280],
+        },
+        {
+          id: 'htc_one_x',
+          title: 'HTC One X',
+          url: 'http://www.htc.com/www/smartphones/htc-one-x/',
+          physicalSize: 4.7,
+          physicalHeight: 5.29,
+          density: 320,
+          landRes: ['shadow', 'back', 'fore'],
+          landOffset: [346,211],
+          portRes: ['shadow', 'back', 'fore'],
+          portOffset: [302,306],
           portSize: [720,1280],
         }
       ];
@@ -274,8 +294,13 @@
         return;
       }
 
+
       var MAX_SIZE_INCHES = 10; // XOOM
-      var MAX_HEIGHT = 126; // XOOM, to fit into 200px wide
+      var MAX_DISPLAY_HEIGHT = 126; // XOOM, to fit into 200px wide
+      var MAX_HEIGHT = 0;
+      for (var i = 0; i < DEVICES.length; i++) {
+        MAX_HEIGHT = Math.max(MAX_HEIGHT, DEVICES[i].physicalHeight);
+      }
 
       $.each(DEVICES, function() {
         $('<li>')
@@ -283,7 +308,7 @@
                 .addClass('thumb-container')
                 .append($('<img>')
                     .attr('src', 'res/device-frames/' + this.id + '/thumb.png')
-                    .attr('height', Math.floor(MAX_HEIGHT * this.physicalSize / MAX_SIZE_INCHES))))
+                    .attr('height', Math.floor(MAX_DISPLAY_HEIGHT * this.physicalHeight / MAX_HEIGHT))))
             .append($('<div>')
                 .html('<strong>' +
                   (this.url ? 
