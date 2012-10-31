@@ -1756,7 +1756,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
             'For clipart sources, visit ',
             '<a href="http://developer.android.com/design/downloads/">',
                 'Android Design: Downloads',
-            '</a>.'
+            '</a>.<br>',
+            'Additional icons can be found at ',
+            '<a href="http://www.androidicons.com">androidicons.com</a>.'
           ].join(''))
         .appendTo(clipartParamsEl);
 
@@ -2439,10 +2441,11 @@ studio.util = {};
 
 studio.util.getMultBaseMdpi = function(density) {
   switch (density) {
-    case 'xhdpi': return 2.00;
-    case  'hdpi': return 1.50;
-    case  'mdpi': return 1.00;
-    case  'ldpi': return 0.75;
+    case 'xxhdpi': return 3.00;
+    case  'xhdpi': return 2.00;
+    case   'hdpi': return 1.50;
+    case   'mdpi': return 1.00;
+    case   'ldpi': return 0.75;
   }
   return 1.0;
 };

@@ -18,10 +18,11 @@ studio.util = {};
 
 studio.util.getMultBaseMdpi = function(density) {
   switch (density) {
-    case 'xhdpi': return 2.00;
-    case  'hdpi': return 1.50;
-    case  'mdpi': return 1.00;
-    case  'ldpi': return 0.75;
+    case 'xxhdpi': return 3.00;
+    case  'xhdpi': return 2.00;
+    case   'hdpi': return 1.50;
+    case   'mdpi': return 1.00;
+    case   'ldpi': return 0.75;
   }
   return 1.0;
 };

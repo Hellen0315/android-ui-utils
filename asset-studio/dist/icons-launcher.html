@@ -66,6 +66,7 @@
         </h3>
       </div>
       <div id="footer">
+        <p>Based on the launcher boilerplates from <a href="http://www.androidicons.com/">androidicons.com</a>, with permission.</p>
         <p>See the source at the <a href="http://code.google.com/p/android-ui-utils">android-ui-utils</a> Google Code project.</p>
         <p>All generated art is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/3.0/">Creative Commons Attribution 3.0 Unported License</a>. <a href="attribution.html">Attribution info</a></p>
       </div>
@@ -83,9 +84,10 @@
 
       // Create image output slots
       var group = studio.ui.createImageOutputGroup({
-        container: $('#outputs')
+        container: $('#outputs'),
+        dark: true
       });
-      for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1})
+      for (var density in {'xxhdpi':1, 'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1})
         studio.ui.createImageOutputSlot({
           container: group,
           id: 'out-icon-' + density,
@@ -94,9 +96,9 @@
 
       // Load image resources (stencils)
       var resList = {};
-      for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1})
+      for (var density in {'xxhdpi':1, 'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1})
         for (var backgroundShape in {'square':1, 'circle':1})
-          for (var type in {'back':1, 'fore1':1, 'mask':1})
+          for (var type in {'back':1, 'fore1':1, 'mask':1, 'mask_inner':1})
             resList[backgroundShape + '-' + density + '-' + type] = (
               'res/launcher-stencil/' + backgroundShape + '/' + density + '/' + type + '.png');
 
@@ -109,17 +111,33 @@
       });
 
       var PARAM_RESOURCES = {
-          'web-iconSize': { w: 512, h: 512 },
-        'xhdpi-iconSize': { w:  96, h:  96 },
-         'hdpi-iconSize': { w:  72, h:  72 },
-         'mdpi-iconSize': { w:  48, h:  48 },
-         'ldpi-iconSize': { w:  36, h:  36 },
+           'web-iconSize': { w: 512, h: 512 },
+        'xxhdpi-iconSize': { w: 144, h: 144 },
+         'xhdpi-iconSize': { w:  96, h:  96 },
+          'hdpi-iconSize': { w:  72, h:  72 },
+          'mdpi-iconSize': { w:  48, h:  48 },
+          'ldpi-iconSize': { w:  36, h:  36 },
 
-          'web-targetRect': { x: 21, y: 21, w: 470, h: 470 },
-        'xhdpi-targetRect': { x:  4, y:  4, w:  88, h:  88 },
-         'hdpi-targetRect': { x:  3, y:  3, w:  66, h:  66 },
-         'mdpi-targetRect': { x:  2, y:  2, w:  44, h:  44 },
-         'ldpi-targetRect': { x:  1, y:  1, w:  34, h:  34 }
+           'web-none-targetRect': { x: 32, y: 32, w: 448, h: 448 },
+        'xxhdpi-none-targetRect': { x:  9, y:  9, w: 126, h: 126 },
+         'xhdpi-none-targetRect': { x:  6, y:  6, w:  84, h:  84 },
+          'hdpi-none-targetRect': { x:  4, y:  4, w:  64, h:  64 },
+          'mdpi-none-targetRect': { x:  3, y:  3, w:  42, h:  42 },
+          'ldpi-none-targetRect': { x:  1, y:  1, w:  34, h:  34 },
+
+           'web-circle-targetRect': { x: 21, y: 21, w: 470, h: 470 },
+        'xxhdpi-circle-targetRect': { x:  9, y: 12, w: 126, h: 126 },
+         'xhdpi-circle-targetRect': { x:  6, y:  8, w:  84, h:  84 },
+          'hdpi-circle-targetRect': { x:  4, y:  6, w:  64, h:  64 },
+          'mdpi-circle-targetRect': { x:  3, y:  4, w:  42, h:  42 },
+          'ldpi-circle-targetRect': { x:  2, y:  3, w:  32, h:  32 },
+
+           'web-square-targetRect': { x: 32, y: 53, w: 448, h: 427 },
+        'xxhdpi-square-targetRect': { x:  9, y: 15, w: 126, h: 120 },
+         'xhdpi-square-targetRect': { x:  6, y: 10, w:  84, h:  80 },
+          'hdpi-square-targetRect': { x:  3, y:  3, w:  66, h:  66 },
+          'mdpi-square-targetRect': { x:  2, y:  2, w:  44, h:  44 },
+          'ldpi-square-targetRect': { x:  1, y:  1, w:  34, h:  34 }
       };
 
       /**
@@ -147,7 +165,7 @@
 
         var continue_ = function(foreCtx) {
           var backgroundShape = values['backgroundShape'];
-          for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1}) {
+          for (var density in {'xxhdpi':1, 'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1}) {
             var mult = studio.util.getMultBaseMdpi(density);
             if (density == 'web') {
               mult = 1;
@@ -157,7 +175,7 @@
             }
 
             var iconSize = PARAM_RESOURCES[density + '-iconSize'];
-            var targetRect = PARAM_RESOURCES[density + '-targetRect'];
+            var targetRect = PARAM_RESOURCES[density + '-' + backgroundShape + '-targetRect'];
 
             var outCtx = imagelib.drawing.context(iconSize);
             var tmpCtx = imagelib.drawing.context(iconSize);
@@ -250,7 +268,16 @@
               tmpCtx.globalCompositeOperation = 'source-atop';
               tmpCtx.fillStyle = values['backColor'].color;
               tmpCtx.fillRect(0, 0, iconSize.w, iconSize.h);
+
               if (foreCtx) {
+                var tmpCtx2 = imagelib.drawing.context(iconSize);
+                tmpCtx2.save();
+                tmpCtx2.globalCompositeOperation = 'source-over';
+                imagelib.drawing.copy(tmpCtx2, IMAGE_RESOURCES[backgroundShape + '-' + density + '-mask_inner'], iconSize);
+                tmpCtx2.globalCompositeOperation = 'source-atop';
+                tmpCtx2.fillStyle = values['backColor'].color;
+                tmpCtx2.fillRect(0, 0, iconSize.w, iconSize.h);
+
                 var copyFrom = foreCtx;
                 var foreSize = {
                   w: foreCtx.canvas.width,
@@ -258,20 +285,22 @@
                 };
 
                 if (values['foreColor'].alpha) {
-                  var tmpCtx2 = imagelib.drawing.context(foreSize);
-                  imagelib.drawing.copy(tmpCtx2, foreCtx, foreSize);
-                  tmpCtx2.globalCompositeOperation = 'source-atop';
-                  tmpCtx2.fillStyle = values['foreColor'].color;
-                  tmpCtx2.fillRect(0, 0, foreSize.w, foreSize.h);
-                  copyFrom = tmpCtx2;
+                  var tmpCtx3 = imagelib.drawing.context(foreSize);
+                  imagelib.drawing.copy(tmpCtx3, foreCtx, foreSize);
+                  tmpCtx3.globalCompositeOperation = 'source-atop';
+                  tmpCtx3.fillStyle = values['foreColor'].color;
+                  tmpCtx3.fillRect(0, 0, foreSize.w, foreSize.h);
+                  copyFrom = tmpCtx3;
                   tmpCtx.globalAlpha = values['foreColor'].alpha / 100;
                 }
 
                 imagelib.drawing[values['crop'] ? 'drawCenterCrop' : 'drawCenterInside']
-                  (tmpCtx, copyFrom, targetRect, {
+                  (tmpCtx2, copyFrom, targetRect, {
                     x: 0, y: 0,
                     w: foreSize.w, h: foreSize.h
                   });
+
+                imagelib.drawing.copy(tmpCtx, tmpCtx2, iconSize);
               }
               tmpCtx.restore();
 
@@ -317,7 +346,7 @@
             helpText: 'For transparent foregrounds',
             defaultValue: '#33b5e5',
             alpha: true,
-            defaultAlpha: 0
+            defaultAlpha: 255
           }),
           new studio.forms.BooleanField('crop', {
             title: 'Scaling',

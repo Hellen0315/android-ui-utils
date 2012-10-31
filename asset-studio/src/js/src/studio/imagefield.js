@@ -161,7 +161,9 @@ studio.forms.ImageField = studio.forms.Field.extend({
             'For clipart sources, visit ',
             '<a href="http://developer.android.com/design/downloads/">',
                 'Android Design: Downloads',
-            '</a>.'
+            '</a>.<br>',
+            'Additional icons can be found at ',
+            '<a href="http://www.androidicons.com">androidicons.com</a>.'
           ].join(''))
         .appendTo(clipartParamsEl);
 
