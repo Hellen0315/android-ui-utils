@@ -232,6 +232,11 @@ studio.forms.ColorField = studio.forms.Field.extend({
     			me.setValue({ alpha: Number(me.alphaEl_.val()) }, true);
         })
         .appendTo(fieldContainer);
+
+      this.alphaTextEl_ = $('<div>')
+        .addClass('form-range-text')
+        .text(this.getValue().alpha + '%')
+        .appendTo(fieldContainer);
     }
   },
 
@@ -267,6 +272,9 @@ studio.forms.ColorField = studio.forms.Field.extend({
       if (this.alphaEl_) {
         this.alphaEl_.val(computedValue.alpha);
       }
+    }
+    if (this.alphaTextEl_) {
+      this.alphaTextEl_.text(computedValue.alpha + '%');
     }
     this.form_.notifyChanged_(this);
   },
