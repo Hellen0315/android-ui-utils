@@ -45,7 +45,7 @@
 
     <target name="mac"
         depends="desktop"
-        description="Generates the Mac bundle and distributable disk image.">
+        description="Generates the Mac bundle and distributable file.">
         <exec executable="${mac.dir}/package_mac.sh" />
     </target>
 
