@@ -28,6 +28,11 @@ studio.zip = {};
     for (var i = 0; i < rawLength; ++i) {
       uInt8Array[i] = raw.charCodeAt(i);
     }
+
+    if (imagelib.util.hasBlobConstructor()) {
+      return new Blob([uInt8Array], {type: mimetype})
+    }
+
     var bb = new BlobBuilder();
     bb.append(uInt8Array.buffer);
     return bb.getBlob(mimetype);

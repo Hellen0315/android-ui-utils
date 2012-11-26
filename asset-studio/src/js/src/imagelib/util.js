@@ -36,12 +36,11 @@ imagelib.util.runWorkerJs = function(js, params, callback) {
   var URL = (window.URL || window.webkitURL);
   var Worker = window.Worker;
 
-  if (URL && BlobBuilder && Worker) {
+  if (URL && Worker && imagelib.util.hasBlobConstructor()) {
     // BlobBuilder, Worker, and window.URL.createObjectURL are all available,
     // so we can use inline workers.
-    var bb = new BlobBuilder();
-    bb.append(js);
-    var worker = new Worker(URL.createObjectURL(bb.getBlob()));
+    var bb = new Blob([js], {type:'text/javascript'});
+    var worker = new Worker(URL.createObjectURL(bb));
     worker.onmessage = function(event) {
       callback(event.data);
     };
@@ -69,5 +68,15 @@ imagelib.util.runWorkerJs = function(js, params, callback) {
     return {
       terminate: function(){}
     };
+  }
+};
+
+// https://github.com/gildas-lormeau/zip.js/issues/17#issuecomment-8513258
+// thanks Eric!
+imagelib.util.hasBlobConstructor = function() {
+  try {
+    return !!new Blob();
+  } catch(e) {
+    return false;
   }
 };
