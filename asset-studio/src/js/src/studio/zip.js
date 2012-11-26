@@ -57,7 +57,7 @@ studio.zip = {};
     return zip.generate();
   }
 
-  window.URL = window.webkitURL || window.URL;
+  window.URL = window.URL || window.webkitURL || window.mozURL;
   window.BlobBuilder = window.BlobBuilder || window.WebKitBlobBuilder ||
                        window.MozBlobBuilder;
 

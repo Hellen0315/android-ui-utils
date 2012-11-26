@@ -32,12 +32,11 @@ imagelib.util = {};
  *     Worker object and running callback(event.data);
  */
 imagelib.util.runWorkerJs = function(js, params, callback) {
-  var BlobBuilder = (window.BlobBuilder || window.WebKitBlobBuilder);
-  var URL = (window.URL || window.webkitURL);
+  var URL = window.URL || window.webkitURL || window.mozURL;
   var Worker = window.Worker;
 
   if (URL && Worker && imagelib.util.hasBlobConstructor()) {
-    // BlobBuilder, Worker, and window.URL.createObjectURL are all available,
+    // The Blob constructor, Worker, and window.URL.createObjectURL are all available,
     // so we can use inline workers.
     var bb = new Blob([js], {type:'text/javascript'});
     var worker = new Worker(URL.createObjectURL(bb));
