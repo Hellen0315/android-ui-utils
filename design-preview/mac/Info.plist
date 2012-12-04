@@ -19,12 +19,10 @@ http://developer.apple.com/library/ios/#documentation/general/Reference/InfoPlis
 	<string>Android Design Preview</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>0.3</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>0.3</string>
+	<string>0.3.1</string>
 	<key>Java</key>
 	<dict>
 		<key>ClassPath</key>

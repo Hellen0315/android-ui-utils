@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.List;
 
 public class AdbRunner {
+    private static final int ADB_CACHE_VERSION = 1;
+
     private boolean debug = Util.isDebug();
 
     private File adbPath;
@@ -43,6 +45,14 @@ public class AdbRunner {
             System.out.println("Preparing ADB");
         }
 
+        int currentCacheVersion = Util.getCacheVersion();
+        boolean forceExtract = currentCacheVersion < ADB_CACHE_VERSION;
+
+        if (debug && forceExtract) {
+            System.out.println("Current adb cache is old (version " + currentCacheVersion + "). "
+                    + "Upgrading to cache version " + ADB_CACHE_VERSION);
+        }
+
         Util.OS currentOS = Util.getCurrentOS();
         if (currentOS == Util.OS.Other) {
             throw new ProoferException("Unknown operating system, cannot run ADB.");
@@ -51,13 +61,15 @@ public class AdbRunner {
         switch (currentOS) {
             case Mac:
             case Linux:
-                adbPath = extractAssetToCacheDirectory(currentOS.id + "/adb", "adb");
+                adbPath = extractAssetToCacheDirectory(currentOS.id + "/adb", "adb", forceExtract);
                 break;
 
             case Windows:
-                adbPath = extractAssetToCacheDirectory("windows/adb.exe", "adb.exe");
-                extractAssetToCacheDirectory("windows/AdbWinApi.dll", "AdbWinApi.dll");
-                extractAssetToCacheDirectory("windows/AdbWinUsbApi.dll", "AdbWinUsbApi.dll");
+                adbPath = extractAssetToCacheDirectory("windows/adb.exe", "adb.exe", forceExtract);
+                extractAssetToCacheDirectory("windows/AdbWinApi.dll", "AdbWinApi.dll",
+                        forceExtract);
+                extractAssetToCacheDirectory("windows/AdbWinUsbApi.dll", "AdbWinUsbApi.dll",
+                        forceExtract);
                 break;
         }
 
@@ -65,12 +77,15 @@ public class AdbRunner {
             throw new ProoferException("Error setting ADB binary as executable.");
         }
 
+        Util.putCacheVersion(ADB_CACHE_VERSION);
+
         ready = true;
     }
 
-    private File extractAssetToCacheDirectory(String assetPath, String filename) throws ProoferException {
+    private File extractAssetToCacheDirectory(String assetPath, String filename, boolean force)
+            throws ProoferException {
         File outFile = new File(Util.getCacheDirectory(), filename);
-        if (!outFile.exists()) {
+        if (force || !outFile.exists()) {
             if (!Util.extractResource("assets/" + assetPath, outFile)) {
                 throw new ProoferException("Error extracting to " + outFile.toString());
             }

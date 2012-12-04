@@ -17,11 +17,14 @@
 package com.google.android.desktop.proofer;
 
 import java.awt.*;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 
 import javax.imageio.ImageIO;
@@ -100,6 +103,34 @@ public class Util {
             cacheDirectory.mkdirs();
         }
         cacheDirectory.setWritable(true);
+    }
+
+    public static int getCacheVersion() {
+        try {
+            InputStream in = new FileInputStream(new File(getCacheDirectory(), "cache_version"));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            return Integer.parseInt(reader.readLine());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+
+        return 0;
+    }
+
+    public static void putCacheVersion(int version) {
+        try {
+            OutputStream out = new FileOutputStream(new File(getCacheDirectory(), "cache_version"));
+            out.write(Integer.toString(version).getBytes());
+            out.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static File getCacheDirectory() {
