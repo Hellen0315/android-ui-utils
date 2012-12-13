@@ -73,6 +73,8 @@
     </div>
 
     <script>
+      var DENSITIES = {'xxhdpi':1, 'xhdpi':1, 'hdpi':1, 'mdpi':1, 'web':1};
+
       $(studio.checkBrowser);
       imagelib.ALLOW_MANUAL_RESCALE = true;
 
@@ -87,7 +89,7 @@
         container: $('#outputs'),
         dark: true
       });
-      for (var density in {'xxhdpi':1, 'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1})
+      for (var density in DENSITIES)
         studio.ui.createImageOutputSlot({
           container: group,
           id: 'out-icon-' + density,
@@ -96,7 +98,7 @@
 
       // Load image resources (stencils)
       var resList = {};
-      for (var density in {'xxhdpi':1, 'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1})
+      for (var density in DENSITIES)
         for (var backgroundShape in {'square':1, 'circle':1})
           for (var type in {'back':1, 'fore1':1, 'mask':1, 'mask_inner':1})
             resList[backgroundShape + '-' + density + '-' + type] = (
@@ -111,33 +113,21 @@
       });
 
       var PARAM_RESOURCES = {
-           'web-iconSize': { w: 512, h: 512 },
-        'xxhdpi-iconSize': { w: 144, h: 144 },
-         'xhdpi-iconSize': { w:  96, h:  96 },
-          'hdpi-iconSize': { w:  72, h:  72 },
-          'mdpi-iconSize': { w:  48, h:  48 },
-          'ldpi-iconSize': { w:  36, h:  36 },
+         'web-iconSize': { w: 512, h: 512 },
+        'hdpi-iconSize': { w:  72, h:  72 },
+        'mdpi-iconSize': { w:  48, h:  48 },
 
-           'web-none-targetRect': { x: 32, y: 32, w: 448, h: 448 },
-        'xxhdpi-none-targetRect': { x:  9, y:  9, w: 126, h: 126 },
-         'xhdpi-none-targetRect': { x:  6, y:  6, w:  84, h:  84 },
-          'hdpi-none-targetRect': { x:  4, y:  4, w:  64, h:  64 },
-          'mdpi-none-targetRect': { x:  3, y:  3, w:  42, h:  42 },
-          'ldpi-none-targetRect': { x:  1, y:  1, w:  34, h:  34 },
+         'web-none-targetRect': { x: 32, y: 32, w: 448, h: 448 },
+        'hdpi-none-targetRect': { x:  4, y:  4, w:  64, h:  64 },
+        'mdpi-none-targetRect': { x:  3, y:  3, w:  42, h:  42 },
 
-           'web-circle-targetRect': { x: 32, y: 43, w: 448, h: 448 },
-        'xxhdpi-circle-targetRect': { x:  9, y: 12, w: 126, h: 126 },
-         'xhdpi-circle-targetRect': { x:  6, y:  8, w:  84, h:  84 },
-          'hdpi-circle-targetRect': { x:  4, y:  6, w:  64, h:  64 },
-          'mdpi-circle-targetRect': { x:  3, y:  4, w:  42, h:  42 },
-          'ldpi-circle-targetRect': { x:  2, y:  3, w:  32, h:  32 },
+         'web-circle-targetRect': { x: 32, y: 43, w: 448, h: 448 },
+        'hdpi-circle-targetRect': { x:  4, y:  6, w:  64, h:  64 },
+        'mdpi-circle-targetRect': { x:  3, y:  4, w:  42, h:  42 },
 
-           'web-square-targetRect': { x: 32, y: 53, w: 448, h: 427 },
-        'xxhdpi-square-targetRect': { x:  9, y: 15, w: 126, h: 120 },
-         'xhdpi-square-targetRect': { x:  6, y: 10, w:  84, h:  80 },
-          'hdpi-square-targetRect': { x:  4, y:  8, w:  64, h:  60 },
-          'mdpi-square-targetRect': { x:  3, y:  5, w:  42, h:  40 },
-          'ldpi-square-targetRect': { x:  2, y:  3, w:  32, h:  30 }
+         'web-square-targetRect': { x: 32, y: 53, w: 448, h: 427 },
+        'hdpi-square-targetRect': { x:  4, y:  8, w:  64, h:  60 },
+        'mdpi-square-targetRect': { x:  3, y:  5, w:  42, h:  40 }
       };
 
       /**
@@ -165,7 +155,7 @@
 
         var continue_ = function(foreCtx) {
           var backgroundShape = values['backgroundShape'];
-          for (var density in {'xxhdpi':1, 'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1, 'web':1}) {
+          for (var density in DENSITIES) {
             var mult = studio.util.getMultBaseMdpi(density);
             if (density == 'web') {
               mult = 1;
@@ -174,8 +164,12 @@
               }
             }
 
-            var iconSize = PARAM_RESOURCES[density + '-iconSize'];
-            var targetRect = PARAM_RESOURCES[density + '-' + backgroundShape + '-targetRect'];
+            var mult = studio.util.getMultBaseMdpi(density);
+            var iconSize = PARAM_RESOURCES[density + '-iconSize']
+                || studio.util.multRound(PARAM_RESOURCES['mdpi-iconSize'], mult);
+            var targetRect = PARAM_RESOURCES[density + '-' + backgroundShape + '-targetRect']
+                || studio.util.multRound(PARAM_RESOURCES['mdpi-' + backgroundShape + '-targetRect'],
+                   mult);
 
             var outCtx = imagelib.drawing.context(iconSize);
             var tmpCtx = imagelib.drawing.context(iconSize);

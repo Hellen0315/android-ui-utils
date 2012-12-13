@@ -86,7 +86,7 @@
             label: type + ((version == 'X') ? '' : ', API ' + version)
           });
 
-          for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1})
+          for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1})
             studio.ui.createImageOutputSlot({
               container: group,
               id: 'out-icon-' + version + '-' + type + '-' + density,
@@ -129,7 +129,7 @@
 
         for (var version in {'X':1, '5':1}) {
           for (var type in {'selected':1, 'unselected':1}) {
-            for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+            for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1}) {
               var versionStr = (version == 'X') ? '' : ('-v' + version);
 
               var mult = studio.util.getMultBaseMdpi(density);

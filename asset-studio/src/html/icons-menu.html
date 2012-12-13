@@ -80,7 +80,7 @@
       var group = studio.ui.createImageOutputGroup({
         container: $('#outputs')
       });
-      for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1})
+      for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1})
         studio.ui.createImageOutputSlot({
           container: group,
           id: 'out-icon-' + density,
@@ -88,8 +88,8 @@
         });
 
       var PARAM_RESOURCES = {
-        'mdpi-iconSize': { w: 48, h: 48 },
-        'mdpi-targetRect': { x: 8, y: 8, w: 32, h: 32 },
+        'iconSize': { w: 48, h: 48 },
+        'targetRect': { x: 8, y: 8, w: 32, h: 32 },
       };
 
       /**
@@ -111,12 +111,12 @@
         var srcSize = { w: srcCtx.canvas.width, h: srcCtx.canvas.height };
         var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
-        for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+        for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1}) {
           var mult = studio.util.getMultBaseMdpi(density);
           var iconSize = studio.util.multRound(
-              PARAM_RESOURCES['mdpi-iconSize'], mult);
+              PARAM_RESOURCES['iconSize'], mult);
           var targetRect = studio.util.multRound(
-              PARAM_RESOURCES['mdpi-targetRect'], mult);
+              PARAM_RESOURCES['targetRect'], mult);
 
           var outCtx = imagelib.drawing.context(iconSize);
           var tmpCtx = imagelib.drawing.context(iconSize);

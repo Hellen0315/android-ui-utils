@@ -86,7 +86,7 @@
           dark: (version == '11')
         });
 
-        for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1})
+        for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1})
           studio.ui.createImageOutputSlot({
             container: group,
             id: 'out-icon-' + version + '-' + density,
@@ -97,10 +97,9 @@
       // Load image resources (stencils)
       var resList = {};
       for (var version in {'X':1})
-        for (var shape in {'square':1, 'circle':1})
-          for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1})
-            resList[version + '-' + shape + '-' + density] = (
-              'res/notification-stencil/' + shape + '/' + density + '.png');
+        for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1})
+          resList[version + '-' + density] = (
+            'res/notification-stencil/' + density + '.png');
 
       var IMAGE_RESOURCES = {};
       imagelib.loadImageResources(resList, function(r) {
@@ -111,17 +110,14 @@
       });
 
       var PARAM_RESOURCES = {
-        'X-mdpi-iconSize': { w: 25, h: 25 },
-        'X-square-mdpi-targetRect': { x: 4, y: 4, w: 17, h: 17 },
-        'X-circle-mdpi-targetRect': { x: 4, y: 4, w: 17, h: 17 },
+        'X-iconSize': { w: 25, h: 25 },
+        'X-targetRect': { x: 4, y: 4, w: 17, h: 17 },
 
-        '11-mdpi-iconSize': { w: 24, h: 24 },
-        '11-square-mdpi-targetRect': { x: 1, y: 1, w: 22, h: 22 },
-        '11-circle-mdpi-targetRect': { x: 1, y: 1, w: 22, h: 22 },
+        '11-iconSize': { w: 24, h: 24 },
+        '11-targetRect': { x: 1, y: 1, w: 22, h: 22 },
 
-        '9-mdpi-iconSize': { w: 16, h: 25 },
-        '9-square-mdpi-targetRect': { x: 0, y: 5, w: 16, h: 16 },
-        '9-circle-mdpi-targetRect': { x: 0, y: 5, w: 16, h: 16 }
+        '9-iconSize': { w: 16, h: 25 },
+        '9-targetRect': { x: 0, y: 5, w: 16, h: 16 },
       };
 
       /**
@@ -146,16 +142,15 @@
         var srcSize = { w: srcCtx.canvas.width, h: srcCtx.canvas.height };
         var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
-        var shape = values['shape'];
         for (var version in {'X':1, '11':1, '9':1}) {
           for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1}) {
             var versionStr = (version == 'X') ? '' : ('-v' + version);
 
             var mult = studio.util.getMultBaseMdpi(density);
             var iconSize = studio.util.multRound(
-                PARAM_RESOURCES[version + '-mdpi-iconSize'], mult);
+                PARAM_RESOURCES[version + '-iconSize'], mult);
             var targetRect = studio.util.multRound(
-                PARAM_RESOURCES[version + '-' + shape + '-mdpi-targetRect'], mult);
+                PARAM_RESOURCES[version + '-targetRect'], mult);
 
             var outCtx = imagelib.drawing.context(iconSize);
             var tmpCtx = imagelib.drawing.context(iconSize);
@@ -168,7 +163,7 @@
               tmpCtx.fillRect(0, 0, iconSize.w, iconSize.h);
               tmpCtx.restore();
 
-              imagelib.drawing.copy(outCtx, IMAGE_RESOURCES[version + '-' + shape + '-' + density], iconSize);
+              imagelib.drawing.copy(outCtx, IMAGE_RESOURCES[version + '-' + density], iconSize);
               imagelib.drawing.copy(outCtx, tmpCtx, iconSize);
             } else if (version == '11') {
               imagelib.drawing.drawCenterInside(tmpCtx, srcCtx, targetRect, srcRect);
@@ -222,15 +217,6 @@
             title: 'Source',
             helpText: 'Must be transparent',
             defaultValueTrim: 1
-          }),
-          new studio.forms.EnumField('shape', {
-            title: 'Shape',
-            buttons: true,
-            options: [
-              { id: 'square', title: 'Square' },
-              { id: 'circle', title: 'Circle' }
-            ],
-            defaultValue: 'square'
           }),
           new studio.forms.TextField('name', {
             title: 'Name',

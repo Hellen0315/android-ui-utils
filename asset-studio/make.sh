@@ -17,11 +17,11 @@
 rm -rf dist
 mkdir -p dist
 mkdir -p dist/js
-mkdir -p dist/images
+#mkdir -p dist/images
 mkdir -p dist/css
 
 cd src/
-find images -iname \*.png -exec pngcrush {} ../dist/{} \;
+#find images -iname \*.png -exec pngcrush {} ../dist/{} \;
 
 cd js/
 ant clean

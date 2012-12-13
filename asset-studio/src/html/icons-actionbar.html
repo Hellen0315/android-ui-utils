@@ -81,7 +81,7 @@
       var group = studio.ui.createImageOutputGroup({
         container: $('#outputs')
       });
-      for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1})
+      for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1})
         studio.ui.createImageOutputSlot({
           container: group,
           id: 'out-icon-' + density,
@@ -89,9 +89,9 @@
         });
 
       var PARAM_RESOURCES = {
-        'mdpi-iconSize': { w: 32, h: 32 },
-        'mdpi-targetRect-noclipart': { x: 4, y: 4, w: 24, h: 24 },
-        'mdpi-targetRect-clipart': { x: 0, y: 0, w: 32, h: 32 }
+        'iconSize': { w: 32, h: 32 },
+        'targetRect-noclipart': { x: 4, y: 4, w: 24, h: 24 },
+        'targetRect-clipart': { x: 0, y: 0, w: 32, h: 32 }
       };
 
       /**
@@ -116,15 +116,15 @@
         var srcSize = { w: srcCtx.canvas.width, h: srcCtx.canvas.height };
         var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
-        for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+        for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1}) {
           var mult = studio.util.getMultBaseMdpi(density);
           var iconSize = studio.util.multRound(
-              PARAM_RESOURCES['mdpi-iconSize'], mult);
+              PARAM_RESOURCES['iconSize'], mult);
           var targetRect;
           if (values['source'].type == 'clipart') {
-            targetRect = studio.util.multRound(PARAM_RESOURCES['mdpi-targetRect-clipart'], mult);
+            targetRect = studio.util.multRound(PARAM_RESOURCES['targetRect-clipart'], mult);
           } else {
-            targetRect = studio.util.multRound(PARAM_RESOURCES['mdpi-targetRect-noclipart'], mult);
+            targetRect = studio.util.multRound(PARAM_RESOURCES['targetRect-noclipart'], mult);
           }
 
           var outCtx = imagelib.drawing.context(iconSize);

@@ -383,12 +383,13 @@
       zipper.clear();
       zipper.setZipFilename(resourceName + '.9.zip');
 
-      for (var densityStr in {'xhdpi':1, 'hdpi':1, 'mdpi':1}) {
+      for (var densityStr in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1}) {
         var density;
         switch (densityStr) {
           case 'xhdpi': density = 320; break;
           case  'hdpi': density = 240; break;
           case  'mdpi': density = 160; break;
+          case  'ldpi': density = 120; break;
         }
 
         // scale source graphic
