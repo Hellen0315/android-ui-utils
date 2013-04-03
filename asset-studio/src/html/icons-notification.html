@@ -143,7 +143,7 @@
         var srcRect = { x: 0, y: 0, w: srcSize.w, h: srcSize.h };
 
         for (var version in {'X':1, '11':1, '9':1}) {
-          for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1, 'ldpi':1}) {
+          for (var density in {'xhdpi':1, 'hdpi':1, 'mdpi':1}) {
             var versionStr = (version == 'X') ? '' : ('-v' + version);
 
             var mult = studio.util.getMultBaseMdpi(density);
