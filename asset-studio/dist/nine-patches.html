@@ -232,13 +232,15 @@
       $('#stage-canvas-container').append(stage.canvas);
 
       // Set up events on the stage
+      $(document).bind('mouseup', function(evt) {
+        if (stage.dragging) {
+          stage.dragging = false;
+          saveStage();
+        }
+      });
       $(stage.canvas)
           .bind('mousedown', function(evt) {
             stage.dragging = true;
-          })
-          .bind('mouseup', function(evt) {
-            stage.dragging = false;
-            saveStage();
           })
           .bind('mousemove', function(evt) {
             var editRect = (stage.editMode == 'stretch') ? stage.stretchRect : stage.contentRect;
