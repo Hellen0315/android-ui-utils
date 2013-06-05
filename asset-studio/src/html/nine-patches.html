@@ -161,7 +161,8 @@
         y: 0,
         w: 0,
         h: 0
-      }
+      },
+      name: 'default'
     };
 
     // Stage code
@@ -221,6 +222,7 @@
       };
 
       stage.contentRect = { x: 0, y: 0, w: stage.srcSize.w, h: stage.srcSize.h };
+      loadStage();
 
       // Create the stage canvas
       stage.canvas = $('<canvas>')
@@ -236,6 +238,7 @@
           })
           .bind('mouseup', function(evt) {
             stage.dragging = false;
+            saveStage();
           })
           .bind('mousemove', function(evt) {
             var editRect = (stage.editMode == 'stretch') ? stage.stretchRect : stage.contentRect;
@@ -358,6 +361,24 @@
                      editRect.w * stage.zoom - 1, editRect.h * stage.zoom - 1);
     }
 
+    function saveStage() {
+      if (localStorage && JSON) {
+        localStorage['sc-' + stage.name] = JSON.stringify({
+          stretchRect: stage.stretchRect,
+          contentRect: stage.contentRect
+        });
+      }
+    };
+    function loadStage() {
+      try {
+        var store = JSON.parse(localStorage['sc-' + stage.name]);
+        if (store.stretchRect && store.contentRect) {
+          stage.stretchRect = store.stretchRect;
+          stage.contentRect = store.contentRect;
+        }
+      } catch (e) {}
+    };
+ 
     // Generator
     var zipper = studio.zip.createDownloadifyZipButton($('#zip-button-stub'));
     var group = studio.ui.createImageOutputGroup({ container: $('#outputs') });
@@ -440,12 +461,20 @@
     }
 
     // Input form code
+    var nameField;
     var form = new studio.forms.Form('ninepatchform', {
       onChange: function(field) {
         var values = form.getValues();
         if (!field || field.id_ == 'source') {
           if (values['source']) {
+            stage.name = values['source'].name;
             resetStage(values['source'].ctx);
+            if (values['source'].name) {
+              var name = values['source'].name.split('.')[0];
+              if (name != nameField.getValue()) {
+                nameField.setValue(name);
+              }
+            }
           } else {
             resetStage(null);
           }
@@ -470,11 +499,11 @@
           ],
           defaultValue: '320'
         }),
-        new studio.forms.TextField('name', {
+        (nameField = new studio.forms.TextField('name', {
           title: 'Drawable name',
           helpText: 'Used when generating ZIP files. Becomes <code>&lt;name&gt;.9.png</code>.',
           defaultValue: 'example'
-        })
+        }))
       ]
     });
     form.createUI($('#inputs-form').get(0));
