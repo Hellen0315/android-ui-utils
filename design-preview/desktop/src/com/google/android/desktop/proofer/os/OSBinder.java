@@ -50,4 +50,6 @@ public abstract class OSBinder {
     protected OSBinder(Callbacks callbacks) {
         this.callbacks = callbacks;
     }
+
+    public abstract float getDisplayScaleFactor();
 }

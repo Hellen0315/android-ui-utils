@@ -20,4 +20,9 @@ public class DefaultBinder extends OSBinder {
     protected DefaultBinder(Callbacks callbacks) {
         super(callbacks);
     }
+
+    @Override
+    public float getDisplayScaleFactor() {
+        return 1f;
+    }
 }

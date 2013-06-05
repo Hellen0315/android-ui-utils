@@ -47,5 +47,7 @@ http://developer.apple.com/library/ios/#documentation/general/Reference/InfoPlis
 	<string>Copyright 2012 Google Inc.</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 </dict>
 </plist>

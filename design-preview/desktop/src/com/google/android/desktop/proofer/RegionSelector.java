@@ -16,6 +16,8 @@
 
 package com.google.android.desktop.proofer;
 
+import com.google.android.desktop.proofer.os.OSBinder;
+
 import com.sun.awt.AWTUtilities;
 
 import java.awt.*;
@@ -40,6 +42,8 @@ import javax.swing.*;
 
 public class RegionSelector {
     private RegionSelectorFrame frame;
+    private OSBinder osBinder;
+    private float displayScaleFactor;
 
     private Rectangle region = new Rectangle(100, 100, 480, 800);
     private Dimension deviceSize = new Dimension(480, 800);
@@ -52,6 +56,8 @@ public class RegionSelector {
 
     public RegionSelector(RegionChangeCallback regionChangeCallback) {
         this.regionChangeCallback = regionChangeCallback;
+        osBinder = OSBinder.getBinder(null);
+        displayScaleFactor = osBinder.getDisplayScaleFactor();
         setupUI();
     }
 
@@ -128,7 +134,7 @@ public class RegionSelector {
 
         deviceSize = new Dimension(size);
         region.setSize(scaledSize);
-        frame.setSize(scaledSize);
+        this.frame.setSize(scaledSize);
     }
 
     void trySaveFrameConfig() {
@@ -136,8 +142,8 @@ public class RegionSelector {
             Properties props = new Properties();
             props.setProperty("x", String.valueOf(frame.getX()));
             props.setProperty("y", String.valueOf(frame.getY()));
-            props.setProperty("scale",
-                    String.valueOf(frame.getWidth() * 1f / deviceSize.getWidth()));
+            props.setProperty("scale", String.valueOf(
+                    frame.getWidth() * 1f / deviceSize.getWidth() * displayScaleFactor));
             props.storeToXML(new FileOutputStream(
                     new File(Util.getCacheDirectory(), "region.xml")), null);
         } catch (IOException e) {
@@ -174,17 +180,17 @@ public class RegionSelector {
                     Integer.parseInt(props.getProperty("x", String.valueOf(frame.getX()))),
                     Integer.parseInt(props.getProperty("y", String.valueOf(frame.getY()))));
             double scale = Double.parseDouble(props.getProperty("scale", "1"));
-            frame.setSize(
-                    (int) (scale * deviceSize.width),
-                    (int) (scale * deviceSize.height));
+            this.frame.setSize(
+                    (int) (scale / displayScaleFactor * deviceSize.width),
+                    (int) (scale / displayScaleFactor * deviceSize.height));
         } catch (FileNotFoundException ignored) {
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private class RegionSelectorFrame extends JFrame implements MouseListener, MouseMotionListener,
-            KeyListener {
+    private class RegionSelectorFrame extends JFrame implements
+            MouseListener, MouseMotionListener, KeyListener {
         private static final int LINE_SPACING_PIXELS = 8;
 
         private static final int RESIZE_GRIP_SIZE_PIXELS = 20;
@@ -247,8 +253,9 @@ public class RegionSelector {
 
                 // Line 2
                 g2d.setFont(fontSubtitle);
-                if (getWidth() != deviceSize.width) {
-                    s = "(" + (100 * getWidth() / deviceSize.width) + "%)";
+                int scaledWidth = (int) (getWidth() * displayScaleFactor);
+                if (scaledWidth != deviceSize.width) {
+                    s = "(" + (100 * scaledWidth / deviceSize.width) + "%)";
                 } else {
                     s = "(Drag corners to resize)";
                 }

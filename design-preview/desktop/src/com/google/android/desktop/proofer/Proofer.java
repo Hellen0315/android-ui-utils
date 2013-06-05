@@ -16,6 +16,8 @@
 
 package com.google.android.desktop.proofer;
 
+import com.google.android.desktop.proofer.os.OSBinder;
+
 import java.awt.*;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;

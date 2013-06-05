@@ -22,6 +22,8 @@ import com.apple.eawt.QuitHandler;
 import com.apple.eawt.QuitResponse;
 import com.apple.eawt.QuitStrategy;
 
+import java.awt.*;
+
 public class MacBinder extends OSBinder implements QuitHandler {
     Application application;
 
@@ -33,7 +35,15 @@ public class MacBinder extends OSBinder implements QuitHandler {
         application.setQuitHandler(this);
     }
 
+    @Override
+    public float getDisplayScaleFactor() {
+        return (Float) Toolkit.getDefaultToolkit().getDesktopProperty(
+                "apple.awt.contentScaleFactor");
+    }
+
     public void handleQuitRequestWith(AppEvent.QuitEvent quitEvent, QuitResponse quitResponse) {
-        callbacks.onQuit();
+        if (callbacks != null) {
+            callbacks.onQuit();
+        }
     }
 }
