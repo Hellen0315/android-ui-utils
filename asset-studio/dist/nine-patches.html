@@ -183,7 +183,14 @@
       }
 
       stage.srcCtx = srcCtx;
-      stage.srcSize = { w: stage.srcCtx.canvas.width, h: stage.srcCtx.canvas.height };
+
+      // Update the stage source size
+      var srcSizeChanged = false;
+      var newSrcSize = { w: stage.srcCtx.canvas.width, h: stage.srcCtx.canvas.height };
+      srcSizeChanged = !stage.srcSize
+          || stage.srcSize.w != newSrcSize.w
+          || stage.srcSize.h != newSrcSize.h;
+      stage.srcSize = newSrcSize;
 
       // Compute a zoom level that'll show the stage as large as possible
       stage.zoom = Math.max(1, Math.floor(500 / Math.max(stage.srcSize.w, stage.srcSize.h)));
@@ -214,14 +221,17 @@
       stage.previewCtx.putImageData(previewData, 0, 0);
 
       // Reset the stretch and padding/content regions
-      stage.stretchRect = {
-        x: Math.floor(stage.srcSize.w / 3),
-        y: Math.floor(stage.srcSize.h / 3),
-        w: Math.ceil(stage.srcSize.w / 3),
-        h: Math.ceil(stage.srcSize.h / 3)
-      };
+      if (srcSizeChanged) {
+        stage.stretchRect = {
+          x: Math.floor(stage.srcSize.w / 3),
+          y: Math.floor(stage.srcSize.h / 3),
+          w: Math.ceil(stage.srcSize.w / 3),
+          h: Math.ceil(stage.srcSize.h / 3)
+        };
 
-      stage.contentRect = { x: 0, y: 0, w: stage.srcSize.w, h: stage.srcSize.h };
+        stage.contentRect = { x: 0, y: 0, w: stage.srcSize.w, h: stage.srcSize.h };
+      }
+
       loadStage();
 
       // Create the stage canvas
