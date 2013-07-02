@@ -155,6 +155,14 @@ a {
     font-weight: 600;
   }
 
+  #page-linsk li.deprecated {
+    color: #ccc;
+  }
+
+    #page-links li.deprecated a {
+      color: #ccc;
+    }
+
 #outputs, #footer {
   border-top: 4px solid #f0f0f0;
 }

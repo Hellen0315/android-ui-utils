@@ -49,6 +49,23 @@
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
     </script>
+
+    <style>
+      .out-image-group.dark .label {
+        color: #fff;
+        font-weight: bold;
+        text-shadow: 0 1px 3px #000;
+      }
+
+      .out-image-group.dark .out-image {
+        border: 1px solid rgba(0, 0, 0, 0.25);
+      }
+
+      .out-image-group {
+        background-image: url(https://docs.google.com/uc?export=download&id=0BxEWAcbuDzg1dFRmYnZScWpfNU0);
+        background-size: cover;
+      }
+    </style>
   </head>
   <body>
     <div id="main-container">
@@ -117,6 +134,10 @@
         'hdpi-iconSize': { w:  72, h:  72 },
         'mdpi-iconSize': { w:  48, h:  48 },
 
+         'web-bevel-targetRect': { x: 32, y: 32, w: 448, h: 448 },
+        'hdpi-bevel-targetRect': { x:  4, y:  4, w:  64, h:  64 },
+        'mdpi-bevel-targetRect': { x:  3, y:  3, w:  42, h:  42 },
+
          'web-none-targetRect': { x: 32, y: 32, w: 448, h: 448 },
         'hdpi-none-targetRect': { x:  4, y:  4, w:  64, h:  64 },
         'mdpi-none-targetRect': { x:  3, y:  3, w:  42, h:  42 },
@@ -174,7 +195,13 @@
             var outCtx = imagelib.drawing.context(iconSize);
             var tmpCtx = imagelib.drawing.context(iconSize);
 
-            if (backgroundShape == 'none') {
+            if ((values['foreground'].type == 'text' ||
+                values['foreground'].type == 'clipart') &&
+                values['foreColor'].alpha == 0) {
+              values['foreColor'].alpha = 100;
+            }
+
+            if (backgroundShape == 'none' || backgroundShape == 'bevel') {
               tmpCtx.save();
               tmpCtx.globalCompositeOperation = 'source-over';
               if (foreCtx) {
@@ -204,55 +231,60 @@
 
               var foreEffect = 1; //values['foreEffect'];
 
-              if (density == 'web') {
-                imagelib.drawing.fx([
-                  {
-                    effect: 'inner-shadow',
-                    color: '#fff',
-                    opacity: 0.25,
-                    blur: 0,
-                    translate: { y: 5 }
-                  },
-                  {
-                    effect: 'inner-shadow',
-                    color: '#000',
-                    opacity: 0.4,
-                    blur: 5,
-                    translate: { y: -5 }
-                  },
-                  {
-                    effect: 'outer-shadow',
-                    color: '#000',
-                    opacity: 0.4,
-                    blur: 8,
-                    translate: { y: 3 }
-                  }
-                ], outCtx, tmpCtx, iconSize);
+              if (backgroundShape == 'none') {
+                outCtx.drawImage(tmpCtx.canvas, 0, 0);
 
-              } else {
-                imagelib.drawing.fx([
-                  {
-                    effect: 'inner-shadow',
-                    color: '#fff',
-                    opacity: 0.25,
-                    blur: 0,
-                    translate: { y: Math.ceil(0.5 * mult) }
-                  },
-                  {
-                    effect: 'inner-shadow',
-                    color: '#000',
-                    opacity: 0.6,
-                    blur: Math.ceil(1 * mult),
-                    translate: { y: -Math.ceil(0.5 * mult) }
-                  },
-                  {
-                    effect: 'outer-shadow',
-                    color: '#000',
-                    opacity: 0.3,
-                    blur: Math.ceil(2 * mult),
-                    translate: { y: Math.ceil(0.5 * mult) }
-                  }
-                ], outCtx, tmpCtx, iconSize);
+              } else if (backgroundShape == 'bevel') {
+                if (density == 'web') {
+                  imagelib.drawing.fx([
+                    {
+                      effect: 'inner-shadow',
+                      color: '#fff',
+                      opacity: 0.25,
+                      blur: 0,
+                      translate: { y: 5 }
+                    },
+                    {
+                      effect: 'inner-shadow',
+                      color: '#000',
+                      opacity: 0.4,
+                      blur: 5,
+                      translate: { y: -5 }
+                    },
+                    {
+                      effect: 'outer-shadow',
+                      color: '#000',
+                      opacity: 0.4,
+                      blur: 8,
+                      translate: { y: 3 }
+                    }
+                  ], outCtx, tmpCtx, iconSize);
+
+                } else {
+                  imagelib.drawing.fx([
+                    {
+                      effect: 'inner-shadow',
+                      color: '#fff',
+                      opacity: 0.25,
+                      blur: 0,
+                      translate: { y: Math.ceil(0.5 * mult) }
+                    },
+                    {
+                      effect: 'inner-shadow',
+                      color: '#000',
+                      opacity: 0.6,
+                      blur: Math.ceil(1 * mult),
+                      translate: { y: -Math.ceil(0.5 * mult) }
+                    },
+                    {
+                      effect: 'outer-shadow',
+                      color: '#000',
+                      opacity: 0.3,
+                      blur: Math.ceil(2 * mult),
+                      translate: { y: Math.ceil(0.5 * mult) }
+                    }
+                  ], outCtx, tmpCtx, iconSize);
+                }
               }
 
             } else {
@@ -353,10 +385,11 @@
             buttons: true,
             options: [
               { id: 'none', title: 'None' },
+              { id: 'bevel', title: 'Bevel' },
               { id: 'square', title: 'Square' },
               { id: 'circle', title: 'Circle' }
             ],
-            defaultValue: 'none'
+            defaultValue: 'bevel'
           }),
           new studio.forms.ColorField('backColor', {
             title: 'Background',

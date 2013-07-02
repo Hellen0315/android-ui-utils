@@ -274,22 +274,25 @@ studio.forms.ImageField = studio.forms.Field.extend({
       }
       this.tryLoadWebFont_.timeout_ = setTimeout(function() {
         me.tryLoadWebFont_(true);
-      }, 100);
+      }, 500);
       return;
     }
 
     this.loadedWebFont_ = desiredFont;
     var webFontNodeId = this.form_.id_ + '-' + this.id_ + '-__webfont-stylesheet__';
-    var $webFontNode = $('#' + webFontNodeId);
-    if (!$webFontNode.length) {
-      $webFontNode = $('<link>')
-          .attr('id', webFontNodeId)
-          .attr('rel', 'stylesheet')
-          .appendTo('head');
-    }
-    $webFontNode.attr(
-        'href', 'http://fonts.googleapis.com/css?family='
-            + encodeURIComponent(desiredFont));
+    $('#' + webFontNodeId).remove();
+    $('<link>')
+        .attr('id', webFontNodeId)
+        .attr('rel', 'stylesheet')
+        .attr('href', 'http://fonts.googleapis.com/css?family='
+            + encodeURIComponent(desiredFont))
+        .bind('load', function() {
+          me.renderValueAndNotifyChanged_();
+          window.setTimeout(function() {
+            me.renderValueAndNotifyChanged_();
+          }, 500);
+        })
+        .appendTo('head');
   },
 
   setValueType_: function(type) {

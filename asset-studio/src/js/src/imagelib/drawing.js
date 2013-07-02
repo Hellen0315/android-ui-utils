@@ -71,7 +71,9 @@ imagelib.drawing.drawCenterCrop = function(dstCtx, src, dstRect, srcRect) {
 };
 
 imagelib.drawing.drawImageScaled = function(dstCtx, src, sx, sy, sw, sh, dx, dy, dw, dh) {
-  if ((dw < sw && dh < sh) && imagelib.ALLOW_MANUAL_RESCALE) {
+  if ((dw < sw / 2 && dh < sh / 2) && imagelib.ALLOW_MANUAL_RESCALE) {
+    // scaling down by more than 50%, use an averaging algorithm since canvas.drawImage doesn't
+    // do a good job by default
     sx = Math.floor(sx);
     sy = Math.floor(sy);
     sw =  Math.ceil(sw);
@@ -81,8 +83,6 @@ imagelib.drawing.drawImageScaled = function(dstCtx, src, sx, sy, sw, sh, dx, dy,
     dw =  Math.ceil(dw);
     dh =  Math.ceil(dh);
 
-    // scaling down, use an averaging algorithm since canvas.drawImage doesn't do a good
-    // job in all browsers.
     var tmpCtx = imagelib.drawing.context({ w: sw, h: sh });
     tmpCtx.drawImage(src.canvas || src, -sx, -sy);
     var srcData = tmpCtx.getImageData(0, 0, sw, sh);
@@ -126,7 +126,7 @@ imagelib.drawing.drawImageScaled = function(dstCtx, src, sx, sy, sw, sh, dx, dy,
     dstCtx.drawImage(outCtx.canvas, dx, dy);
 
   } else {
-    // scaling up, use canvas.drawImage
+    // use canvas.drawImage for all other cases, or if the page doesn't allow manual rescale
     dstCtx.drawImage(src.canvas || src, sx, sy, sw, sh, dx, dy, dw, dh);
   }
 };
