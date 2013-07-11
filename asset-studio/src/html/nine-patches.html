@@ -487,6 +487,7 @@
             resetStage(values['source'].ctx);
             if (values['source'].name) {
               var name = values['source'].name.split('.')[0];
+              name = studio.util.sanitizeResourceName(name);
               if (name != nameField.getValue()) {
                 nameField.setValue(name);
               }

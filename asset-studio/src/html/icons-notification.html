@@ -108,7 +108,7 @@
       function regenerate() {
         var values = form.getValues();
 
-        var iconName = 'ic_stat_' + values['name'];
+        var iconName = values['name'];
         zipper.clear();
         zipper.setZipFilename(iconName + '.zip');
 
@@ -179,19 +179,32 @@
         }
       }
 
+      var nameField;
       var form = new studio.forms.Form('iconform', {
-        onChange: regenerate,
+        onChange: function(field) {
+          var values = form.getValues();
+          if ((!field || field.id_ == 'source')
+              && values['source'] && values['source'].name) {
+            var name = values['source'].name.split('.')[0];
+            name = 'ic_stat_' + studio.util.sanitizeResourceName(name);
+            if (name != nameField.getValue()) {
+              nameField.setValue(name);
+            }
+          }
+
+          regenerate();
+        },
         fields: [
           new studio.forms.ImageField('source', {
             title: 'Source',
             helpText: 'Must be transparent',
             defaultValueTrim: 1
           }),
-          new studio.forms.TextField('name', {
+          (nameField = new studio.forms.TextField('name', {
             title: 'Name',
-            helpText: 'Used when generating ZIP files. Becomes <code>ic_stat_&lt;name&gt;</code>.',
-            defaultValue: 'example'
-          })
+            helpText: 'Used when generating ZIP files.',
+            defaultValue: 'ic_stat_example'
+          }))
         ]
       });
       form.createUI($('#inputs-form').get(0));

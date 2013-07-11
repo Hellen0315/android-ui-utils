@@ -2485,6 +2485,10 @@ studio.util.multRound = function(s, mult) {
   return d;
 };
 
+studio.util.sanitizeResourceName = function(s) {
+  return s.toLowerCase().replace(/[\s-\.]/g, '_').replace(/[^\w_]/g, '');
+};
+
 studio.zip = {};
 
 (function() {

@@ -153,8 +153,21 @@
         }
       }
 
+      var nameField;
       var form = new studio.forms.Form('iconform', {
-        onChange: regenerate,
+        onChange: function(field) {
+          var values = form.getValues();
+          if ((!field || field.id_ == 'source')
+              && values['source'] && values['source'].name) {
+            var name = values['source'].name.split('.')[0];
+            name = 'ic_' + studio.util.sanitizeResourceName(name);
+            if (name != nameField.getValue()) {
+              nameField.setValue(name);
+            }
+          }
+
+          regenerate();
+        },
         fields: [
           new studio.forms.ImageField('source', {
             title: 'Source',
@@ -186,11 +199,11 @@
             alpha: true,
             defaultAlpha: 100
           }),
-          new studio.forms.TextField('name', {
+          (nameField = new studio.forms.TextField('name', {
             title: 'Name',
             helpText: 'Used when generating ZIP files as the resource name.',
             defaultValue: 'ic_example'
-          })
+          }))
         ]
       });
       form.createUI($('#inputs-form').get(0));
