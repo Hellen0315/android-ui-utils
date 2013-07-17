@@ -142,8 +142,13 @@
         }
       }
 
+      var customColorField;
       var form = new studio.forms.Form('iconform', {
-        onChange: regenerate,
+        onChange: function(field) {
+          var values = form.getValues();
+          customColorField.setEnabled(values['theme'] == 'custom');
+          regenerate();
+        },
         fields: [
           new studio.forms.EnumField('theme', {
             title: 'Theme',
@@ -155,13 +160,12 @@
             ],
             defaultValue: 'light'
           }),
-          new studio.forms.ColorField('color', {
-            title: 'Custom Color',
-            helpText: 'Foreground color.',
+          (customColorField = new studio.forms.ColorField('color', {
+            title: 'Custom color',
             defaultValue: '#33b5e5',
             alpha: true,
             defaultAlpha: 40
-          })
+          }))
         ]
       });
       form.createUI($('#inputs-form').get(0));

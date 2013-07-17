@@ -140,12 +140,20 @@
                 opacity: 0.6
               }
             ], outCtx, tmpCtx, iconSize);
-          } else {
+          } else if (values['theme'] == 'dark') {
             imagelib.drawing.fx([
               {
                 effect: 'fill-color',
                 color: '#ffffff',
                 opacity: 0.8
+              }
+            ], outCtx, tmpCtx, iconSize);
+          } else {
+            imagelib.drawing.fx([
+              {
+                effect: 'fill-color',
+                color: values['color'].color,
+                opacity: values['color'].alpha / 100
               }
             ], outCtx, tmpCtx, iconSize);
           }
@@ -175,6 +183,7 @@
               nameField.setValue(name);
             }
           }
+          customColorField.setEnabled(values['theme'] == 'custom');
 
           regenerate();
         },
@@ -194,10 +203,17 @@
             buttons: true,
             options: [
               { id: 'light', title: 'Holo Light' },
-              { id: 'dark', title: 'Holo Dark' }
+              { id: 'dark', title: 'Holo Dark' },
+              { id: 'custom', title: 'Custom' }
             ],
             defaultValue: 'light'
-          })
+          }),
+          (customColorField = new studio.forms.ColorField('color', {
+            title: 'Custom color',
+            defaultValue: '#33b5e5',
+            alpha: true,
+            defaultAlpha: 60
+          }))
         ]
       });
       form.createUI($('#inputs-form').get(0));

@@ -1078,7 +1078,7 @@ studio.forms.Field = Base.extend({
    */
   createUI: function(container) {
     container = $(container);
-    return $('<div>')
+    this.baseEl_ = $('<div>')
       .addClass('form-field-outer')
       .append(
         $('<label>')
@@ -1094,6 +1094,20 @@ studio.forms.Field = Base.extend({
           .addClass('form-field-container')
       )
       .appendTo(container);
+    return this.baseEl_;
+  },
+
+  /**
+   * Enables or disables the form field.
+   */
+  setEnabled: function(enabled) {
+    if (this.baseEl_) {
+      if (enabled) {
+        this.baseEl_.removeAttr('disabled');
+      } else {
+        this.baseEl_.attr('disabled', 'disabled');
+      }
+    }
   }
 });
 
