@@ -80,6 +80,11 @@
         image-rendering: -moz-crisp-edges;
         -ms-interpolation-mode: nearest-neighbor;
       }
+
+      .form-field-buttonset label small {
+        font-weight: normal;
+        text-transform: none;
+      }
     </style>
 
     <!-- TODO: remove Analytics tracking if you're building the tools locally! -->
@@ -111,8 +116,9 @@
         <div id="stage">
           Edit Mode &nbsp;
           <div id="stage-which" class="form-field-buttonset">
-            <input id="stage-stretch" name="stage-which" type="radio" value="stretch" checked><label for="stage-stretch">Stretch Regions</label><!--
-            --><input id="stage-padding" name="stage-which" type="radio" value="padding"><label for="stage-padding">Content Padding</label>
+            <input id="stage-stretch" name="stage-which" type="radio" value="stretch" checked><label for="stage-stretch">Stretch<br>Regions</label><!--
+            --><input id="stage-padding" name="stage-which" type="radio" value="padding"><label for="stage-padding">Content<br>Padding</label><!--
+            --><input id="stage-opticalbounds" name="stage-which" type="radio" value="opticalbounds"><label for="stage-opticalbounds">Optical<br>Bounds (4.3+)<br></label>
           </div>
           <div id="stage-canvas-container">
             <div style="margin: 24px 0; color: #888">
@@ -158,6 +164,12 @@
         h: 0
       },
       contentRect: {
+        x: 0,
+        y: 0,
+        w: 0,
+        h: 0
+      },
+      opticalBoundsRect: {
         x: 0,
         y: 0,
         w: 0,
@@ -221,7 +233,7 @@
       }
       stage.previewCtx.putImageData(previewData, 0, 0);
 
-      // Reset the stretch and padding/content regions
+      // Reset the stretch, padding/content, and optical bounds regions
       if (srcSizeChanged) {
         stage.stretchRect = {
           x: Math.floor(stage.srcSize.w / 3),
@@ -231,6 +243,7 @@
         };
 
         stage.contentRect = { x: 0, y: 0, w: stage.srcSize.w, h: stage.srcSize.h };
+        stage.opticalBoundsRect = { x: 0, y: 0, w: stage.srcSize.w, h: stage.srcSize.h };
       }
 
       loadStage();
@@ -254,7 +267,12 @@
             stage.dragging = true;
           })
           .bind('mousemove', function(evt) {
-            var editRect = (stage.editMode == 'stretch') ? stage.stretchRect : stage.contentRect;
+            var editRect = stage.stretchRect;
+            if (stage.editMode == 'padding') {
+              editRect = stage.contentRect;
+            } else if (stage.editMode == 'opticalbounds') {
+              editRect = stage.opticalBoundsRect;
+            }
 
             var offs = $(this).offset();
             var offsetX = evt.pageX - offs.left;
@@ -330,7 +348,12 @@
 
     function redrawStage() {
       var editingStretch = (stage.editMode == 'stretch');
-      var editRect = (stage.editMode == 'stretch') ? stage.stretchRect : stage.contentRect;
+      var editRect = stage.stretchRect;
+      if (stage.editMode == 'padding') {
+        editRect = stage.contentRect;
+      } else if (stage.editMode == 'opticalbounds') {
+        editRect = stage.opticalBoundsRect;
+      }
 
       var ctx = stage.canvas.getContext('2d');
       ctx.clearRect(0, 0, stage.size.w, stage.size.h);
@@ -378,16 +401,18 @@
       if (localStorage && JSON) {
         localStorage['sc-' + stage.name] = JSON.stringify({
           stretchRect: stage.stretchRect,
-          contentRect: stage.contentRect
+          contentRect: stage.contentRect,
+          opticalBoundsRect: stage.opticalBoundsRect
         });
       }
     };
     function loadStage() {
       try {
         var store = JSON.parse(localStorage['sc-' + stage.name]);
-        if (store.stretchRect && store.contentRect) {
+        if (store.stretchRect && store.contentRect && store.opticalBoundsRect) {
           stage.stretchRect = store.stretchRect;
           stage.contentRect = store.contentRect;
+          stage.opticalBoundsRect = store.opticalBoundsRect;
         }
       } catch (e) {}
     };
@@ -444,6 +469,7 @@
         // draw nine-patch tick marks
         outCtx.strokeStyle = '#000';
         outCtx.lineWidth = 1;
+        outCtx.beginPath();
 
         outCtx.moveTo(1 + Math.floor(scale * stage.stretchRect.x), 0.5);
         outCtx.lineTo(1 + Math.ceil(scale * (stage.stretchRect.x + stage.stretchRect.w)), 0.5);
@@ -460,6 +486,30 @@
         outCtx.moveTo(outSize.w - 0.5, 1 + Math.floor(scale * stage.contentRect.y));
         outCtx.lineTo(outSize.w - 0.5, 1 + Math.ceil(scale * (stage.contentRect.y + stage.contentRect.h)));
         outCtx.stroke();
+
+        outCtx.closePath();
+
+        // draw Android 4.3 optical bounds
+        outCtx.strokeStyle = '#f00';
+        outCtx.beginPath();
+
+        outCtx.moveTo(1, outSize.h - 0.5);
+        outCtx.lineTo(1 + Math.floor(scale * stage.opticalBoundsRect.x), outSize.h - 0.5);
+        outCtx.stroke();
+
+        outCtx.moveTo(Math.ceil(scale * (stage.opticalBoundsRect.x + stage.opticalBoundsRect.w)), outSize.h - 0.5);
+        outCtx.lineTo(outSize.w - 0.5, outSize.h - 0.5);
+        outCtx.stroke();
+
+        outCtx.moveTo(outSize.w - 0.5, 1);
+        outCtx.lineTo(outSize.w - 0.5, 1 + Math.floor(scale * stage.opticalBoundsRect.y));
+        outCtx.stroke();
+
+        outCtx.moveTo(outSize.w - 0.5, Math.ceil(scale * (stage.opticalBoundsRect.y + stage.opticalBoundsRect.h)));
+        outCtx.lineTo(outSize.w - 0.5, outSize.h - 0.5);
+        outCtx.stroke();
+
+        outCtx.closePath();
 
         // add to zip and show preview
 
