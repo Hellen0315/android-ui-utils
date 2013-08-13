@@ -81,6 +81,19 @@
         -ms-interpolation-mode: nearest-neighbor;
       }
 
+      .canvas-label {
+        position: absolute;
+        background: rgba(255,0,0,0.4);
+        padding: 4px 6px;
+        font-weight: bold;
+        font-family: roboto;
+        color: #fff;
+        pointer-events: none;
+        font-size: 10px;
+        text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+        line-height: 10px;
+      }
+
       .form-field-buttonset label small {
         font-weight: normal;
         text-transform: none;
@@ -179,6 +192,9 @@
     };
 
     // Stage code
+    $tlLabel = $('<div>').addClass('canvas-label top-left').hide().appendTo('body');
+    $brLabel = $('<div>').addClass('canvas-label bottom-right').hide().appendTo('body');
+
     $('#stage-which input').change(function() {
       stage.editMode = $(this).val();
       redrawStage();
@@ -188,8 +204,9 @@
       $('.out-image-group').toggleClass('dark half', stage.gridColor == 'dark');
       redrawStage();
     });
-    function resetStage(srcCtx) {
+    function resetStage(srcCtx, initStage) {
       $('#stage-canvas-container').empty();
+      initStage = initStage || {};
 
       if (!srcCtx) {
         return;
@@ -235,18 +252,20 @@
 
       // Reset the stretch, padding/content, and optical bounds regions
       if (srcSizeChanged) {
-        stage.stretchRect = {
+        stage.stretchRect = initStage.stretchRect || {
           x: Math.floor(stage.srcSize.w / 3),
           y: Math.floor(stage.srcSize.h / 3),
           w: Math.ceil(stage.srcSize.w / 3),
           h: Math.ceil(stage.srcSize.h / 3)
         };
 
-        stage.contentRect = { x: 0, y: 0, w: stage.srcSize.w, h: stage.srcSize.h };
-        stage.opticalBoundsRect = { x: 0, y: 0, w: stage.srcSize.w, h: stage.srcSize.h };
+        stage.contentRect = initStage.contentRect || { x: 0, y: 0, w: stage.srcSize.w, h: stage.srcSize.h };
+        stage.opticalBoundsRect = initStage.opticalBoundsRect || { x: 0, y: 0, w: stage.srcSize.w, h: stage.srcSize.h };
       }
 
-      loadStage();
+      if (!initStage.stretchRect) {
+        loadStage();
+      }
 
       // Create the stage canvas
       stage.canvas = $('<canvas>')
@@ -256,15 +275,10 @@
       $('#stage-canvas-container').append(stage.canvas);
 
       // Set up events on the stage
-      $(document).bind('mouseup', function(evt) {
-        if (stage.dragging) {
-          stage.dragging = false;
-          saveStage();
-        }
-      });
       $(stage.canvas)
           .bind('mousedown', function(evt) {
             stage.dragging = true;
+            redrawStage();
           })
           .bind('mousemove', function(evt) {
             var editRect = stage.stretchRect;
@@ -346,6 +360,14 @@
       regenerate();
     }
 
+    $(document).bind('mouseup', function(evt) {
+      if (stage.dragging) {
+        stage.dragging = false;
+        redrawStage();
+        saveStage();
+      }
+    });
+
     function redrawStage() {
       var editingStretch = (stage.editMode == 'stretch');
       var editRect = stage.stretchRect;
@@ -386,15 +408,48 @@
       ctx.strokeStyle = 'rgba(255,255,255,0.5)';
       ctx.lineWidth = 1;
       if (editingStretch) {
-        ctx.strokeRect(0, 0.5 + editRect.y * stage.zoom,
-                       stage.size.w, editRect.h * stage.zoom - 1);
-        ctx.strokeRect(0.5 + editRect.x * stage.zoom, 0,
-                       editRect.w * stage.zoom - 1, stage.size.h);
+        ctx.strokeRect(-20, 0.5 + editRect.y * stage.zoom,
+                       stage.size.w + 20, editRect.h * stage.zoom - 1);
+        ctx.strokeRect(0.5 + editRect.x * stage.zoom, -20,
+                       editRect.w * stage.zoom - 1, stage.size.h + 20);
       }
-      ctx.strokeStyle = 'rgba(255,255,255,0.75)';
-      ctx.lineWidth = 1;
+      if (stage.dragging) {
+        ctx.strokeStyle = 'rgba(255,0,0,0.75)';
+        ctx.lineWidth = 2;
+      } else {
+        ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+        ctx.lineWidth = 1;
+      }
       ctx.strokeRect(0.5 + editRect.x * stage.zoom, 0.5 + editRect.y * stage.zoom,
                      editRect.w * stage.zoom - 1, editRect.h * stage.zoom - 1);
+
+      // draw distance labels
+      if (stage.dragging) {
+        var stageOffset = $(stage.canvas).offset();
+        stageOffset.left++; // account for 1px border
+        stageOffset.top++;
+
+        $tlLabel.text('(' + editRect.x + ', ' + editRect.y + ')');
+        $tlLabel
+            .css({left: '-1000px', top: '-1000px'})
+            .show();
+        $tlLabel.css({
+          left: (editRect.x * stage.zoom + stageOffset.left - $tlLabel.get(0).offsetWidth) + 'px',
+          top: (editRect.y * stage.zoom + stageOffset.top - $tlLabel.get(0).offsetHeight) + 'px'
+        });
+
+        $brLabel.text('(' + (stage.srcSize.w - editRect.x - editRect.w) + ', '
+            + (stage.srcSize.h - editRect.y - editRect.h) + ')');
+        $brLabel
+            .css({
+              left: ((editRect.x + editRect.w) * stage.zoom + stageOffset.left) + 'px',
+              top: ((editRect.y + editRect.h) * stage.zoom + stageOffset.top) + 'px'
+            })
+            .show();
+      } else {
+        $tlLabel.hide();
+        $brLabel.hide();
+      }
     }
 
     function saveStage() {
@@ -405,7 +460,8 @@
           opticalBoundsRect: stage.opticalBoundsRect
         });
       }
-    };
+    }
+
     function loadStage() {
       try {
         var store = JSON.parse(localStorage['sc-' + stage.name]);
@@ -415,8 +471,109 @@
           stage.opticalBoundsRect = store.opticalBoundsRect;
         }
       } catch (e) {}
-    };
+    }
  
+    function loadNinePatch(ctx) {
+      var srcSize = { w: ctx.canvas.width, h: ctx.canvas.height };
+      var imgData = ctx.getImageData(0, 0, srcSize.w, srcSize.h);
+      var size = { w: srcSize.w - 2, h: srcSize.h - 2 };
+      var initStage = {
+        contentRect: { x: 0, y: 0, w: size.w, h: size.h },
+        stretchRect: { x: 0, y: 0, w: size.w, h: size.h },
+        opticalBoundsRect: { x: 0, y: 0, w: size.w, h: size.h }
+      };
+
+      function _rgba(r,g,b,a){ return (r << 16) + (g << 8) + (b << 0) + (a << 24); }
+
+      function _getPixel(x, y) {
+        return (imgData.data[(y * srcSize.w + x) * 4 + 0] << 16) // r
+            + (imgData.data[(y * srcSize.w + x) * 4 + 1] << 8) // g
+            + (imgData.data[(y * srcSize.w + x) * 4 + 2] << 0) // b
+            + (imgData.data[(y * srcSize.w + x) * 4 + 3] << 24); // a
+      }
+
+      var BLACK = _rgba(0,0,0,255);
+      var RED = _rgba(255,0,0,255);
+
+      var inRegion;
+
+      // Read stretch rect
+      inRegion = false;
+      for (var x = 0; x < size.w; x++) {
+        var p = _getPixel(x + 1, 0);
+        if (!inRegion && p == BLACK) {
+          initStage.stretchRect.x = x;
+          inRegion = true;
+        } else if (inRegion && p != BLACK) {
+          initStage.stretchRect.w = x - initStage.stretchRect.x;
+          inRegion = false;
+        }
+      }
+      inRegion = false;
+      for (var y = 0; y < size.h; y++) {
+        var p = _getPixel(0, y + 1);
+        if (!inRegion && p == BLACK) {
+          initStage.stretchRect.y = y;
+          inRegion = true;
+        } else if (inRegion && p != BLACK) {
+          initStage.stretchRect.h = y - initStage.stretchRect.y;
+          inRegion = false;
+        }
+      }
+
+      // Read content rect
+      inRegion = false;
+      for (var x = 0; x < size.w; x++) {
+        var p = _getPixel(x + 1, srcSize.h - 1);
+        if (!inRegion && p == BLACK) {
+          initStage.contentRect.x = x;
+          inRegion = true;
+        } else if (inRegion && p != BLACK) {
+          initStage.contentRect.w = x - initStage.contentRect.x;
+          inRegion = false;
+        }
+      }
+      inRegion = false;
+      for (var y = 0; y < size.h; y++) {
+        var p = _getPixel(srcSize.w - 1, y + 1);
+        if (!inRegion && p == BLACK) {
+          initStage.contentRect.y = y;
+          inRegion = true;
+        } else if (inRegion && p != BLACK) {
+          initStage.contentRect.h = y - initStage.contentRect.y;
+          inRegion = false;
+        }
+      }
+
+      // Read optical bounds rect
+      inRegion = false;
+      for (var x = 0; x < size.w; x++) {
+        var p = _getPixel(x + 1, srcSize.h - 1);
+        if (!inRegion && p != RED) {
+          initStage.opticalBoundsRect.x = x;
+          inRegion = true;
+        } else if (inRegion && p == RED) {
+          initStage.opticalBoundsRect.w = x - initStage.opticalBoundsRect.x;
+          inRegion = false;
+        }
+      }
+      for (var y = 0; y < size.h; y++) {
+        var p = _getPixel(srcSize.w - 1, y + 1);
+        if (!inRegion && p != RED) {
+          initStage.opticalBoundsRect.y = y;
+          inRegion = true;
+        } else if (inRegion && p == RED) {
+          initStage.opticalBoundsRect.h = y - initStage.opticalBoundsRect.y;
+          inRegion = false;
+        }
+      }
+
+      // Inset the context
+      var newCtx = imagelib.drawing.context(size);
+      newCtx.drawImage(ctx.canvas, 1, 1, size.w, size.h, 0, 0, size.w, size.h);
+      resetStage(newCtx, initStage);
+    }
+
     // Generator
     var zipper = studio.zip.createDownloadifyZipButton($('#zip-button-stub'));
     var group = studio.ui.createImageOutputGroup({ container: $('#outputs') });
@@ -466,9 +623,31 @@
             0, 0, stage.srcSize.w, stage.srcSize.h,
             1, 1, outSize.w - 2, outSize.h - 2);
 
+        // draw Android 4.3 optical bounds
+        outCtx.strokeStyle = '#f00';
+        outCtx.lineWidth = 1;
+        outCtx.beginPath();
+
+        outCtx.moveTo(1, outSize.h - 0.5);
+        outCtx.lineTo(1 + Math.floor(scale * stage.opticalBoundsRect.x), outSize.h - 0.5);
+        outCtx.stroke();
+
+        outCtx.moveTo(Math.ceil(scale * (stage.opticalBoundsRect.x + stage.opticalBoundsRect.w)) + 1, outSize.h - 0.5);
+        outCtx.lineTo(outSize.w - 1, outSize.h - 0.5);
+        outCtx.stroke();
+
+        outCtx.moveTo(outSize.w - 0.5, 1);
+        outCtx.lineTo(outSize.w - 0.5, 1 + Math.floor(scale * stage.opticalBoundsRect.y));
+        outCtx.stroke();
+
+        outCtx.moveTo(outSize.w - 0.5, Math.ceil(scale * (stage.opticalBoundsRect.y + stage.opticalBoundsRect.h)) + 1);
+        outCtx.lineTo(outSize.w - 0.5, outSize.h - 1);
+        outCtx.stroke();
+
+        outCtx.closePath();
+
         // draw nine-patch tick marks
         outCtx.strokeStyle = '#000';
-        outCtx.lineWidth = 1;
         outCtx.beginPath();
 
         outCtx.moveTo(1 + Math.floor(scale * stage.stretchRect.x), 0.5);
@@ -485,28 +664,6 @@
 
         outCtx.moveTo(outSize.w - 0.5, 1 + Math.floor(scale * stage.contentRect.y));
         outCtx.lineTo(outSize.w - 0.5, 1 + Math.ceil(scale * (stage.contentRect.y + stage.contentRect.h)));
-        outCtx.stroke();
-
-        outCtx.closePath();
-
-        // draw Android 4.3 optical bounds
-        outCtx.strokeStyle = '#f00';
-        outCtx.beginPath();
-
-        outCtx.moveTo(1, outSize.h - 0.5);
-        outCtx.lineTo(1 + Math.floor(scale * stage.opticalBoundsRect.x), outSize.h - 0.5);
-        outCtx.stroke();
-
-        outCtx.moveTo(Math.ceil(scale * (stage.opticalBoundsRect.x + stage.opticalBoundsRect.w)), outSize.h - 0.5);
-        outCtx.lineTo(outSize.w - 0.5, outSize.h - 0.5);
-        outCtx.stroke();
-
-        outCtx.moveTo(outSize.w - 0.5, 1);
-        outCtx.lineTo(outSize.w - 0.5, 1 + Math.floor(scale * stage.opticalBoundsRect.y));
-        outCtx.stroke();
-
-        outCtx.moveTo(outSize.w - 0.5, Math.ceil(scale * (stage.opticalBoundsRect.y + stage.opticalBoundsRect.h)));
-        outCtx.lineTo(outSize.w - 0.5, outSize.h - 0.5);
         outCtx.stroke();
 
         outCtx.closePath();
@@ -534,7 +691,11 @@
         if (!field || field.id_ == 'source') {
           if (values['source']) {
             stage.name = values['source'].name;
-            resetStage(values['source'].ctx);
+            if (stage.name && stage.name.match(/\.9\.png$/i)) {
+              loadNinePatch(values['source'].ctx);
+            } else {
+              resetStage(values['source'].ctx);
+            }
             if (values['source'].name) {
               var name = values['source'].name.split('.')[0];
               name = studio.util.sanitizeResourceName(name);
