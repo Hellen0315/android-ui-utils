@@ -98,6 +98,97 @@
         font-weight: normal;
         text-transform: none;
       }
+
+      #preview-area-container {
+        background: #f0f0f0;
+      }
+
+      .expando {
+        position: relative;
+        cursor: pointer;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+      .expando:before {
+        display: block;
+        content: '';
+        position: absolute;
+        left: -10px;
+        top: 50%;
+        width: 10px;
+        height: 5px;
+        margin-top: -2px;
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAFCAYAAAB8ZH1oAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAG4nAABzrwABBrIAAHktAABO7AABBcsAADBmAAASE4PB1CMAAABSSURBVHjabM2xDYAwDETRh2CekAqyBXOTCsZgBkCicREQXzrZ8p3OPUYsOHF4k8K7+jBvzJ9wQsGKfYjjFrM0bQUVO3SfVxlT7LUp+CWHXjwDALRTDyPvWAMbAAAAAElFTkSuQmCC);
+      }
+      .expando.expanded:before {
+        background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAFCAYAAAB8ZH1oAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAG4nAABzrwABBrIAAHktAABO7AABBcsAADBmAAASE4PB1CMAAABGSURBVHjaYmDABAZQjAJYsCgyQ+JfwKYQpugElG+BrJgFi6JLSJotGBgY/jMwMFxkZmBg0GdgYDDHouglAwPDb6jiP4ABAPZgDPwY9BFaAAAAAElFTkSuQmCC);
+      }
+
+      #preview-area-expando {
+        padding: 8px 24px;
+        text-transform: uppercase;
+        font-weight: bold;
+        font-size: 12px;
+        color: #888;
+      }
+      #preview-area-expando:before {
+        left: 8px;
+      }
+      #preview-area {
+        position: relative;
+        height: 0;
+        overflow: hidden;
+        cursor: se-resize;
+        transition: height 0.3s ease;
+
+        background: #fff;
+
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+      #preview-area.dark {
+        background: rgba(0,0,0,0.5);
+      }
+      #preview-area #text-preview {
+        position: absolute;
+        overflow: hidden;
+        width: 0;
+        height: 0;
+        display: none;
+      }
+      #preview-area canvas {
+        pointer-events: none;
+      }
+      #preview-area.expanded {
+        height: 500px;
+      }
+      #preview-stage > div {
+        position: relative;
+      }
+      #preview-area label[for="preview-with-content"] {
+        position: absolute;
+        top: 24px;
+        right: 24px;
+      }
+      #preview-area.dark label {
+        color: #eee;
+      }
+      #preview-stage {
+        height: 100%;
+        display: box;
+        box-pack: center;
+        box-align: center;
+
+        display: -webkit-box;
+        -webkit-box-pack: center;
+        -webkit-box-align: center;
+
+        display: -moz-box;
+        -moz-box-pack: center;
+        -moz-box-align: center;
+      }
     </style>
 
     <!-- TODO: remove Analytics tracking if you're building the tools locally! -->
@@ -150,6 +241,19 @@
           </div>
         </div>
       </div>
+      <div id="preview-area-container">
+        <div class="expando" id="preview-area-expando">Interactive preview</div>
+        <div id="preview-area">
+          <input type="checkbox" id="preview-with-content" class="form-field-checkbutton">
+          <label for="preview-with-content">With Content</label>
+          <div id="preview-stage">
+            <div>
+              <canvas></canvas>
+              <div id="text-preview">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque auctor auctor purus, a iaculis neque pharetra in. Curabitur in eleifend erat, sit amet facilisis augue. In hendrerit lectus sit amet purus auctor, at condimentum arcu consectetur. Suspendisse nisl massa, condimentum sit amet luctus ut, euismod id lacus. Pellentesque pretium consectetur urna, non vehicula massa tincidunt in. Nam lacus ante, euismod vel purus eget, faucibus dapibus lectus. Sed mi augue, pulvinar in sodales a, laoreet suscipit magna. Maecenas mollis nisl a nisl auctor venenatis. Praesent id tempor nulla. Cras viverra vulputate ligula. Interdum et malesuada fames ac ante ipsum primis in faucibus.</div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div id="outputs">
         <h3><div id="zip-button-stub"></div></h3>
       </div>
@@ -191,6 +295,16 @@
       name: 'default'
     };
 
+    // Set up zipper and image output slots
+    var zipper = studio.zip.createDownloadifyZipButton($('#zip-button-stub'));
+    var group = studio.ui.createImageOutputGroup({ container: $('#outputs') });
+    for (var density in {'xxhdpi':1, 'xhdpi':1, 'hdpi':1, 'mdpi':1})
+      studio.ui.createImageOutputSlot({
+        container: group,
+        id: 'out-patch-' + density,
+        label: density
+      });
+
     // Stage code
     $tlLabel = $('<div>').addClass('canvas-label top-left').hide().appendTo('body');
     $brLabel = $('<div>').addClass('canvas-label bottom-right').hide().appendTo('body');
@@ -202,6 +316,7 @@
     $('#stage-grid-color input').change(function() {
       stage.gridColor = $(this).val();
       $('.out-image-group').toggleClass('dark half', stage.gridColor == 'dark');
+      $('#preview-area').toggleClass('dark', stage.gridColor == 'dark');
       redrawStage();
     });
     function resetStage(srcCtx, initStage) {
@@ -346,16 +461,18 @@
                 editRect.y = newY;
               }
               if (stage.editRight) {
-                editRect.w = Math.max(1, Math.round(offsetX / stage.zoom) - editRect.x);
+                editRect.w = Math.min(stage.srcSize.w - editRect.x,
+                    Math.max(1, Math.round(offsetX / stage.zoom) - editRect.x));
               }
               if (stage.editBottom) {
-                editRect.h = Math.max(1, Math.round(offsetY / stage.zoom) - editRect.y);
+                editRect.h = Math.min(stage.srcSize.h - editRect.y,
+                    Math.max(1, Math.round(offsetY / stage.zoom) - editRect.y));
               }
               redrawStage();
               regenerate();
             }
           })
-      
+
       redrawStage();
       regenerate();
     }
@@ -365,6 +482,9 @@
         stage.dragging = false;
         redrawStage();
         saveStage();
+      }
+      if (preview.dragging) {
+        preview.dragging = false;
       }
     });
 
@@ -574,20 +694,127 @@
       resetStage(newCtx, initStage);
     }
 
-    // Generator
-    var zipper = studio.zip.createDownloadifyZipButton($('#zip-button-stub'));
-    var group = studio.ui.createImageOutputGroup({ container: $('#outputs') });
-    for (var density in {'xxhdpi':1, 'xhdpi':1, 'hdpi':1, 'mdpi':1})
-      studio.ui.createImageOutputSlot({
-        container: group,
-        id: 'out-patch-' + density,
-        label: density
+    // Set up preview area
+    var preview = {
+      width: 200,
+      height: 200
+    };
+    $(document).ready(function() {
+      var $expando = $('#preview-area-expando');
+      $expando.click(function() {
+        $expando.toggleClass('expanded');
+        $('#preview-area').toggleClass('expanded', $expando.hasClass('expanded'));
+      })
+
+      updatePreviewCanvas();
+      $('#preview-area')
+          .bind('mousedown', function(evt) {
+            preview.dragging = true;
+            preview.startWidth = preview.width;
+            preview.startHeight = preview.height;
+            preview.startX = evt.pageX;
+            preview.startY = evt.pageY;
+          })
+          .bind('mousemove', function(evt) {
+            if (preview.dragging) {
+              preview.width = Math.max(1, preview.startWidth + (evt.pageX - preview.startX) * 2);
+              preview.height = Math.max(1, preview.startHeight + (evt.pageY - preview.startY) * 2);
+              updatePreviewCanvas();
+            }
+          })
+          .bind('mouseup', function() {
+            preview.dragging = false;
+          })
+
+      $('#preview-with-content').click(function() {
+        $('#text-preview').toggle($(this).is(':checked'));
       });
+    });
+    function updatePreviewCanvas() {
+      var canvas = $('#preview-area canvas').get(0);
+      canvas.width = preview.width;
+      canvas.height = preview.height;
+
+      if (stage.srcCtx) {
+        var ctx = canvas.getContext('2d');
+
+        var fixed = {
+          l: stage.stretchRect.x,
+          t: stage.stretchRect.y,
+          r: stage.srcSize.w - stage.stretchRect.x - stage.stretchRect.w,
+          b: stage.srcSize.h - stage.stretchRect.y - stage.stretchRect.h
+        }
+
+        // TL
+        if (fixed.l && fixed.t)
+          ctx.drawImage(stage.srcCtx.canvas,
+              0, 0, fixed.l, fixed.t,
+              0, 0, fixed.l, fixed.t);
+
+        // BL
+        if (fixed.l && fixed.b)
+          ctx.drawImage(stage.srcCtx.canvas,
+              0, stage.srcSize.h - fixed.b, fixed.l, fixed.b,
+              0, preview.height - fixed.b, fixed.l, fixed.b);
+
+        // TR
+        if (fixed.r && fixed.t)
+          ctx.drawImage(stage.srcCtx.canvas,
+              stage.srcSize.w - fixed.r, 0, fixed.r, fixed.t,
+              preview.width - fixed.r, 0, fixed.r, fixed.t);
+
+        // BR
+        if (fixed.r && fixed.b)
+          ctx.drawImage(stage.srcCtx.canvas,
+              stage.srcSize.w - fixed.r, stage.srcSize.h - fixed.b, fixed.r, fixed.b,
+              preview.width - fixed.r, preview.height - fixed.b, fixed.r, fixed.b);
+
+        // Top
+        if (fixed.t)
+          ctx.drawImage(stage.srcCtx.canvas,
+              fixed.l, 0, stage.stretchRect.w, fixed.t,
+              fixed.l, 0, preview.width - fixed.l - fixed.r, fixed.t);
+
+        // Left
+        if (fixed.l)
+          ctx.drawImage(stage.srcCtx.canvas,
+              0, fixed.t, fixed.l, stage.stretchRect.h,
+              0, fixed.t, fixed.l, preview.height - fixed.t - fixed.b);
+
+        // Right
+        if (fixed.r)
+          ctx.drawImage(stage.srcCtx.canvas,
+              stage.srcSize.w - fixed.r, fixed.t, fixed.r, stage.stretchRect.h,
+              preview.width - fixed.r, fixed.t, fixed.r, preview.height - fixed.t - fixed.b);
+
+        // Bottom
+        if (fixed.b)
+          ctx.drawImage(stage.srcCtx.canvas,
+              fixed.l, stage.srcSize.h - fixed.b, stage.stretchRect.w, fixed.b,
+              fixed.l, preview.height - fixed.b, preview.width - fixed.l - fixed.r, fixed.b);
+
+        // Middle
+        ctx.drawImage(stage.srcCtx.canvas,
+            fixed.l, fixed.t, stage.stretchRect.w, stage.stretchRect.h,
+            fixed.l, fixed.t, preview.width - fixed.l - fixed.r, preview.height - fixed.t - fixed.b);
+
+        // preview content
+        var $textPreview = $('#preview-area #text-preview');
+        $textPreview.css({
+          left: stage.contentRect.x + "px",
+          top: stage.contentRect.y + "px",
+          width: (preview.width - stage.srcSize.w + stage.contentRect.w ) + "px",
+          height: (preview.height - stage.srcSize.h + stage.contentRect.h) + "px"
+        });
+      }
+    }
 
     /**
      * Main nine patch generation routine.
      */
     function regenerate() {
+      updatePreviewCanvas();
+
       if (!stage.srcCtx) {
         return;
       }
