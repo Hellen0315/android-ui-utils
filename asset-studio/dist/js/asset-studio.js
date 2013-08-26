@@ -2677,6 +2677,36 @@ imagelib.util.hasBlobConstructor = function() {
   }
 };
 
+// http://en.wikipedia.org/wiki/Adler32
+imagelib.util.adler32 = function(arr) {
+  arr = arr || [];
+  var adler = new imagelib.util.Adler32();
+  for (var i = 0; i < arr.length; i++) {
+    adler.addNext(arr[i]);
+  }
+  return adler.compute();
+};
+
+imagelib.util.Adler32 = function() {
+  this.reset();
+};
+imagelib.util.Adler32._MOD_ADLER = 65521;
+imagelib.util.Adler32.prototype.reset = function() {
+  this._a = 1;
+  this._b = 0;
+  this._index = 0;
+};
+imagelib.util.Adler32.prototype.addNext = function(value) {
+  this._a = (this._a + value) % imagelib.util.Adler32._MOD_ADLER;
+  this._b = (this._b + this._a) % imagelib.util.Adler32._MOD_ADLER;
+};
+imagelib.util.Adler32.prototype.compute = function() {
+  return (this._b << 16) | this._a;
+};
+
+imagelib.util.Summer = imagelib.util.Adler32;
+imagelib.util.Summer.prototype = imagelib.util.Adler32.prototype;
+
 window.imagelib = imagelib;
 
 })();
