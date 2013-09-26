@@ -137,8 +137,30 @@ studio.forms.ImageField = studio.forms.Field.extend({
         .hide()
         .appendTo(fieldContainer);
 
-      var clipartListEl = $('<div>')
+      var clipartListEl;
+
+      var clipartFilterEl = $('<input>')
+        .addClass('form-image-clipart-filter')
+        .attr('placeholder', 'Find clipart')
+        .keydown(function() {
+          var $this = $(this);
+          setTimeout(function() {
+            var val = $this.val().toLowerCase().replace(/[^\w]+/g, '');
+            if (!val) {
+              clipartListEl.find('img').show();
+            } else {
+              clipartListEl.find('img').each(function() {
+                var $this = $(this);
+                $this.toggle($this.attr('title').indexOf(val) >= 0);
+              });
+            }
+          }, 0);
+        })
+        .appendTo(clipartParamsEl);
+
+      clipartListEl = $('<div>')
         .addClass('form-image-clipart-list')
+        .addClass('cancel-parent-scroll')
         .appendTo(clipartParamsEl);
 
       for (var i = 0; i < studio.forms.ImageField.clipartList_.length; i++) {
@@ -490,6 +512,7 @@ studio.forms.ImageField = studio.forms.Field.extend({
 });
 
 studio.forms.ImageField.clipartList_ = [
+  'icons/core_overflow.svg',
   'icons/action_about.svg',
   'icons/action_help.svg',
   'icons/action_search.svg',
@@ -780,3 +803,13 @@ studio.forms.ImageField.makeDragleaveHandler_ = function(el) {
     }, 100);
   };
 };
+
+// Prevent scrolling for clipart per http://stackoverflow.com/questions/7600454
+$(document).ready(function() {
+  $('.cancel-parent-scroll').on('mousewheel DOMMouseScroll',
+    function(e) {
+      var delta = e.originalEvent.wheelDelta || -e.originalEvent.detail;
+      this.scrollTop -= delta;
+      e.preventDefault();
+    });
+});

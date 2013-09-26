@@ -240,6 +240,25 @@ a {
   margin-top: 4px;
 }
 
+.form-image-clipart-filter {
+  background-color: #ccc;
+  color: #fff;
+  font-size: 13px;
+  width: 230px;
+  border: 0;
+  padding: 4px 10px;
+}
+
+.form-image-clipart-filter:focus {
+  background-color: #09c;
+  outline: 0;
+}
+
+.form-image-clipart-filter::-webkit-input-placeholder {
+  color: rgba(255,255,255,0.5);
+  font-style: italic;
+}
+
 .form-image-clipart-list {
   background-color: #fff;
   border: 1px solid #ccc;
