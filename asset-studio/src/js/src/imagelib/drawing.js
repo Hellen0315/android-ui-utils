@@ -507,7 +507,7 @@ imagelib.drawing.fx = function(effects, dstCtx, src, size) {
 
     tmpCtx.restore(); // T1
     dstCtx.restore(); // D2
-  }
+  };
 
   dstCtx.restore(); // D1
 };
