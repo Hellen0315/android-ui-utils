@@ -671,13 +671,22 @@
       try {
         var store = JSON.parse(localStorage['sc-' + stage.name]);
         if (store.stretchRect && store.contentRect && store.opticalBoundsRect) {
-          stage.stretchRect = store.stretchRect;
-          stage.contentRect = store.contentRect;
-          stage.opticalBoundsRect = store.opticalBoundsRect;
+          stage.stretchRect = fitRect(store.stretchRect, stage.srcSize);
+          stage.contentRect = fitRect(store.contentRect, stage.srcSize);
+          stage.opticalBoundsRect = fitRect(store.opticalBoundsRect, stage.srcSize);
         }
       } catch (e) {}
     }
  
+    function fitRect(rect, size) {
+      var newRect = {};
+      newRect.x = Math.max(0, rect.x);
+      newRect.y = Math.max(0, rect.y);
+      newRect.w = Math.min(size.w - rect.x, rect.w);
+      newRect.h = Math.min(size.h - rect.y, rect.h);
+      return newRect;
+    }
+
     function loadNinePatch(ctx) {
       var srcSize = { w: ctx.canvas.width, h: ctx.canvas.height };
       var imgData = ctx.getImageData(0, 0, srcSize.w, srcSize.h);
@@ -1513,14 +1522,19 @@
         var values = form.getValues();
         if (!field || field.id_ == 'source') {
           if (values['source']) {
-            stage.name = values['source'].name;
-            if (stage.name && stage.name.match(/\.9\.png$/i)) {
-              loadNinePatch(values['source'].ctx);
-            } else {
-              resetStage(values['source'].ctx);
+            if (!values['source'].ctx) {
+              return;
             }
-            if (values['source'].name) {
-              var name = values['source'].name.split('.')[0];
+            var src = values['source'];
+            var size = { w: src.ctx.canvas.width, h: src.ctx.canvas.height };
+            stage.name = src.name + '-' + size.w + 'x' + size.h;
+            if (stage.name && stage.name.match(/\.9\.png$/i)) {
+              loadNinePatch(src.ctx);
+            } else {
+              resetStage(src.ctx);
+            }
+            if (src.name) {
+              var name = src.name.split('.')[0];
               name = studio.util.sanitizeResourceName(name);
               if (name != nameField.getValue()) {
                 nameField.setValue(name);
