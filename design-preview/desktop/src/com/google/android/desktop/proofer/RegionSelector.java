@@ -317,12 +317,15 @@ public class RegionSelector {
                     newSize.width = keepAspectWidth;
                 }
 
-                // Lock to 25% increments
-                float frac = Math.round(newSize.height / deviceSize.getHeight() * 4) / 4f;
-                frac = Math.max(0.25f, frac);
+                // Lock to 25% increments (or possibly 33% increments)
+                float naturalFrac = (float) (newSize.height / deviceSize.getHeight());
+                float frac = Math.round(naturalFrac * 4 * displayScaleFactor) / (4f * displayScaleFactor);
+                float frac3 = Math.round(naturalFrac * 3 * displayScaleFactor) / (3f * displayScaleFactor);
+                frac = (Math.abs(naturalFrac - frac3) < Math.abs(naturalFrac - frac))
+                        ? frac3 : frac;
+                frac = Math.max(0.25f / displayScaleFactor, frac);
                 newSize.width = (int) (deviceSize.getWidth() * frac);
                 newSize.height = (int) (deviceSize.getHeight() * frac);
-
 
                 Point newLocation = new Point(
                         w ? (startLocation.x - newSize.width + startSize.width) : startLocation.x,
