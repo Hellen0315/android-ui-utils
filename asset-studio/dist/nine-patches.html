@@ -1528,7 +1528,7 @@
             var src = values['source'];
             var size = { w: src.ctx.canvas.width, h: src.ctx.canvas.height };
             stage.name = src.name + '-' + size.w + 'x' + size.h;
-            if (stage.name && stage.name.match(/\.9\.png$/i)) {
+            if (src.name && src.name.match(/\.9\.png$/i)) {
               loadNinePatch(src.ctx);
             } else {
               resetStage(src.ctx);
